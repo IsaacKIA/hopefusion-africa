@@ -374,7 +374,7 @@ CREATE TABLE IF NOT EXISTS messages (
   id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   sender_id    UUID NOT NULL REFERENCES users(id),
   recipient_id UUID NOT NULL REFERENCES users(id),
-  thread_id    UUID NOT NULL,
+  thread_id    TEXT NOT NULL,
   content      TEXT NOT NULL,
   attachments  TEXT[],
   is_read      BOOLEAN DEFAULT FALSE,
@@ -1158,6 +1158,8 @@ app.use((err, req, res, next) => {
 app.use((req, res) => res.status(404).json({ error: `Route ${req.method} ${req.path} not found` }));
 
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => console.log(`HopeFusion Backend running on port ${PORT}`));
+if (process.env.NO_LISTEN !== 'true') {
+  httpServer.listen(PORT, () => console.log(`HopeFusion Backend running on port ${PORT}`));
+}
 
 export { app, httpServer, db, redis, authenticate, authorize };

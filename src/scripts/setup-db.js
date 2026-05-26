@@ -3,6 +3,7 @@
  * Run: npm run db:setup
  */
 
+import './setup-env.js';
 import pg from 'pg';
 import dotenv from 'dotenv';
 import { SCHEMA } from '../server.js';

@@ -3,6 +3,7 @@
  * Run: npm run db:seed
  */
 
+import './setup-env.js';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
@@ -125,7 +126,7 @@ async function runSeed() {
         1500,
         250,
         [1, 2, 8, 13], // SDG 1, 2, 8, 13
-        TRUE,
+        true,
       ]
     );
     const startupId = startupRes.rows[0].id;
