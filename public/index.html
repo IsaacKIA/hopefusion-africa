@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HopeFusion Africa</title>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#2DB562"/>
+<meta name="description" content="Africa's first integrated startup ecosystem marketplace — Empower. Innovate. Thrive."/>
+<meta property="og:title" content="HopeFusion Africa"/>
+<meta property="og:description" content="Connecting startups, investors, mentors and resources across the continent."/>
+<meta property="og:image" content="/icons/og-image.png"/>
+<meta property="og:url" content="https://hopefusionafrica.com"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<!-- Redirect to homepage or dashboard based on auth -->
+<script>
+const token = localStorage.getItem('hfa_token');
+const user  = (() => { try { return JSON.parse(localStorage.getItem('hfa_user')); } catch { return null; } })();
+if (token && user) {
+  const roleMap = {
+    startup:  '/hopefusion-startup-dashboard.html',
+    investor: '/hopefusion-investor-dashboard.html',
+    mentor:   '/hopefusion-mentor-dashboard.html',
+    admin:    '/hopefusion-admin-dashboard.html',
+  };
+  window.location.replace(roleMap[user.role] || '/hopefusion-homepage.html');
+} else {
+  window.location.replace('/hopefusion-homepage.html');
+}
+</script>
+</head>
+<body style="background:#1A1A1A;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif">
+  <div style="text-align:center;color:#fff">
+    <div style="font-size:28px;font-weight:700;margin-bottom:8px"><span style="color:#2DB562">Hope</span>Fusion <span style="color:#E8A020">Africa</span></div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.4)">Loading…</div>
+  </div>
+</body>
+</html>

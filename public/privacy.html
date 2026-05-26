@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- HFA_CONFIG_START -->
+<script>
+  window.HFA_CONFIG = {
+    API_URL: "http://localhost:3000",
+    AI_URL: "http://localhost:3001",
+    WS_URL: "ws://localhost:3000",
+    ENV: "development"
+  };
+</script>
+<!-- HFA_CONFIG_END -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Privacy Policy — HopeFusion Africa</title>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#2DB562"/>
+<meta name="description" content="HopeFusion Africa Privacy Policy. Protecting your identity and data across the startup ecosystem."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+/* ===== RESET & ROOT ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --g:       #2DB562;
+  --g-dark:  #1e8a48;
+  --g-deep:  #0f5233;
+  --g-t:     #E9F9EF;
+  --gold:    #E8A020;
+  --gold-t:  #FEF7E8;
+  --red:     #E02020;
+  --blk:     #121212;
+  --blk2:    #1A1A1A;
+  --blk3:    #242424;
+  --white:   #ffffff;
+  --txt:     #e0e0e0;
+  --txt2:    #a0a0a0;
+  --border:  rgba(255,255,255,0.08);
+  --font-h:  'Sora', sans-serif;
+  --font-b:  'DM Sans', sans-serif;
+  --font-m:  'Space Grotesk', sans-serif;
+}
+body{
+  font-family:var(--font-b);
+  background:var(--blk);
+  color:var(--txt);
+  overflow-x:hidden;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  line-height:1.6;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--blk)}
+::-webkit-scrollbar-thumb{background:var(--g);border-radius:3px}
+
+/* ===== NAV ===== */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:rgba(18,18,18,0.85);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 2.5rem;
+  height:66px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-icon{width:36px;height:36px}
+.nav-brand{font-family:var(--font-h);font-size:17px;font-weight:600}
+.nav-brand .hope{color:var(--g)}
+.nav-brand .fusion{color:var(--white)}
+.nav-brand .africa{color:var(--gold);font-size:11px;display:block;font-weight:400;letter-spacing:.18em;margin-top:-3px;font-family:var(--font-m)}
+.nav-right{display:flex;align-items:center;gap:20px}
+.btn-nav-outline{
+  background:transparent;
+  color:rgba(255,255,255,0.7);
+  border:1px solid rgba(255,255,255,0.18);
+  padding:9px 18px;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
+  transition:all .2s;
+  font-family:var(--font-m);
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.btn-nav-outline:hover{color:var(--white);border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.05)}
+
+/* ===== HERO & ORBS ===== */
+.page-header{
+  padding:120px 2rem 40px;
+  position:relative;
+  text-align:center;
+  overflow:hidden;
+}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}
+.orb-1{width:300px;height:300px;background:rgba(45,181,98,0.1);top:-50px;right:20%}
+.orb-2{width:400px;height:400px;background:rgba(232,160,32,0.06);bottom:-50px;left:10%}
+
+.page-title{font-family:var(--font-h);font-size:2.5rem;font-weight:700;color:var(--white);margin-bottom:12px}
+.page-subtitle{font-family:var(--font-m);font-size:14px;color:var(--txt2);letter-spacing:0.05em;text-transform:uppercase}
+
+/* ===== CONTENT ===== */
+.main-content{
+  flex:1;
+  max-width:900px;
+  width:95%;
+  margin:0 auto 80px;
+  padding:40px;
+  background:rgba(26,26,26,0.6);
+  border:1px solid var(--border);
+  border-radius:16px;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.3);
+  position:relative;
+  z-index:2;
+}
+.legal-section{margin-bottom:35px}
+.legal-section h2{
+  font-family:var(--font-h);
+  font-size:20px;
+  color:var(--white);
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.legal-section h2 i{color:var(--g)}
+.legal-section p{margin-bottom:16px;color:var(--txt);font-size:15px;line-height:1.7}
+.legal-section ul{margin-left:24px;margin-bottom:16px;color:var(--txt);font-size:15px}
+.legal-section li{margin-bottom:8px}
+
+/* ===== FOOTER ===== */
+footer{
+  background:var(--blk2);
+  border-top:1px solid var(--border);
+  padding:30px 2.5rem;
+  text-align:center;
+  font-family:var(--font-m);
+  font-size:13px;
+  color:var(--txt2);
+}
+.footer-links{display:flex;justify-content:center;gap:20px;margin-bottom:12px}
+.footer-links a{color:var(--txt2);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--g)}
+</style>
+<!-- Include HFA Client Connection Layer -->
+<script src="/hopefusion-connection-layer.js"></script>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- NAVIGATION -->
+<nav>
+  <a href="/hopefusion-homepage.html" class="nav-logo">
+    <svg class="nav-logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="48" fill="#1A1A1A" stroke="#2DB562" stroke-width="4"/>
+      <path d="M30 45C35 35 45 30 50 30C55 30 65 35 70 45C75 55 65 70 50 70C35 70 25 55 30 45Z" fill="#2DB562" fill-opacity="0.2" stroke="#E8A020" stroke-width="3"/>
+      <circle cx="50" cy="50" r="10" fill="#2DB562"/>
+    </svg>
+    <div class="nav-brand">
+      <span class="hope">Hope</span><span class="fusion">Fusion</span>
+      <span class="africa">AFRICA</span>
+    </div>
+  </a>
+  <div class="nav-right">
+    <div id="lang-switcher"></div>
+    <a href="/hopefusion-homepage.html" class="btn-nav-outline">
+      <i class="ti ti-arrow-left"></i>
+      <span data-i18n="common.back">Back to Home</span>
+    </a>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<header class="page-header">
+  <span class="page-subtitle" data-i18n="legal.privacy_subtitle">Data Security & Privacy</span>
+  <h1 class="page-title" data-i18n="legal.privacy_title">Privacy Policy</h1>
+  <p style="color: var(--txt2); font-size: 14px; font-family: var(--font-m);">Last Updated: May 2026</p>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+  <div class="legal-section">
+    <h2><i class="ti ti-eye"></i> 1. Information We Collect</h2>
+    <p>HopeFusion Africa collects information to deliver a personalized, secure experience across our matchmaking and investment workflows. This includes:</p>
+    <ul>
+      <li><strong>Identity Data:</strong> Full name, email address, physical address, and government-issued identification files (when completing KYB/KYC checks).</li>
+      <li><strong>Startup/Investor Profile Data:</strong> Company pitch deck summaries, operational metrics, fundraising goals, investment preferences, and industry tags.</li>
+      <li><strong>Web3 & Blockchain Data:</strong> Public cryptographic wallet addresses (e.g., MetaMask, WalletConnect) used to interact with the Escrow smart contracts. We never collect or store your private keys.</li>
+      <li><strong>Interaction Data:</strong> Transcripts generated from AI pitch deck analysis sessions, financial model projections, compliance check history, and internal team messages.</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2><i class="ti ti-settings"></i> 2. How We Use Your Data</h2>
+    <p>Your information is used strictly to power core functions of the Platform, including:</p>
+    <ul>
+      <li>Calculating similarity matching scores between startup profiles and active investors.</li>
+      <li>Running OpenAI/Claude-powered AI analysis models on your uploaded pitch summaries and financial metrics (your uploaded details are not used for public model retraining).</li>
+      <li>Binding user actions to active smart contract escrows on the public ledger.</li>
+      <li>Facilitating video mentorship calls via integrated WebRTC client sessions.</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2><i class="ti ti-lock"></i> 3. Data Protection Regulations</h2>
+    <p>HopeFusion Africa is designed with global and localized data privacy laws in mind. We comply with data protection regulations across multiple jurisdictions, including:</p>
+    <ul>
+      <li><strong>GDPR (General Data Protection Regulation):</strong> Protecting data rights of European union citizens.</li>
+      <li><strong>NDPR (Nigeria Data Protection Regulation):</strong> Adhering to the data collection requirements of Nigeria.</li>
+      <li><strong>Kenya Data Protection Act:</strong> Protecting personal data processed in Kenya.</li>
+      <li><strong>POPIA (Protection of Personal Information Act):</strong> Respecting data processing regulations in South Africa.</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2><i class="ti ti-circle-check"></i> 4. Blockchain Transparency Disclaimer</h2>
+    <p>Please note that transactions executed using the HopeFusion Africa Escrow contract are registered directly on a public blockchain network. The transaction sender address, contract parameters, and escrow milestone release events are permanent, public records and cannot be deleted or modified.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><i class="ti ti-share"></i> 5. Third-Party Sharing</h2>
+    <p>We do not sell your personal data. We only share information with third-party service providers (such as cloud hosting, security verifiers, and language APIs) that are contractually bound to safeguard your information.</p>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-links">
+    <a href="/hopefusion-homepage.html">Home</a>
+    <a href="/privacy.html" style="color: var(--g);">Privacy Policy</a>
+    <a href="/terms.html">Terms of Service</a>
+  </div>
+  <div>&copy; 2026 HopeFusion Africa. All rights reserved. Supporting African innovation.</div>
+</footer>
+
+<script type="module">
+  import { translations } from '/hopefusion-i18n.js';
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    // Check local auth if needed
+    if (window.HFA && window.HFA.Auth) {
+      const user = window.HFA.Auth.getUser();
+      console.log('[Privacy] Auth state:', user ? 'Logged in' : 'Guest');
+    }
+    
+    // Initialize i18n switcher
+    if (window.hfai18n) {
+      window.hfai18n.createSwitcher('lang-switcher');
+    }
+  });
+</script>
+</body>
+</html>

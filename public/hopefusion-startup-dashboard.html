@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- HFA_CONFIG_START -->
+<script>
+  window.HFA_CONFIG = {
+    API_URL: "http://localhost:3000",
+    AI_URL: "http://localhost:3001",
+    WS_URL: "ws://localhost:3000",
+    ENV: "development"
+  };
+</script>
+<!-- HFA_CONFIG_END -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Founder Hub — HopeFusion Africa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+/* ===== CORE DESIGN SYSTEM ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --g:#2DB562; --g-dark:#1e8a48; --g-deep:#0f5233; --g-t:rgba(45,181,98,0.1);
+  --gold:#E8A020; --gold-t:rgba(232,160,32,0.1);
+  --red:#E02020; --red-t:rgba(224,32,32,0.1);
+  --blk:#141414; --blk2:#1A1A1A; --blk3:#242424;
+  --white:#ffffff; --txt:rgba(255,255,255,0.85); --txt2:rgba(255,255,255,0.45);
+  --border:rgba(255,255,255,0.06); --sidebar-w:260px;
+  --font-h:'Sora',sans-serif; --font-b:'DM Sans',sans-serif; --font-m:'Space Grotesk',sans-serif;
+}
+body{font-family:var(--font-b);background:var(--blk);color:var(--txt);display:flex;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--blk)}
+::-webkit-scrollbar-thumb{background:var(--g);border-radius:2px}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;background:var(--blk2);
+  position:fixed;top:0;left:0;bottom:0;
+  display:flex;flex-direction:column;border-right:1px solid var(--border);
+  z-index:200;transition:transform .3s;
+}
+.sidebar-logo{
+  padding:24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+}
+.sidebar-brand{font-family:var(--font-h);font-size:16px;font-weight:600}
+.sidebar-brand .h{color:var(--g)}
+.sidebar-brand .f{color:var(--white)}
+.sidebar-brand .a{color:var(--gold);font-size:9px;display:block;letter-spacing:.18em;font-family:var(--font-m);font-weight:400;margin-top:-2px}
+
+.sidebar-section{padding:20px 20px 8px;font-size:10px;font-family:var(--font-m);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.25)}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 20px;margin:2px 12px;border-radius:10px;
+  color:rgba(255,255,255,0.5);font-size:14px;font-family:var(--font-m);
+  cursor:pointer;transition:all .2s;text-decoration:none;position:relative;
+}
+.nav-item:hover{color:var(--white);background:rgba(255,255,255,0.04)}
+.nav-item.active{color:var(--white);background:rgba(45,181,98,0.12);border:1px solid rgba(45,181,98,0.2)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--g);border-radius:0 3px 3px 0}
+.nav-item i{font-size:18px}
+.nav-badge{margin-left:auto;background:var(--g);color:var(--white);font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;font-family:var(--font-m)}
+.nav-badge.gold{background:var(--gold)}
+
+.sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid var(--border)}
+.founder-card{
+  display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  cursor:pointer;transition:background .2s;text-decoration:none;
+}
+.founder-card:hover{background:rgba(255,255,255,0.06)}
+.founder-avatar{
+  width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gold));
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--white);flex-shrink:0;
+}
+.founder-name{font-family:var(--font-h);font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.founder-role{font-size:11px;color:var(--txt2);font-family:var(--font-m)}
+
+/* ===== MAIN WORKSPACE ===== */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* ===== TOPBAR ===== */
+.topbar{
+  background:var(--blk2);border-bottom:1px solid var(--border);
+  padding:0 32px;height:66px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.page-title{font-family:var(--font-h);font-size:18px;font-weight:700;color:var(--white)}
+.page-subtitle{font-size:12.5px;color:var(--txt2);font-family:var(--font-m);margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.status-pill{
+  display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:100px;
+  background:var(--g-t);border:1px solid rgba(45,181,98,0.25);
+  font-size:12px;font-family:var(--font-m);font-weight:500;color:#6fdfa3;
+}
+.status-pill.unverified{background:var(--gold-t);border-color:rgba(232,160,32,0.25);color:var(--gold)}
+.status-dot{width:6px;height:6px;background:var(--g);border-radius:50%;animation:pulse 2s infinite}
+.status-pill.unverified .status-dot{background:var(--gold)}
+
+/* ===== CONTENT AREAS ===== */
+.content{padding:32px;flex:1}
+.content-section{display:none;animation:hfaFadeUp .4s ease both}
+.content-section.active{display:block}
+@keyframes hfaFadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== GLASS CARD ===== */
+.glass-card{
+  background:var(--blk2);border:1px solid var(--border);border-radius:16px;
+  padding:24px;margin-bottom:24px;position:relative;overflow:hidden;
+}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px}
+.card-title{font-family:var(--font-h);font-size:15px;font-weight:600;color:var(--white)}
+.card-desc{font-size:13px;color:var(--txt2);font-family:var(--font-m);margin-top:2px}
+
+/* ===== GRID SYSTEM ===== */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+
+/* ===== STAT CARD ===== */
+.stat-card{
+  background:linear-gradient(145deg,#1f1f1f,#161616);border:1px solid var(--border);
+  border-radius:14px;padding:20px;text-align:left;position:relative;
+}
+.stat-icon{
+  width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;margin-bottom:14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);
+}
+.stat-val{font-family:var(--font-h);font-size:24px;font-weight:700;color:var(--white)}
+.stat-label{font-size:12px;color:var(--txt2);margin-top:4px;font-family:var(--font-m)}
+
+/* ===== AI MATCH LIST ===== */
+.matches-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.match-card{
+  background:var(--blk2);border:1px solid var(--border);border-radius:14px;
+  padding:20px;display:flex;align-items:center;gap:20px;cursor:pointer;
+  transition:all .25s;position:relative;
+}
+.match-card:hover{transform:translateY(-2px);border-color:var(--g);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+.match-logo{
+  width:48px;height:48px;border-radius:10px;background:var(--g-t);color:var(--g);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:16px;font-weight:700;
+}
+.match-info{flex:1}
+.match-name{font-family:var(--font-h);font-size:14px;font-weight:600;color:var(--white)}
+.match-tagline{font-size:12px;color:var(--txt2);margin:4px 0 8px;line-height:1.4}
+.match-meta{display:flex;gap:12px;font-size:11px;font-family:var(--font-m);color:var(--g)}
+
+/* ===== INTERACTIVE TOOLS ===== */
+.input-group{margin-bottom:20px;text-align:left}
+.input-label{font-family:var(--font-m);font-size:12.5px;color:var(--txt);margin-bottom:8px;display:block}
+.input-field{
+  width:100%;padding:12px 16px;background:var(--blk3);border:1px solid var(--border);
+  border-radius:10px;color:var(--white);font-size:13.5px;outline:none;transition:border-color .2s;
+  font-family:var(--font-b);
+}
+.input-field:focus{border-color:var(--g)}
+.action-btn{
+  background:var(--g);color:var(--white);border:none;padding:12px 24px;border-radius:10px;
+  font-family:var(--font-h);font-size:13.5px;font-weight:600;cursor:pointer;
+  transition:all .2s;box-shadow:0 4px 14px rgba(45,181,98,0.25);
+  display:inline-flex;align-items:center;gap:8px;
+}
+.action-btn:hover{background:var(--g-dark);transform:translateY(-1px)}
+.action-btn:disabled{background:#555;cursor:not-allowed;box-shadow:none}
+
+/* Drag Drop Zone */
+.drag-zone{
+  border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;
+  cursor:pointer;background:rgba(255,255,255,0.01);transition:all .2s;position:relative;
+}
+.drag-zone:hover{border-color:var(--g);background:var(--g-t)}
+.drag-icon{font-size:32px;color:var(--g);margin-bottom:8px}
+
+/* Results Display */
+.ai-results{
+  background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;
+  padding:20px;margin-top:20px;display:none;animation:hfaFadeUp .3s ease;
+}
+.ai-results.show{display:block}
+
+/* Financial Modeler Projection Table */
+.table-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:20px}
+table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+th{background:rgba(255,255,255,0.02);padding:12px 16px;font-family:var(--font-m);font-size:11.5px;color:var(--txt2);border-bottom:1px solid var(--border)}
+td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--txt)}
+tr:last-child td{border-bottom:none}
+
+/* Compliance Checklist */
+.checklist-item{
+  display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-radius:10px;
+  background:rgba(255,255,255,0.02);border:1px solid var(--border);margin-bottom:10px;
+  transition:all .2s;
+}
+.checklist-item.done{border-color:rgba(45,181,98,0.3);background:rgba(45,181,98,0.02)}
+.checklist-check{
+  width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:2px;
+  font-size:11px;color:#fff;
+}
+.checklist-item.done .checklist-check{background:var(--g);border-color:var(--g)}
+.checklist-info{flex:1}
+.checklist-title{font-family:var(--font-h);font-size:13.5px;font-weight:600;color:var(--white)}
+.checklist-desc{font-size:11.5px;color:var(--txt2);margin-top:4px;line-height:1.4}
+.checklist-badge{
+  font-size:9.5px;font-family:var(--font-m);padding:2px 8px;border-radius:100px;
+  background:rgba(255,255,255,0.05);color:var(--txt2);display:inline-block;margin-top:6px;
+}
+
+/* Modals / Detail overlay */
+.overlay-pane{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
+  z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;
+  animation:hfaFadeIn .25s ease;
+}
+.overlay-pane.show{display:flex}
+.modal{
+  background:var(--blk2);border:1px solid var(--border);border-radius:20px;
+  width:100%;max-width:540px;max-height:85vh;overflow-y:auto;padding:32px;
+  box-shadow:0 16px 48px rgba(0,0,0,0.4);position:relative;
+  animation:hfaScaleUp .25s cubic-bezier(.34,1.56,.64,1);
+}
+.modal-close{
+  position:absolute;top:20px;right:20px;background:none;border:none;color:var(--txt2);
+  font-size:20px;cursor:pointer;transition:color .2s;
+}
+.modal-close:hover{color:var(--white)}
+@keyframes hfaFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes hfaScaleUp{from{transform:scale(0.93);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* score visualizer */
+.score-circle-big{display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative}
+
+/* Course Card */
+.course-card{
+  background:var(--blk2);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;display:flex;flex-direction:column;transition:transform .2s;
+}
+.course-card:hover{transform:translateY(-2px)}
+.course-thumb{width:100%;height:140px;object-fit:cover;background:#333}
+.course-body{padding:18px;display:flex;flex-direction:column;flex:1}
+.course-title{font-family:var(--font-h);font-size:14px;font-weight:600;color:var(--white);margin-bottom:8px;line-height:1.45}
+.course-desc{font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:14px}
+.course-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;font-size:11px;font-family:var(--font-m);color:var(--g)}
+
+@media(max-width:1100px){
+  .grid-2{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr}
+  .matches-grid{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .content{padding:20px 16px}
+}
+</style>
+<script src="/hopefusion-connection-layer.js"></script>
+<script src="/hopefusion-i18n.js" type="module"></script>
+
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#2DB562"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="HopeFusion"/>
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a class="sidebar-logo" href="hopefusion-homepage.html">
+    <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+      <path d="M8 28 Q5 18 11 10" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M13 30 Q9 19 16 11" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <path d="M18 31 Q14 20 21 12" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M23 30 Q19 19 25 12" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="21" cy="8" r="2.5" fill="#E02020"/>
+      <circle cx="26" cy="13" r="2.5" fill="#E02020"/>
+    </svg>
+    <div class="sidebar-brand"><span class="h">Hope</span><span class="f">Fusion</span><span class="a">A F R I C A</span></div>
+  </a>
+
+  <div class="sidebar-section">Main Dashboard</div>
+  <a class="nav-item active" onclick="switchNav('overview')"><i class="ti ti-layout-dashboard"></i> Overview</a>
+  <a class="nav-item" onclick="switchNav('matches')"><i class="ti ti-brain"></i> AI Matches <span class="nav-badge" id="match-badge">0</span></a>
+  <a class="nav-item" onclick="switchNav('pitch')"><i class="ti ti-chart-pie"></i> Pitch Analyzer</a>
+  <a class="nav-item" onclick="switchNav('financials')"><i class="ti ti-coins"></i> 18M Modeler</a>
+  <a class="nav-item" onclick="switchNav('compliance')"><i class="ti ti-scale"></i> Compliance</a>
+  <a class="nav-item" onclick="switchNav('grants')"><i class="ti ti-award"></i> Grants Discovery</a>
+  <a class="nav-item" onclick="switchNav('elearning')"><i class="ti ti-school"></i> Learning Hub</a>
+  <a class="nav-item" onclick="switchNav('escrow')"><i class="ti ti-wallet"></i> Web3 Escrows</a>
+
+  <div class="sidebar-section">Account</div>
+  <a class="nav-item" href="#" data-hfa-logout><i class="ti ti-logout"></i> Sign out</a>
+
+  <div class="sidebar-bottom">
+    <a class="founder-card" href="#">
+      <div class="founder-avatar" id="avatar-initials">F</div>
+      <div style="overflow:hidden">
+        <div class="founder-name" id="founder-fullname">Ama Korantema</div>
+        <div class="founder-role">Founder role</div>
+      </div>
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN CONTAINER -->
+<div class="main">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div>
+      <div class="page-title" id="sec-title">Dashboard Overview</div>
+      <div class="page-subtitle" id="sec-subtitle">Welcome back to your dashboard hub</div>
+    </div>
+    <div class="topbar-right">
+      <div id="lang-switcher" style="margin-right:12px"></div>
+      <button id="web3-connect-btn" class="action-btn" onclick="connectWalletUI()" style="padding:6px 14px;font-size:12px;background:none;border:1px solid var(--g);color:var(--g);box-shadow:none;display:inline-flex;align-items:center;gap:6px;border-radius:100px;">
+        <i class="ti ti-wallet"></i> Connect Wallet
+      </button>
+      <div class="status-pill" id="verification-pill">
+        <span class="status-dot"></span>
+        <span id="verification-text">Verified Founder</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- ====== SECTION 1: OVERVIEW ====== -->
+    <section class="content-section active" id="sec-overview">
+      <div class="glass-card" style="padding:32px;background:linear-gradient(135deg,rgba(45,181,98,0.06),rgba(0,0,0,0))">
+        <div style="max-width:600px">
+          <h2 style="font-family:var(--font-h);font-size:24px;font-weight:700;color:#fff;margin-bottom:8px">
+            Build your venture, Ama 🚀
+          </h2>
+          <p style="font-size:14px;color:var(--txt2);line-height:1.75;margin-bottom:24px">
+            Welcome to your control center. Below, you can access advanced Claude AI tools to prepare your pitch, model your financials, discover impact grants, and connect with compatible investors.
+          </p>
+        </div>
+        <div class="grid-3">
+          <div class="stat-card">
+            <div class="stat-icon" style="color:var(--g)"><i class="ti ti-brain"></i></div>
+            <div class="stat-val" id="stat-match-count">0</div>
+            <div class="stat-label">AI Investors matched</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="color:var(--gold)"><i class="ti ti-award"></i></div>
+            <div class="stat-val" id="stat-compliance-progress">0%</div>
+            <div class="stat-label">Compliance checklist done</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="color:var(--red)"><i class="ti ti-coins"></i></div>
+            <div class="stat-val" id="stat-funding-goal">$0</div>
+            <div class="stat-label">Funding goal sought</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Startup info card -->
+        <div class="glass-card">
+          <div class="card-header"><div class="card-title">Startup profile</div></div>
+          <div style="display:grid;gap:14px;font-size:14px">
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:10px">
+              <span class="input-label" style="margin:0">VENTURE NAME</span>
+              <strong style="color:#fff" id="prof-startup-name">Loading...</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:10px">
+              <span class="input-label" style="margin:0">SECTOR / INDUSTRY</span>
+              <strong style="color:#fff" id="prof-sector">Loading...</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:10px">
+              <span class="input-label" style="margin:0">CURRENT STAGE</span>
+              <strong style="color:#fff" id="prof-stage">Loading...</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:10px">
+              <span class="input-label" style="margin:0">OPERATIONS COUNTRY</span>
+              <strong style="color:#fff" id="prof-country">Loading...</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="glass-card">
+          <div class="card-header"><div class="card-title">AI Actions center</div></div>
+          <div style="display:grid;gap:12px">
+            <button class="action-btn" onclick="switchNav('pitch')" style="width:100%;justify-content:center"><i class="ti ti-chart-pie"></i> Analyze pitch deck with Claude</button>
+            <button class="action-btn" onclick="switchNav('financials')" style="width:100%;justify-content:center;background:none;border:1.5px solid var(--border);box-shadow:none"><i class="ti ti-coins"></i> Model 18-month financial projections</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION 2: AI MATCHES ====== -->
+    <section class="content-section" id="sec-matches">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">AI Investor Matches</div>
+            <div class="card-desc">Ranked dynamically by our Claude engine matching thesis parameters.</div>
+          </div>
+        </div>
+        <div class="matches-grid" id="matches-container">
+          <!-- populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION 3: PITCH DECK ANALYZER ====== -->
+    <section class="content-section" id="sec-pitch">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">AI Pitch Deck Analysis</div>
+            <div class="card-desc">Enter a pitch overview or paste summaries to receive world-class feedback from African-market analysts.</div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">PASTE PITCH DECK CONTENT / EXECUTIVE SUMMARY</label>
+          <textarea id="pitch-input-text" class="input-field" style="min-height:160px;resize:vertical" 
+            placeholder="Paste your problem, solution, market size, business model, and traction details here to let Claude analyze your metrics..."></textarea>
+        </div>
+
+        <button class="action-btn" id="btn-run-pitch" onclick="analyzePitchDeck()"><i class="ti ti-sparkles"></i> Run Claude pitch analysis</button>
+
+        <div class="ai-results" id="pitch-results">
+          <h3 style="font-family:var(--font-h);color:#fff;font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px"><i class="ti ti-award" style="color:var(--g)"></i> Analysis scorecard</h3>
+          
+          <div class="grid-2">
+            <div class="score-circle-big" id="pitch-score-ring">
+              <!-- rendered score ring -->
+            </div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:#fff" id="pitch-readiness-label">Ready to present</div>
+              <p style="font-size:13px;color:var(--txt2);margin-top:6px;line-height:1.6" id="pitch-summary-text"></p>
+            </div>
+          </div>
+
+          <div style="margin-top:20px;display:grid;gap:12px">
+            <div style="background:rgba(255,255,255,0.02);padding:14px;border-radius:10px;border-left:4px solid var(--g)">
+              <div style="font-size:13px;font-weight:700;color:#fff">TOP STRENGTHS</div>
+              <ul style="font-size:12.5px;color:var(--txt);margin-top:6px;padding-left:16px;line-height:1.5" id="pitch-strengths-list"></ul>
+            </div>
+            <div style="background:rgba(255,255,255,0.02);padding:14px;border-radius:10px;border-left:4px solid var(--red)">
+              <div style="font-size:13px;font-weight:700;color:#fff">CRITICAL GAPS</div>
+              <ul style="font-size:12.5px;color:var(--txt);margin-top:6px;padding-left:16px;line-height:1.5" id="pitch-gaps-list"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION 4: FINANCIAL MODELER ====== -->
+    <section class="content-section" id="sec-financials">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">18-Month Financial Modeler</div>
+            <div class="card-desc">Construct conservative, realistic monthly budgets adjusted for African currency and operation cycles.</div>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="input-group">
+            <label class="input-label">STARTING MONTHLY REVENUE (USD)</label>
+            <input type="number" id="fin-mrr" class="input-field" value="2000" />
+          </div>
+          <div class="input-group">
+            <label class="input-label">MONTHLY TEAM BURN RATE (USD)</label>
+            <input type="number" id="fin-burn" class="input-field" value="5000" />
+          </div>
+          <div class="input-group">
+            <label class="input-label">EXPECTED REVENUE GROWTH (%)</label>
+            <input type="number" id="fin-growth" class="input-field" value="10" />
+          </div>
+        </div>
+
+        <button class="action-btn" id="btn-run-finance" onclick="buildFinancialProjections()"><i class="ti ti-coins"></i> Model projections</button>
+
+        <div class="ai-results" id="finance-results">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="font-family:var(--font-h);color:#fff;font-size:15px">Projections model overview</h3>
+            <span class="status-pill" style="background:var(--gold-t);color:var(--gold);border-color:rgba(232,160,32,0.2)" id="finance-runway-badge">12 months runway</span>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>MONTH</th>
+                  <th>REVENUE (USD)</th>
+                  <th>EXPENSES (USD)</th>
+                  <th>NET CASH FLOW</th>
+                  <th>RUNWAY STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="finance-table-body">
+                <!-- dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION 5: COMPLIANCE ADVISOR ====== -->
+    <section class="content-section" id="sec-compliance">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Regulatory Compliance Advisor</div>
+            <div class="card-desc">Check corporate and tax items required for startups active in your country.</div>
+          </div>
+        </div>
+
+        <div id="compliance-checklist-container">
+          <!-- checklist rendered here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION 6: GRANTS DISCOVERY ====== -->
+    <section class="content-section" id="sec-grants">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Grants Discovery & Applications</div>
+            <div class="card-desc">AI-suggested, non-dilutive impact funding mapped directly from your agritech/tech tag profiles.</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>GRANT PROGRAMME</th>
+                <th>ORGANISATION</th>
+                <th>MAX FUNDING</th>
+                <th>MATCH SCORE</th>
+                <th>URGENCY</th>
+              </tr>
+            </thead>
+            <tbody id="grants-table-body">
+              <!-- dynamic rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION 7: E-LEARNING ====== -->
+    <section class="content-section" id="sec-elearning">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">E-Learning & Founder Development</div>
+            <div class="card-desc">Enroll in courses designed specifically to navigate investment and expansion barriers on the continent.</div>
+          </div>
+        </div>
+        <div class="grid-3" id="courses-container">
+          <!-- courses -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION 8: WEB3 ESCROW DEALS ====== -->
+    <section class="content-section" id="sec-escrow">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Milestone Escrows (Web3)</div>
+            <div class="card-desc">Interact with your investor-deployed milestone contracts and submit evidence to release MATIC/funds.</div>
+          </div>
+          <button id="web3-sec-connect-btn" class="action-btn" onclick="connectWalletUI()" style="background:none;border:1px solid var(--g);color:var(--g);box-shadow:none;display:inline-flex;align-items:center;gap:6px;border-radius:100px;">
+            <i class="ti ti-wallet"></i> Connect Wallet
+          </button>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="stat-card">
+            <div class="stat-val" id="web3-wallet-address" style="font-family:'Space Grotesk',sans-serif;font-size:15px;color:#fff">Disconnected</div>
+            <div class="stat-label">Connected Wallet Address</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" style="font-family:'Space Grotesk',sans-serif;font-size:15px;color:var(--gold)">0x5FbDB231567...0aa3</div>
+            <div class="stat-label">Deployed Escrow Smart Contract</div>
+          </div>
+        </div>
+
+        <!-- DEPLOYED ESCROWS FOR FOUNDER -->
+        <div class="glass-card" style="border-style:dashed;background:rgba(255,255,255,0.01)">
+          <div class="card-title" style="margin-bottom:16px; font-family:var(--font-h); font-size:15px; font-weight:600; color:var(--white)"><i class="ti ti-briefcase" style="color:var(--g)"></i> Active Funding Escrows</div>
+          <div id="escrows-list-container" style="display:flex;flex-direction:column;gap:18px">
+            <div style="text-align:center;padding:32px;color:var(--txt2);font-family:var(--font-b)">Connect wallet to check your deployed investor deals.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ====== MATCH OVERLAY DETAIL VIEW ====== -->
+<div class="overlay-pane" id="match-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeMatchOverlay()"><i class="ti ti-x"></i></button>
+    <div style="text-align:center">
+      <div class="match-logo" style="width:64px;height:64px;border-radius:12px;font-size:22px;margin:0 auto 16px" id="modal-logo">OI</div>
+      <h3 class="modal-title" style="font-size:20px;color:#fff" id="modal-name">Oasis Impact Ventures</h3>
+      <div class="status-pill" style="margin:10px auto;display:inline-flex;background:var(--g-t);color:var(--g);border-color:rgba(45,181,98,0.2)" id="modal-badge-score">98% AI Match</div>
+    </div>
+    
+    <div style="margin-top:24px;display:grid;gap:18px">
+      <div>
+        <div class="input-label">INVESTMENT THESIS</div>
+        <p style="font-size:13.5px;color:var(--txt);line-height:1.65" id="modal-thesis">...</p>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:16px">
+        <div class="input-label">AI COMPATIBILITY STRENGTHS</div>
+        <ul style="font-size:12.5px;color:var(--txt);padding-left:16px;line-height:1.6" id="modal-reasons-list"></ul>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <span class="input-label">TICKET RANGE</span>
+          <strong id="modal-ticket" style="color:#fff">$50K - $500K</strong>
+        </div>
+        <div>
+          <span class="input-label">INSTRUMENTS</span>
+          <strong id="modal-instruments" style="color:#fff">SAFE, Note</strong>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:32px;display:flex;gap:12px">
+      <button class="action-btn" style="flex:1;justify-content:center" onclick="HFA.UI.toast('Message connection opened!')"><i class="ti ti-message"></i> Send message</button>
+      <button class="action-btn" style="flex:1;justify-content:center;background:none;border:1.5px solid var(--border);box-shadow:none" onclick="HFA.UI.toast('Meeting scheduler opened!')"><i class="ti ti-calendar"></i> Book session</button>
+    </div>
+  </div>
+</div>
+
+<!-- JAVASCRIPT LOGIC -->
+<script>
+// Protected route guard
+HFA.Auth.guard(['startup']);
+
+let activeStartup = null;
+let activeMatches = [];
+
+// Init on load
+document.addEventListener('DOMContentLoaded', async () => {
+  HFA.UI.showLoading('matches-container', 'Loading matched investors...');
+  HFA.UI.showLoading('compliance-checklist-container', 'Loading compliance checklist...');
+  HFA.UI.showLoading('courses-container', 'Loading courses...');
+  
+  try {
+    const dash = await HFA.Data.loadDashboard();
+    activeStartup = dash.profile?.startup_profile;
+    
+    // Set UI details
+    if (dash.profile) {
+      document.getElementById('founder-fullname').textContent = `${dash.profile.first_name} ${dash.profile.last_name}`;
+      document.getElementById('avatar-initials').textContent = `${dash.profile.first_name?.[0] || ''}${dash.profile.last_name?.[0] || ''}`;
+      
+      const unverified = !dash.profile.is_verified;
+      document.getElementById('verification-pill').className = 'status-pill' + (unverified ? ' unverified' : '');
+      document.getElementById('verification-text').textContent = unverified ? 'Verification pending' : 'Verified Founder';
+    }
+
+    if (activeStartup) {
+      document.getElementById('prof-startup-name').textContent = activeStartup.name;
+      document.getElementById('prof-sector').textContent = activeStartup.sector;
+      document.getElementById('prof-stage').textContent = activeStartup.stage.toUpperCase().replace('_', ' ');
+      document.getElementById('prof-country').textContent = activeStartup.country;
+      document.getElementById('stat-funding-goal').textContent = HFA.UI.formatCurrency(activeStartup.funding_goal);
+      
+      // Load AI matching & checklist
+      await loadAIMatches();
+      await loadComplianceChecklist();
+      await loadGrantsTable();
+      await loadCourses();
+    }
+  } catch (err) {
+    console.error('Dashboard boot error:', err);
+    HFA.UI.showError('matches-container', 'Failed to load details.', 'window.location.reload');
+  }
+});
+
+// Sidebar switch section
+function switchNav(sectionId) {
+  document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+  document.getElementById('sec-' + sectionId).classList.add('active');
+  
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(item => {
+    const text = item.textContent.toLowerCase();
+    return text.includes(sectionId.replace('elearning', 'learning').replace('escrow', 'escrows'));
+  });
+  if (activeNav) activeNav.classList.add('active');
+
+  // Title update
+  const titles = {
+    overview: 'Founder Dashboard Overview',
+    matches: 'AI Compatibility Matches',
+    pitch: 'AI Pitch Deck Analyst',
+    financials: '18-Month Financial Projection Modeler',
+    compliance: 'Regulatory Compliance Advisor',
+    grants: 'Matched Grants Discovery',
+    elearning: 'E-Learning & Founder Masterclasses',
+    escrow: 'Milestone-based Web3 Escrows'
+  };
+  document.getElementById('sec-title').textContent = titles[sectionId] || 'Founder Hub';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── 1. AI MATCHING ─────────────────────────────────────────
+async function loadAIMatches() {
+  try {
+    const res = await HFA.Data.loadMatches({ minScore: 60 });
+    activeMatches = res.data || [];
+    document.getElementById('stat-match-count').textContent = activeMatches.length;
+    document.getElementById('match-badge').textContent = activeMatches.length;
+
+    const cont = document.getElementById('matches-container');
+    if (!activeMatches.length) {
+      HFA.UI.showEmpty('matches-container', { icon: '🤖', title: 'No AI matches found', subtitle: 'Refine your pitch text to trigger matches.' });
+      return;
+    }
+
+    cont.innerHTML = activeMatches.map(m => {
+      const inv = m.investor_detail;
+      const initials = inv ? `${inv.first_name?.[0] || ''}${inv.last_name?.[0] || ''}` : 'OI';
+      return `
+        <div class="match-card" onclick="openMatchOverlay('${m.id}')">
+          <div class="match-logo">${initials}</div>
+          <div class="match-info">
+            <div class="match-name">${inv?.firm || 'Impact Ventures'}</div>
+            <div class="match-tagline">Focus: ${inv?.sectors?.join(', ') || 'Agritech'}</div>
+            <div class="match-meta">
+              <span><i class="ti ti-sparkles"></i> ${m.ai_score}% Match</span>
+              <span style="color:var(--txt2)">·</span>
+              <span style="color:var(--gold)">${m.ai_grade}</span>
+            </div>
+          </div>
+          <div style="flex-shrink:0">
+            ${HFA.UI.renderScoreRing(m.ai_score, m.ai_score > 90 ? 'var(--g)' : 'var(--gold)', 54)}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    HFA.UI.showError('matches-container', 'Failed to load matched investors.');
+  }
+}
+
+function openMatchOverlay(matchId) {
+  const match = activeMatches.find(m => m.id === matchId);
+  if (!match) return;
+
+  const inv = match.investor_detail;
+  document.getElementById('modal-name').textContent = inv?.firm || 'Oasis Impact Ventures';
+  document.getElementById('modal-logo').textContent = inv ? `${inv.first_name?.[0] || ''}${inv.last_name?.[0] || ''}` : 'OI';
+  document.getElementById('modal-badge-score').textContent = `${match.ai_score}% AI Match (${match.ai_grade})`;
+  
+  // Custom thesis
+  document.getElementById('modal-thesis').textContent = inv?.thesis || 'Oasis Ventures is a premier impact fund backing West African startups working in agritech and food security.';
+  
+  // Strengths
+  const reasonsList = document.getElementById('modal-reasons-list');
+  reasonsList.innerHTML = (match.ai_reasons || [
+    'Perfect sector fit within agritech.',
+    'Stage fit matches current MVP operations.',
+    'Ticket size aligns with budget projections.'
+  ]).map(r => `<li style="margin-bottom:6px">${r}</li>`).join('');
+
+  document.getElementById('match-overlay').classList.add('show');
+}
+
+function closeMatchOverlay() {
+  document.getElementById('match-overlay').classList.remove('show');
+}
+
+// ─── 2. AI PITCH DECK ANALYZER ──────────────────────────────
+async function analyzePitchDeck() {
+  const text = document.getElementById('pitch-input-text').value.trim();
+  if (!text) {
+    alert('Please enter your pitch overview or copy deck slides content.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-run-pitch');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:hfaSpin .8s linear infinite"></i> Analyzing...';
+
+  try {
+    const res = await HFA.AI.analyzePitch(text, activeStartup || {});
+    const r = res.data;
+    
+    if (r) {
+      document.getElementById('pitch-score-ring').innerHTML = HFA.UI.renderScoreRing(r.overall_score, '#2DB562', 120);
+      document.getElementById('pitch-readiness-label').textContent = `READINESS: ${r.investor_readiness.toUpperCase()}`;
+      document.getElementById('pitch-summary-text').textContent = r.executive_summary || 'Analysis complete.';
+      
+      // Strengths & gaps
+      document.getElementById('pitch-strengths-list').innerHTML = (r.top_strengths || []).map(s => `<li>${s}</li>`).join('');
+      document.getElementById('pitch-gaps-list').innerHTML = (r.critical_gaps || []).map(g => `<li>${g}</li>`).join('');
+      
+      document.getElementById('pitch-results').classList.add('show');
+      HFA.UI.toast('Pitch analysis completed successfully!');
+    }
+  } catch (err) {
+    alert('Failed to analyze pitch deck: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-sparkles"></i> Run Claude pitch analysis';
+  }
+}
+
+// ─── 3. FINANCIAL MODELER ───────────────────────────────────
+async function buildFinancialProjections() {
+  const mrr = parseInt(document.getElementById('fin-mrr').value) || 2000;
+  const burn = parseInt(document.getElementById('fin-burn').value) || 5000;
+  const growth = parseInt(document.getElementById('fin-growth').value) || 10;
+
+  const btn = document.getElementById('btn-run-finance');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:hfaSpin .8s linear infinite"></i> Modeling...';
+
+  try {
+    const res = await HFA.AI.buildFinancialModel({
+      ...activeStartup,
+      mrr: mrr,
+      annual_revenue: mrr * 12,
+      team_burn: burn
+    }, 18);
+    const d = res.data;
+
+    if (d && d.projections) {
+      // Runway
+      document.getElementById('finance-runway-badge').textContent = `${d.runway_months} months runway`;
+      
+      // Table rows
+      const tbody = document.getElementById('finance-table-body');
+      tbody.innerHTML = d.projections.map(p => `
+        <tr>
+          <td><strong>Month ${p.month}</strong></td>
+          <td style="color:var(--g)">${HFA.UI.formatCurrency(p.revenue)}</td>
+          <td style="color:var(--red)">${HFA.UI.formatCurrency(p.expenses)}</td>
+          <td style="${p.net >= 0 ? 'color:var(--g)' : 'color:var(--red)'}">${HFA.UI.formatCurrency(p.net)}</td>
+          <td><span class="status-pill" style="${p.cumulative_cash > 0 ? 'background:var(--g-t);color:#6fdfa3;border-color:transparent' : 'background:var(--red-t);color:var(--red);border-color:transparent'}">${p.cumulative_cash > 0 ? 'Healthy' : 'Deficit'}</span></td>
+        </tr>
+      `).join('');
+
+      document.getElementById('finance-results').classList.add('show');
+      HFA.UI.toast('18-Month financial model built!');
+    }
+  } catch (err) {
+    alert('Failed to model projections: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-coins"></i> Model projections';
+  }
+}
+
+// ─── 4. COMPLIANCE CHECKLIST ────────────────────────────────
+let complianceItems = [];
+async function loadComplianceChecklist() {
+  try {
+    const res = await HFA.API.get(`/users/me`); // checks profile & items
+    const country = activeStartup?.country || 'Ghana';
+    
+    // Call AI compliance checklist
+    const compRes = await HFA.AI.checkCompliance(activeStartup || {}, country);
+    complianceItems = compRes.data?.items || [];
+    
+    const cont = document.getElementById('compliance-checklist-container');
+    if (!complianceItems.length) {
+      HFA.UI.showEmpty('compliance-checklist-container', { icon: '⚖️', title: 'No checklist requirements', subtitle: 'Your sector has no flagged compliance tasks.' });
+      return;
+    }
+
+    renderComplianceChecklist();
+  } catch (err) {
+    HFA.UI.showError('compliance-checklist-container', 'Failed to load checklist advisor.');
+  }
+}
+
+function renderComplianceChecklist() {
+  const cont = document.getElementById('compliance-checklist-container');
+  let doneCount = 0;
+  
+  cont.innerHTML = complianceItems.map((item, idx) => {
+    const isDone = item.status?.toLowerCase() === 'done';
+    if (isDone) doneCount++;
+    return `
+      <div class="checklist-item ${isDone ? 'done' : ''}" onclick="toggleCheck(${idx})">
+        <div class="checklist-check">
+          ${isDone ? '✓' : ''}
+        </div>
+        <div class="checklist-info">
+          <div class="checklist-title">${item.area}</div>
+          <div class="checklist-desc">${item.description}</div>
+          <div class="checklist-badge">${item.urgency || 'Required'} · Deadline: ${item.deadline || 'Immediate'}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Update compliance stat
+  const progress = Math.round((doneCount / complianceItems.length) * 100) || 0;
+  document.getElementById('stat-compliance-progress').textContent = `${progress}%`;
+}
+
+function toggleCheck(idx) {
+  const item = complianceItems[idx];
+  if (!item) return;
+  item.status = item.status?.toLowerCase() === 'done' ? 'required' : 'done';
+  renderComplianceChecklist();
+  HFA.UI.toast(`Compliance task status updated.`);
+}
+
+// ─── 5. GRANTS DISCOVERY ────────────────────────────────────
+async function loadGrantsTable() {
+  try {
+    const res = await HFA.AI.discoverGrants(activeStartup || {});
+    const grants = res.data?.grants || [];
+    
+    const tbody = document.getElementById('grants-table-body');
+    if (!grants.length) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--txt2);padding:32px">No matching grants found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = grants.map(g => `
+      <tr>
+        <td><strong>${g.name}</strong></td>
+        <td>${g.organisation}</td>
+        <td style="color:var(--g)">${g.amount}</td>
+        <td style="font-weight:600"><i class="ti ti-sparkles" style="color:var(--g)"></i> ${g.match_score}%</td>
+        <td><span class="status-pill" style="${g.urgency?.includes('now') ? 'background:var(--red-t);color:var(--red);border-color:transparent' : 'background:var(--gold-t);color:var(--gold);border-color:transparent'}">${g.urgency || 'Apply soon'}</span></td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error('Grants discovery error:', err);
+  }
+}
+
+// ─── 6. E-LEARNING COURSES ──────────────────────────────────
+async function loadCourses() {
+  try {
+    const res = await HFA.API.get('/v1/grants'); // utilizing dynamic v1 mock loader
+    
+    // Custom seed course data
+    const courses = [
+      { title: 'Succeeding in West African Agritech', desc: 'Learn the regulatory, cultural, and logistics distribution strategies required to scale solutions in Ghana and Nigeria.', enrollments: '142 enrolled', time: '3h course' },
+      { title: 'Pitching for Impact: Grants and SAFEs', desc: 'Masterclass on how to draft problem statements and ESG goals to capture international grant funding.', enrollments: '308 enrolled', time: '2h course' }
+    ];
+
+    const cont = document.getElementById('courses-container');
+    cont.innerHTML = courses.map(c => `
+      <div class="course-card">
+        <div class="course-thumb" style="background: linear-gradient(135deg, var(--g-deep), var(--blk3)); display:flex; align-items:center; justify-content:center; font-size:32px">🏫</div>
+        <div class="course-body">
+          <div class="course-title">${c.title}</div>
+          <div class="course-desc">${c.desc}</div>
+          <div class="course-foot">
+            <span><i class="ti ti-users"></i> ${c.enrollments}</span>
+            <span><i class="ti ti-clock"></i> ${c.time}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    HFA.UI.showError('courses-container', 'Failed to load development courses.');
+  }
+}
+
+/* --- WEB3 ESCROW MANAGEMENT --- */
+let connectedAddress = null;
+
+async function connectWalletUI() {
+  try {
+    const address = await HFA.Web3.connectWallet();
+    connectedAddress = address;
+    document.getElementById('web3-wallet-address').textContent = address.slice(0, 6) + '...' + address.slice(-4);
+    
+    const connectBtns = [
+      document.getElementById('web3-connect-btn'),
+      document.getElementById('web3-sec-connect-btn')
+    ];
+    connectBtns.forEach(btn => {
+      if (btn) {
+        btn.innerHTML = `<i class="ti ti-wallet"></i> Connected`;
+        btn.style.borderColor = 'transparent';
+        btn.style.background = 'var(--g)';
+        btn.style.color = '#fff';
+      }
+    });
+
+    HFA.UI.toast("Wallet connected successfully!");
+    loadEscrowDeals();
+  } catch (err) {
+    console.error("Wallet connection failed:", err);
+    HFA.UI.toast(err.message || "Failed to connect wallet.", "error");
+  }
+}
+
+async function loadEscrowDeals() {
+  if (!connectedAddress) return;
+  const container = document.getElementById('escrows-list-container');
+  HFA.UI.showLoading('escrows-list-container', 'Loading active deals...');
+
+  try {
+    const list = await HFA.Web3.loadUserEscrows(connectedAddress, true);
+    if (list.length === 0) {
+      HFA.UI.showEmpty('escrows-list-container', {
+        icon: '💼',
+        title: 'No active Web3 deals',
+        subtitle: 'Once an investor deploys a milestone escrow deal for you, it will appear here.'
+      });
+      return;
+    }
+
+    let html = `<div style="display:flex;flex-direction:column;gap:18px">`;
+    for (const deal of list) {
+      html += `
+        <div style="border:1.5px solid var(--border);border-radius:12px;padding:16px;background:rgba(255,255,255,0.02);text-align:left">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div>
+              <div style="font-family:var(--font-h);font-size:15px;font-weight:700;color:#fff">${deal.startupName}</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:11.5px;color:var(--txt2)">REF: ${deal.dealRef} · ID: ${deal.id.slice(0, 10)}...</div>
+            </div>
+            <span style="margin-left:auto;background:var(--g-t);color:var(--g);font-size:12px;font-weight:600;padding:4px 10px;border-radius:100px">${deal.status}</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;background:rgba(255,255,255,0.01);padding:12px;border-radius:8px;margin-bottom:14px;border:1px solid var(--border)">
+            <div>
+              <div style="font-size:11px;color:var(--txt2)">Total Escrowed Value</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#fff">${deal.totalAmount} MATIC</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--txt2)">Released Funds</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--g)">${deal.releasedAmount} MATIC</div>
+            </div>
+          </div>
+
+          <div style="font-size:12px;font-weight:600;color:var(--txt);margin-bottom:8px">Milestones Progress</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+      `;
+
+      for (let i = 0; i < deal.milestoneCount; i++) {
+        const mil = await HFA.Web3.getMilestoneDetails(deal.id, i);
+        const statusColors = {
+          Locked: { bg: 'rgba(255,255,255,0.05)', txt: 'var(--txt2)' },
+          PendingEvidence: { bg: 'rgba(232,160,32,0.08)', txt: 'var(--gold)' },
+          UnderReview: { bg: 'rgba(79,142,247,0.08)', txt: '#4f8ef7' },
+          Released: { bg: 'var(--g-t)', txt: 'var(--g)' },
+          Rejected: { bg: 'rgba(224,32,32,0.08)', txt: 'var(--red)' }
+        };
+        const st = statusColors[mil.status] || statusColors.Locked;
+
+        html += `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;background:rgba(0,0,0,0.2);border:1px dashed var(--border)">
+            <div>
+              <div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#fff">${mil.title}</div>
+              <div style="font-size:11px;color:var(--txt2)">${mil.amount} MATIC · Due: ${new Date(mil.dueDate).toLocaleDateString()}</div>
+              ${mil.evidenceURI ? `<div style="font-size:11px;color:var(--g);margin-top:2px"><i class="ti ti-link"></i> Proof: <a href="${mil.evidenceURI}" target="_blank" style="color:var(--g);text-decoration:underline">View Evidence</a></div>` : ''}
+            </div>
+            
+            <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+              <span style="background:${st.bg};color:${st.txt};font-size:11px;font-weight:600;padding:3px 8px;border-radius:100px">${mil.status}</span>
+              ${(mil.status === 'Locked' || mil.status === 'Rejected') ? `
+                <button onclick="openEvidenceSubmitUI('${deal.id}', ${i})" style="background:var(--g);color:#fff;border:none;font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-h)">Submit Proof</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      html += `</div></div>`;
+    }
+    html += `</div>`;
+    container.innerHTML = html;
+  } catch (err) {
+    console.error("Load Escrows Failed:", err);
+    HFA.UI.showError('escrows-list-container', 'Failed to retrieve active funding escrows.');
+  }
+}
+
+function openEvidenceSubmitUI(escrowId, index) {
+  document.getElementById('evidence-escrow-id').value = escrowId;
+  document.getElementById('evidence-mil-idx').value = index;
+  document.getElementById('evidence-uri-field').value = '';
+  document.getElementById('evidence-overlay').classList.add('show');
+}
+
+function closeEvidenceOverlay() {
+  document.getElementById('evidence-overlay').classList.remove('show');
+}
+
+async function handleEvidenceSubmit(e) {
+  e.preventDefault();
+  const escrowId = document.getElementById('evidence-escrow-id').value;
+  const index = document.getElementById('evidence-mil-idx').value;
+  const uri = document.getElementById('evidence-uri-field').value.trim();
+
+  closeEvidenceOverlay();
+  HFA.UI.toast("Submitting proof transaction...");
+
+  try {
+    await HFA.Web3.submitMilestone(escrowId, index, uri);
+    HFA.UI.toast("Milestone proof submitted successfully!");
+    loadEscrowDeals();
+  } catch (err) {
+    console.error("Submit Evidence Failed:", err);
+    HFA.UI.toast(err.message || "Failed to submit proof", "error");
+  }
+}
+</script>
+
+<!-- ====== EVIDENCE SUBMISSION OVERLAY ====== -->
+<div class="overlay-pane" id="evidence-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEvidenceOverlay()"><i class="ti ti-x"></i></button>
+    <div style="text-align:center;margin-bottom:20px">
+      <h3 class="modal-title" style="font-size:18px;color:#fff;font-family:var(--font-h)"><i class="ti ti-link" style="color:var(--g)"></i> Submit Milestone Proof</h3>
+      <div style="font-size:12.5px;color:var(--txt2);margin-top:6px;font-family:var(--font-b)">Please host your document proof publicly and paste the link below.</div>
+    </div>
+    <form id="evidence-form" onsubmit="handleEvidenceSubmit(event)">
+      <input type="hidden" id="evidence-escrow-id"/>
+      <input type="hidden" id="evidence-mil-idx"/>
+      <div class="input-group">
+        <label class="input-label">Evidence Link / hosted URL</label>
+        <input type="text" id="evidence-uri-field" placeholder="e.g. https://docsend.com/view/... or ipfs://..." required class="input-field" style="font-family:'Space Grotesk',sans-serif"/>
+      </div>
+      <button type="submit" class="action-btn" style="width:100%;justify-content:center;font-family:var(--font-h)">
+        🚀 Submit Proof to Smart Contract
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  /* ===== AUTH GUARD ===== */
+  (function() {
+    if (!window.HFA || !window.HFA.Auth.isLoggedIn()) {
+      window.location.replace('/hopefusion-homepage.html?session=required');
+      return;
+    }
+    const role = window.HFA.Auth.getRole();
+    if (role === 'investor') {
+      window.location.replace('/hopefusion-investor-dashboard.html');
+    } else if (role === 'admin') {
+      window.location.replace('/hopefusion-admin-dashboard.html');
+    }
+  })();
+
+  window.addEventListener('load', () => {
+    if (window.hfai18n) {
+      window.hfai18n.createSwitcher('lang-switcher');
+    }
+    if (window.ethereum && window.ethereum.selectedAddress) {
+      connectWalletUI();
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- HFA_CONFIG_START -->
+<script>
+  window.HFA_CONFIG = {
+    API_URL: "http://localhost:3000",
+    AI_URL: "http://localhost:3001",
+    WS_URL: "ws://localhost:3000",
+    ENV: "development"
+  };
+</script>
+<!-- HFA_CONFIG_END -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>E-Learning Hub — HopeFusion Africa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<script src="/hopefusion-connection-layer.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --g:#2DB562;--g-dark:#1e8a48;--g-deep:#0f5233;--g-t:#E9F9EF;
+  --gold:#E8A020;--gold-t:#FEF7E8;
+  --red:#E02020;--red-t:#fde8e8;
+  --purple:#7c3aed;--purple-t:#f3e8ff;
+  --blue:#2563eb;--blue-t:#eef3fe;
+  --blk:#1A1A1A;--blk2:#222;
+  --bg:#F4F5F7;--white:#fff;--txt:#3D3D3D;--txt2:#6b6b6b;
+  --border:rgba(255,255,255,0.07);--border-l:#e4e4e4;
+  --sidebar:240px;
+  --font-h:'Sora',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'Space Grotesk',sans-serif;
+}
+body{font-family:var(--font-b);background:var(--bg);color:var(--txt);display:flex;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--blk)}
+::-webkit-scrollbar-thumb{background:var(--g);border-radius:2px}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--blk);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;border-right:1px solid var(--border);z-index:200}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;text-decoration:none}
+.sidebar-brand{font-family:var(--font-h);font-size:15px;font-weight:600}
+.sidebar-brand .h{color:var(--g)}.sidebar-brand .f{color:var(--white)}
+.sidebar-brand .a{color:var(--gold);font-size:9px;display:block;letter-spacing:.18em;font-family:var(--font-m);font-weight:400}
+.sidebar-section{padding:16px 12px 8px;font-size:10px;font-family:var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.25)}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 16px;margin:2px 8px;border-radius:10px;color:rgba(255,255,255,0.45);font-size:13.5px;font-family:var(--font-m);cursor:pointer;transition:all .2s;text-decoration:none;position:relative}
+.nav-item:hover{color:var(--white);background:rgba(255,255,255,0.06)}
+.nav-item.active{color:var(--white);background:rgba(45,181,98,0.15)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--g);border-radius:0 3px 3px 0}
+.nav-item i{font-size:18px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--g);color:var(--white);font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px}
+.sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border)}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gold));display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--white);flex-shrink:0}
+.user-name{font-family:var(--font-h);font-size:13px;font-weight:600;color:var(--white)}
+.user-role{font-size:11px;color:rgba(255,255,255,0.35);font-family:var(--font-m)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--white);border-bottom:1px solid var(--border-l);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.page-title{font-family:var(--font-h);font-size:18px;font-weight:700;color:#111}
+.page-sub{font-size:13px;color:var(--txt2);font-family:var(--font-m)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.tbtn{display:flex;align-items:center;gap:6px;padding:9px 16px;border-radius:9px;font-size:13px;font-family:var(--font-m);font-weight:500;cursor:pointer;transition:all .2s;border:none}
+.tbtn.primary{background:var(--g);color:var(--white);box-shadow:0 2px 10px rgba(45,181,98,0.25)}
+.tbtn.primary:hover{background:var(--g-dark)}
+.tbtn.outline{background:none;border:1.5px solid var(--border-l);color:var(--txt2)}
+.tbtn.outline:hover{border-color:#999;color:var(--txt)}
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border-l);border-radius:9px;padding:8px 14px;transition:border .2s}
+.search-bar:focus-within{border-color:var(--g)}
+.search-bar input{background:none;border:none;outline:none;font-size:13px;font-family:var(--font-m);color:var(--txt);width:200px}
+
+/* CONTENT */
+.content{padding:32px;flex:1}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* HERO BANNER */
+.learn-banner{
+  background:var(--blk);border-radius:20px;padding:40px 48px;
+  margin-bottom:28px;position:relative;overflow:hidden;
+  display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center;
+}
+.learn-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 100% at 85% 50%,rgba(124,58,237,0.12),transparent),radial-gradient(ellipse 40% 80% at 15% 50%,rgba(45,181,98,0.08),transparent)}
+.banner-grid-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.06) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 90% 100% at 50% 50%,black,transparent)}
+.banner-tag{display:inline-flex;align-items:center;gap:7px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);color:#c4b5fd;padding:5px 14px;border-radius:100px;font-size:11.5px;font-family:var(--font-m);margin-bottom:14px}
+.banner-dot{width:7px;height:7px;background:var(--purple);border-radius:50%;animation:pulse 2s infinite}
+.learn-banner h2{font-family:var(--font-h);font-size:clamp(22px,2.5vw,34px);font-weight:700;color:var(--white);line-height:1.2;letter-spacing:-.5px;margin-bottom:10px;position:relative;z-index:1}
+.learn-banner h2 em{color:var(--g);font-style:normal}
+.learn-banner p{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;max-width:500px;position:relative;z-index:1}
+.banner-stats{display:flex;gap:32px;margin-top:24px;position:relative;z-index:1}
+.bstat .val{font-family:var(--font-h);font-size:26px;font-weight:700;color:var(--white)}
+.bstat .val em{color:var(--g);font-style:normal}
+.bstat .lbl{font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--font-m);margin-top:2px}
+/* progress visual */
+.banner-visual{position:relative;z-index:1;flex-shrink:0}
+.progress-rings{width:180px;height:180px;position:relative}
+.ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-pct{font-family:var(--font-h);font-size:28px;font-weight:700;color:var(--white)}
+.ring-lbl{font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--font-m)}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:28px}
+.stat-card{background:var(--white);border-radius:14px;padding:22px 24px;border:1px solid var(--border-l);transition:all .25s;cursor:pointer;position:relative;overflow:hidden}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.08)}
+.stat-card::after{content:'';position:absolute;top:0;right:0;width:70px;height:70px;border-radius:0 14px 0 70px;opacity:.07}
+.stat-card.g::after{background:var(--g)}.stat-card.p::after{background:var(--purple)}.stat-card.gold::after{background:var(--gold)}.stat-card.b::after{background:var(--blue)}
+.sicon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:14px}
+.sval{font-family:var(--font-h);font-size:26px;font-weight:700;color:#111;line-height:1;margin-bottom:4px}
+.slbl{font-size:13px;color:var(--txt2);margin-bottom:8px}
+.schg{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-family:var(--font-m);font-weight:500;padding:3px 8px;border-radius:6px}
+.schg.up{background:#edfaf3;color:#1a7a4a}.schg.p{background:var(--purple-t);color:var(--purple)}.schg.gold{background:var(--gold-t);color:#7a5000}
+
+/* MAIN LAYOUT */
+.learn-layout{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start}
+
+/* TABS */
+.tabs-wrap{display:flex;align-items:center;gap:4px;background:var(--white);border-radius:12px;padding:6px;border:1px solid var(--border-l);margin-bottom:24px;width:fit-content}
+.tab-btn{padding:9px 20px;border-radius:9px;font-size:13.5px;font-family:var(--font-m);font-weight:500;cursor:pointer;border:none;background:none;color:var(--txt2);transition:all .2s;display:flex;align-items:center;gap:7px}
+.tab-btn.active{background:var(--g);color:var(--white);box-shadow:0 2px 10px rgba(45,181,98,0.3)}
+.tab-btn:hover:not(.active){background:var(--bg)}
+.tab-count{font-size:11px;padding:2px 7px;border-radius:100px;font-weight:600}
+.tab-btn.active .tab-count{background:rgba(255,255,255,0.25);color:var(--white)}
+.tab-btn:not(.active) .tab-count{background:var(--bg);color:var(--txt2)}
+
+/* CONTENT SECTIONS */
+.content-tab{display:none}
+.content-tab.active{display:block;animation:fadeUp .3s ease}
+
+/* COURSE GRID */
+.courses-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.course-card{background:var(--white);border-radius:16px;border:1px solid var(--border-l);overflow:hidden;transition:all .3s;cursor:pointer}
+.course-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.1);border-color:transparent}
+.course-thumb{height:160px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.course-thumb-icon{font-size:52px;opacity:.9}
+.course-level{position:absolute;top:12px;left:12px;font-size:11px;font-family:var(--font-m);font-weight:600;padding:4px 10px;border-radius:6px}
+.course-duration{position:absolute;top:12px;right:12px;font-size:11px;font-family:var(--font-m);background:rgba(0,0,0,0.5);color:var(--white);padding:4px 10px;border-radius:6px;display:flex;align-items:center;gap:4px}
+.course-ai-badge{position:absolute;bottom:12px;left:12px;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);color:var(--white);font-size:11px;font-family:var(--font-m);padding:4px 10px;border-radius:6px}
+.course-body{padding:20px}
+.course-tags{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.ctag{font-size:11px;font-family:var(--font-m);font-weight:500;padding:3px 9px;border-radius:5px}
+.course-title{font-family:var(--font-h);font-size:15px;font-weight:700;color:#111;margin-bottom:6px;line-height:1.3}
+.course-desc{font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:14px}
+.course-instructor{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.instructor-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:10px;font-weight:700;color:var(--white);flex-shrink:0}
+.instructor-name{font-size:12.5px;font-family:var(--font-m);color:var(--txt2)}
+.course-meta{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--txt2);font-family:var(--font-m);margin-bottom:14px;flex-wrap:wrap}
+.course-meta i{font-size:14px}
+.stars{color:var(--gold);font-size:13px;letter-spacing:1px}
+.course-progress-wrap{margin-bottom:14px}
+.cp-label{display:flex;justify-content:space-between;font-size:12px;font-family:var(--font-m);margin-bottom:5px}
+.cp-label span:first-child{color:var(--txt2)}
+.cp-label span:last-child{font-weight:600;color:var(--g-deep)}
+.cp-track{height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.cp-fill{height:100%;border-radius:3px}
+.course-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border-l)}
+.course-price{font-family:var(--font-h);font-size:16px;font-weight:700;color:#111}
+.course-price.free{color:var(--g)}
+.btn-enroll{padding:9px 18px;border-radius:8px;font-size:13px;font-family:var(--font-m);font-weight:500;cursor:pointer;border:none;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn-enroll.green{background:var(--g);color:var(--white)}
+.btn-enroll.green:hover{background:var(--g-dark)}
+.btn-enroll.continue{background:var(--purple-t);color:var(--purple)}
+.btn-enroll.continue:hover{background:var(--purple);color:var(--white)}
+.btn-enroll.outline{background:none;border:1.5px solid var(--border-l);color:var(--txt2)}
+.btn-enroll.outline:hover{border-color:var(--g);color:var(--g-deep)}
+.enrolled-badge{display:flex;align-items:center;gap:5px;font-size:11.5px;font-family:var(--font-m);color:var(--g-deep);background:var(--g-t);padding:4px 10px;border-radius:6px}
+
+/* LEARNING PATH */
+.path-card{background:var(--white);border-radius:16px;border:1px solid var(--border-l);overflow:hidden;margin-bottom:20px}
+.path-header{padding:20px 24px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border-l)}
+.path-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.path-name{font-family:var(--font-h);font-size:16px;font-weight:700;color:#111;margin-bottom:4px}
+.path-meta{font-size:12.5px;color:var(--txt2);font-family:var(--font-m)}
+.path-progress{margin-left:auto;text-align:right}
+.path-pct{font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--g)}
+.path-pct-lbl{font-size:11px;color:var(--txt2);font-family:var(--font-m)}
+.path-steps{padding:0 24px 8px}
+.path-step{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border-l);cursor:pointer;transition:all .2s}
+.path-step:last-child{border-bottom:none}
+.path-step:hover{opacity:.8}
+.path-step-num{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;font-family:var(--font-h);flex-shrink:0;transition:all .2s}
+.path-step-title{font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;margin-bottom:3px}
+.path-step-meta{font-size:12px;color:var(--txt2);font-family:var(--font-m)}
+.path-step-status{margin-left:auto;font-size:11.5px;font-family:var(--font-m);font-weight:500;padding:3px 10px;border-radius:5px;white-space:nowrap}
+
+/* LIVE SESSIONS */
+.live-card{background:var(--white);border-radius:14px;border:1px solid var(--border-l);padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all .25s}
+.live-card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.08);transform:translateY(-1px)}
+.live-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;animation:pulse 1.5s infinite}
+.live-thumb{width:60px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.live-title{font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;margin-bottom:4px}
+.live-meta{font-size:12px;color:var(--txt2);font-family:var(--font-m)}
+.live-badge{margin-left:auto;flex-shrink:0}
+.live-now{display:flex;align-items:center;gap:6px;background:var(--red-t);color:var(--red);font-size:11.5px;font-family:var(--font-m);font-weight:600;padding:5px 12px;border-radius:6px}
+.live-upcoming{font-size:12px;font-family:var(--font-m);color:var(--txt2);text-align:right}
+.live-time{font-family:var(--font-h);font-size:14px;font-weight:600;color:#111}
+
+/* CERTIFICATE CARD */
+.cert-card{background:linear-gradient(135deg,var(--blk),var(--blk2));border-radius:16px;padding:24px;border:1px solid rgba(255,255,255,0.08);margin-bottom:16px;position:relative;overflow:hidden}
+.cert-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(232,160,32,0.15),transparent 70%)}
+.cert-badge{position:absolute;top:16px;right:16px;font-size:28px}
+.cert-title{font-family:var(--font-h);font-size:15px;font-weight:600;color:var(--white);margin-bottom:4px}
+.cert-sub{font-size:12px;color:rgba(255,255,255,0.45);font-family:var(--font-m);margin-bottom:16px}
+.cert-progress-wrap{margin-bottom:14px}
+.cert-track{height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
+.cert-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),#f5c842)}
+.cert-meta{display:flex;justify-content:space-between;font-size:11.5px;font-family:var(--font-m)}
+.cert-meta span:first-child{color:rgba(255,255,255,0.4)}
+.cert-meta span:last-child{color:var(--gold);font-weight:600}
+
+/* RIGHT PANEL */
+.right-panel{display:flex;flex-direction:column;gap:20px;position:sticky;top:96px}
+
+/* streak card */
+.streak-card{background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:16px;padding:24px;color:var(--white);position:relative;overflow:hidden}
+.streak-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,255,255,0.1),transparent 70%)}
+.streak-title{font-family:var(--font-h);font-size:14px;font-weight:600;margin-bottom:4px}
+.streak-sub{font-size:12px;opacity:.6;font-family:var(--font-m);margin-bottom:16px}
+.streak-num{font-family:var(--font-h);font-size:48px;font-weight:700;line-height:1;margin-bottom:4px}
+.streak-lbl{font-size:12px;opacity:.6;font-family:var(--font-m);margin-bottom:16px}
+.streak-days{display:flex;gap:6px}
+.streak-day{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--font-m);font-weight:500}
+.streak-day.done{background:rgba(255,255,255,0.2);color:var(--white)}
+.streak-day.today{background:var(--gold);color:var(--white)}
+.streak-day.upcoming{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.3)}
+
+/* recommended */
+.rec-card{background:var(--white);border-radius:16px;border:1px solid var(--border-l);overflow:hidden}
+.rec-header{padding:18px 20px;border-bottom:1px solid var(--border-l);font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;display:flex;align-items:center;gap:8px}
+.rec-item{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border-l);cursor:pointer;transition:background .2s}
+.rec-item:last-child{border-bottom:none}
+.rec-item:hover{background:var(--bg)}
+.rec-thumb{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.rec-title{font-family:var(--font-h);font-size:13px;font-weight:600;color:#111;margin-bottom:3px}
+.rec-meta{font-size:11.5px;color:var(--txt2);font-family:var(--font-m)}
+.rec-match{margin-left:auto;font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--g)}
+
+/* leaderboard */
+.leaderboard-card{background:var(--white);border-radius:16px;border:1px solid var(--border-l);overflow:hidden}
+.lb-header{padding:18px 20px;border-bottom:1px solid var(--border-l);font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;display:flex;align-items:center;justify-content:space-between}
+.lb-item{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border-l);transition:background .2s}
+.lb-item:last-child{border-bottom:none}
+.lb-item:hover{background:var(--bg)}
+.lb-rank{width:24px;font-family:var(--font-h);font-size:14px;font-weight:700;text-align:center;flex-shrink:0}
+.lb-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:12px;font-weight:700;color:var(--white);flex-shrink:0}
+.lb-name{font-family:var(--font-h);font-size:13px;font-weight:600;color:#111;margin-bottom:2px}
+.lb-pts{font-size:11.5px;color:var(--txt2);font-family:var(--font-m)}
+.lb-badge{margin-left:auto;font-size:14px}
+.lb-item.me{background:var(--g-t)}
+.lb-item.me .lb-name{color:var(--g-deep)}
+
+/* achievements */
+.achieve-card{background:var(--white);border-radius:16px;border:1px solid var(--border-l);padding:20px}
+.achieve-title{font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.achieve-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.achieve-item{text-align:center;cursor:pointer;transition:transform .2s}
+.achieve-item:hover{transform:scale(1.08)}
+.achieve-icon{font-size:28px;display:block;margin-bottom:6px;filter:grayscale(0)}
+.achieve-icon.locked{filter:grayscale(1);opacity:.35}
+.achieve-name{font-size:10px;font-family:var(--font-m);color:var(--txt2);line-height:1.3}
+
+/* VIDEO PLAYER MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--white);border-radius:20px;width:100%;max-width:780px;max-height:92vh;overflow-y:auto;animation:modalPop .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes modalPop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1}
+.modal-title{font-family:var(--font-h);font-size:17px;font-weight:700;color:#111}
+.modal-close{width:34px;height:34px;border-radius:8px;background:var(--bg);border:none;cursor:pointer;font-size:18px;color:var(--txt2);display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:var(--red-t);color:var(--red)}
+.modal-body{padding:0}
+.modal-footer{padding:18px 24px;border-top:1px solid var(--border-l);display:flex;gap:10px;justify-content:flex-end}
+.btn-mo{padding:10px 20px;border-radius:9px;font-size:13.5px;font-family:var(--font-m);font-weight:500;cursor:pointer;transition:all .2s;border:none}
+.btn-mo.outline{background:none;border:1.5px solid var(--border-l);color:var(--txt2)}
+.btn-mo.outline:hover{border-color:#999;color:var(--txt)}
+.btn-mo.primary{background:var(--g);color:var(--white);box-shadow:0 4px 14px rgba(45,181,98,0.3)}
+.btn-mo.primary:hover{background:var(--g-dark)}
+.btn-mo.purple{background:var(--purple);color:var(--white)}
+.btn-mo.purple:hover{background:#5b21b6}
+
+/* fake video player */
+.video-player{background:var(--blk);aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.vp-overlay{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(45,181,98,0.08),transparent 60%)}
+.play-btn{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--white);cursor:pointer;transition:all .2s;margin-bottom:20px}
+.play-btn:hover{background:var(--g);border-color:var(--g)}
+.vp-title{font-family:var(--font-h);font-size:16px;font-weight:600;color:var(--white);text-align:center;padding:0 24px}
+.vp-controls{position:absolute;bottom:0;left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,rgba(0,0,0,0.7));display:flex;align-items:center;gap:12px}
+.vp-bar{flex:1;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;cursor:pointer}
+.vp-bar-fill{height:100%;border-radius:2px;background:var(--g);width:35%}
+.vp-time{font-size:12px;color:rgba(255,255,255,0.7);font-family:var(--font-m)}
+.vp-icon-btn{color:rgba(255,255,255,0.8);font-size:20px;cursor:pointer;transition:color .2s}
+.vp-icon-btn:hover{color:var(--white)}
+
+/* curriculum list */
+.curriculum-list{padding:0 24px 24px}
+.curr-section{margin-top:16px}
+.curr-section-title{font-family:var(--font-h);font-size:13px;font-weight:600;color:#111;margin-bottom:8px;padding:8px 0;border-bottom:1px solid var(--border-l)}
+.curr-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-l);font-size:13.5px;cursor:pointer;transition:all .2s}
+.curr-item:last-child{border-bottom:none}
+.curr-item:hover{color:var(--g)}
+.curr-item i{font-size:16px;color:var(--txt2);flex-shrink:0}
+.curr-item.done i{color:var(--g)}
+.curr-item.done{color:var(--txt2)}
+.curr-item-title{flex:1}
+.curr-duration{font-size:12px;color:var(--txt2);font-family:var(--font-m)}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.learn-layout{grid-template-columns:1fr}.courses-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}.content{padding:20px 16px}.stats-row{grid-template-columns:1fr 1fr}.learn-banner{grid-template-columns:1fr;padding:28px}.banner-visual{display:none}}
+@media(max-width:600px){.stats-row{grid-template-columns:1fr}.courses-grid{grid-template-columns:1fr}.achieve-grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+<script src="/hopefusion-i18n.js" type="module"></script>
+
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#2DB562"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="HopeFusion"/>
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a class="sidebar-logo" href="hopefusion-homepage.html">
+    <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+      <path d="M8 28 Q5 18 11 10" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M13 30 Q9 19 16 11" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <path d="M18 31 Q14 20 21 12" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M23 30 Q19 19 25 12" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="21" cy="8" r="2.5" fill="#E02020"/>
+      <circle cx="26" cy="13" r="2.5" fill="#E02020"/>
+    </svg>
+    <div><div class="sidebar-brand"><span class="h">Hope</span><span class="f">Fusion</span><span class="a">A F R I C A</span></div></div>
+  </a>
+  <div class="sidebar-section">Main</div>
+  <a class="nav-item" href="hopefusion-investor-dashboard.html"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a class="nav-item" href="hopefusion-ai-matching.html"><i class="ti ti-brain"></i> AI Matching <span class="nav-badge">12</span></a>
+  <a class="nav-item" href="hopefusion-grant-platform.html"><i class="ti ti-award"></i> Grant Platform</a>
+  <a class="nav-item"><i class="ti ti-briefcase"></i> My Portfolio</a>
+  <div class="sidebar-section">Platform</div>
+  <a class="nav-item active"><i class="ti ti-school"></i> E-Learning Hub</a>
+  <a class="nav-item"><i class="ti ti-users"></i> Mentorship</a>
+  <a class="nav-item"><i class="ti ti-building-bank"></i> Govt. Support</a>
+  <a class="nav-item"><i class="ti ti-shopping-bag"></i> Marketplace</a>
+  <div class="sidebar-section">Account</div>
+  <a class="nav-item"><i class="ti ti-settings"></i> Settings</a>
+  <a class="nav-item" href="#" id="logout-btn" data-hfa-logout><i class="ti ti-logout"></i> Sign out</a>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar" data-hfa-user-initials>AK</div>
+      <div><div class="user-name" data-hfa-user-name>Ama Korantema</div><div class="user-role" data-hfa-user-role>Startup founder · Ghana</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title">E-Learning Hub</div>
+      <div class="page-sub">Learn from Africa's best founders, investors and mentors</div>
+    </div>
+    <div class="topbar-right">
+      <div id="lang-switcher" style="margin-right:12px"></div>
+      <div class="search-bar">
+        <i class="ti ti-search" style="color:#bbb;font-size:16px"></i>
+        <input type="text" placeholder="Search courses, topics…"/>
+      </div>
+      <button class="tbtn outline"><i class="ti ti-certificate"></i> My certificates</button>
+      <button class="tbtn primary" onclick="openCourse('founder')"><i class="ti ti-player-play"></i> Continue learning</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- BANNER -->
+    <div class="learn-banner">
+      <div class="banner-grid-dots"></div>
+      <div>
+        <div class="banner-tag"><span class="banner-dot"></span> 120+ courses · Live sessions weekly</div>
+        <h2>Build the skills to<br/>grow a <em>world-class</em> startup.</h2>
+        <p>Expert-led courses, live mentorship sessions and certifications built specifically for African entrepreneurs — accessible offline, in your language.</p>
+        <div class="banner-stats">
+          <div class="bstat"><div class="val"><em>3</em></div><div class="lbl">Courses in progress</div></div>
+          <div class="bstat"><div class="val"><em>1</em></div><div class="lbl">Certificate earned</div></div>
+          <div class="bstat"><div class="val"><em>14</em></div><div class="lbl">Day streak 🔥</div></div>
+          <div class="bstat"><div class="val"><em>2,840</em></div><div class="lbl">XP points</div></div>
+        </div>
+      </div>
+      <div class="banner-visual">
+        <svg class="progress-rings" width="180" height="180" viewBox="0 0 180 180">
+          <!-- outer ring -->
+          <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+          <circle cx="90" cy="90" r="80" fill="none" stroke="#7c3aed" stroke-width="10"
+            stroke-dasharray="503" stroke-dashoffset="126" stroke-linecap="round"
+            transform="rotate(-90 90 90)"/>
+          <!-- middle ring -->
+          <circle cx="90" cy="90" r="62" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+          <circle cx="90" cy="90" r="62" fill="none" stroke="#2DB562" stroke-width="10"
+            stroke-dasharray="390" stroke-dashoffset="117" stroke-linecap="round"
+            transform="rotate(-90 90 90)"/>
+          <!-- inner ring -->
+          <circle cx="90" cy="90" r="44" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+          <circle cx="90" cy="90" r="44" fill="none" stroke="#E8A020" stroke-width="10"
+            stroke-dasharray="277" stroke-dashoffset="138" stroke-linecap="round"
+            transform="rotate(-90 90 90)"/>
+          <text x="90" y="85" text-anchor="middle" font-family="Sora,sans-serif" font-size="22" font-weight="700" fill="white">75%</text>
+          <text x="90" y="102" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-size="10" fill="rgba(255,255,255,0.4)">OVERALL</text>
+        </svg>
+        <div class="ring-label" style="position:absolute;bottom:-4px;left:0;right:0;display:flex;justify-content:space-around;font-size:10px;font-family:var(--font-m)">
+          <span style="color:#7c3aed">●  75%</span>
+          <span style="color:var(--g)">● 70%</span>
+          <span style="color:var(--gold)">● 50%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card g">
+        <div class="sicon" style="background:var(--g-t);color:var(--g)"><i class="ti ti-book-open"></i></div>
+        <div class="sval">3</div>
+        <div class="slbl">Courses in progress</div>
+        <span class="schg up"><i class="ti ti-trending-up"></i> 2 started this week</span>
+      </div>
+      <div class="stat-card p">
+        <div class="sicon" style="background:var(--purple-t);color:var(--purple)"><i class="ti ti-certificate"></i></div>
+        <div class="sval">1</div>
+        <div class="slbl">Certificates earned</div>
+        <span class="schg p"><i class="ti ti-star"></i> 2 more in progress</span>
+      </div>
+      <div class="stat-card gold">
+        <div class="sicon" style="background:var(--gold-t);color:var(--gold)"><i class="ti ti-flame"></i></div>
+        <div class="sval">14</div>
+        <div class="slbl">Day learning streak</div>
+        <span class="schg gold"><i class="ti ti-trending-up"></i> Personal best!</span>
+      </div>
+      <div class="stat-card b">
+        <div class="sicon" style="background:var(--blue-t);color:var(--blue)"><i class="ti ti-trophy"></i></div>
+        <div class="sval">2,840</div>
+        <div class="slbl">XP points earned</div>
+        <span class="schg up"><i class="ti ti-arrow-up"></i> Rank #4 this week</span>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs-wrap">
+      <button class="tab-btn active" onclick="switchTab('my-learning')"><i class="ti ti-book-open"></i> My Learning <span class="tab-count">3</span></button>
+      <button class="tab-btn" onclick="switchTab('discover')"><i class="ti ti-search"></i> Discover <span class="tab-count">120</span></button>
+      <button class="tab-btn" onclick="switchTab('paths')"><i class="ti ti-route"></i> Learning Paths <span class="tab-count">6</span></button>
+      <button class="tab-btn" onclick="switchTab('live')"><i class="ti ti-live-view"></i> Live Sessions <span class="tab-count">4</span></button>
+    </div>
+
+    <!-- LAYOUT -->
+    <div class="learn-layout">
+
+      <!-- LEFT -->
+      <div>
+
+        <!-- MY LEARNING TAB -->
+        <div class="content-tab active" id="tab-my-learning">
+          <!-- in-progress certs -->
+          <div style="margin-bottom:20px">
+            <div style="font-family:var(--font-h);font-size:15px;font-weight:600;color:#111;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="ti ti-certificate" style="color:var(--gold)"></i> Certification progress</div>
+            <div class="cert-card">
+              <div class="cert-badge">🏆</div>
+              <div class="cert-title">Certified African Startup Founder</div>
+              <div class="cert-sub">HopeFusion Africa · 4 courses · 1 capstone project</div>
+              <div class="cert-progress-wrap">
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-family:var(--font-m);margin-bottom:5px">
+                  <span style="color:rgba(255,255,255,0.4)">3 of 4 courses complete</span>
+                  <span style="color:var(--gold);font-weight:600">75%</span>
+                </div>
+                <div class="cert-track"><div class="cert-fill" style="width:75%"></div></div>
+              </div>
+              <div class="cert-meta">
+                <span>Est. completion: 3 weeks</span>
+                <span>1 course remaining</span>
+              </div>
+            </div>
+            <div class="cert-card" style="margin-top:12px">
+              <div class="cert-badge">📊</div>
+              <div class="cert-title">Startup Finance & Fundraising</div>
+              <div class="cert-sub">HopeFusion Africa · 3 courses · 2 case studies</div>
+              <div class="cert-progress-wrap">
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-family:var(--font-m);margin-bottom:5px">
+                  <span style="color:rgba(255,255,255,0.4)">1 of 3 courses complete</span>
+                  <span style="color:var(--gold);font-weight:600">33%</span>
+                </div>
+                <div class="cert-track"><div class="cert-fill" style="width:33%"></div></div>
+              </div>
+              <div class="cert-meta"><span>Est. completion: 6 weeks</span><span>2 courses remaining</span></div>
+            </div>
+          </div>
+
+          <!-- in-progress courses -->
+          <div style="font-family:var(--font-h);font-size:15px;font-weight:600;color:#111;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="ti ti-book-open" style="color:var(--g)"></i> Continue where you left off</div>
+          <div class="courses-grid">
+
+            <div class="course-card" onclick="openCourse('founder')">
+              <div class="course-thumb" style="background:linear-gradient(135deg,#0f5233,#2DB562)">
+                <span class="course-thumb-icon">🚀</span>
+                <span class="course-level" style="background:var(--g);color:var(--white)">Intermediate</span>
+                <span class="course-duration"><i class="ti ti-clock"></i> 6h 30m</span>
+                <div class="course-ai-badge"><i class="ti ti-sparkles" style="color:var(--gold)"></i> AI recommended</div>
+              </div>
+              <div class="course-body">
+                <div class="course-tags">
+                  <span class="ctag" style="background:var(--g-t);color:var(--g-deep)">Entrepreneurship</span>
+                  <span class="ctag" style="background:var(--gold-t);color:#7a5000">Africa-focused</span>
+                </div>
+                <div class="course-title">Building a Fundable Startup in Africa</div>
+                <div class="course-desc">Master the art of building startups that attract investors. Pitch decks, financial modelling, term sheets and more — all in the African context.</div>
+                <div class="course-instructor">
+                  <div class="instructor-avatar" style="background:var(--g)">BM</div>
+                  <div class="instructor-name">Benjamin Acheampong · Business Advisor</div>
+                </div>
+                <div class="course-meta">
+                  <span class="stars">★★★★★</span>
+                  <span>4.9 (2,341 reviews)</span>
+                  <span>·</span>
+                  <span><i class="ti ti-users"></i> 8,200 enrolled</span>
+                </div>
+                <div class="course-progress-wrap">
+                  <div class="cp-label"><span>Progress</span><span>68% complete</span></div>
+                  <div class="cp-track"><div class="cp-fill" style="width:68%;background:linear-gradient(90deg,var(--g),#5ddfa0)"></div></div>
+                </div>
+                <div class="course-footer">
+                  <div class="enrolled-badge"><i class="ti ti-check"></i> Enrolled</div>
+                  <button class="btn-enroll continue" onclick="event.stopPropagation();openCourse('founder')"><i class="ti ti-player-play"></i> Continue</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="course-card" onclick="openCourse('finance')">
+              <div class="course-thumb" style="background:linear-gradient(135deg,#7a5000,#E8A020)">
+                <span class="course-thumb-icon">💰</span>
+                <span class="course-level" style="background:var(--gold);color:var(--white)">Beginner</span>
+                <span class="course-duration"><i class="ti ti-clock"></i> 4h 15m</span>
+              </div>
+              <div class="course-body">
+                <div class="course-tags">
+                  <span class="ctag" style="background:var(--gold-t);color:#7a5000">Finance</span>
+                  <span class="ctag" style="background:var(--g-t);color:var(--g-deep)">Fundraising</span>
+                </div>
+                <div class="course-title">Startup Finance for Non-Finance Founders</div>
+                <div class="course-desc">P&L statements, cash flow, runway calculations and investor-ready financials — explained without jargon for founders with no finance background.</div>
+                <div class="course-instructor">
+                  <div class="instructor-avatar" style="background:var(--gold)">TA</div>
+                  <div class="instructor-name">Tarik Amiar · Financial Analyst</div>
+                </div>
+                <div class="course-meta">
+                  <span class="stars">★★★★☆</span>
+                  <span>4.7 (1,892 reviews)</span>
+                  <span>·</span>
+                  <span><i class="ti ti-users"></i> 5,600 enrolled</span>
+                </div>
+                <div class="course-progress-wrap">
+                  <div class="cp-label"><span>Progress</span><span>35% complete</span></div>
+                  <div class="cp-track"><div class="cp-fill" style="width:35%;background:linear-gradient(90deg,var(--gold),#f5c842)"></div></div>
+                </div>
+                <div class="course-footer">
+                  <div class="enrolled-badge"><i class="ti ti-check"></i> Enrolled</div>
+                  <button class="btn-enroll continue" onclick="event.stopPropagation();openCourse('finance')"><i class="ti ti-player-play"></i> Continue</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="course-card" onclick="openCourse('ai')">
+              <div class="course-thumb" style="background:linear-gradient(135deg,#3730a3,#7c3aed)">
+                <span class="course-thumb-icon">🤖</span>
+                <span class="course-level" style="background:var(--purple);color:var(--white)">Advanced</span>
+                <span class="course-duration"><i class="ti ti-clock"></i> 8h 00m</span>
+                <div class="course-ai-badge"><i class="ti ti-sparkles" style="color:var(--gold)"></i> New course</div>
+              </div>
+              <div class="course-body">
+                <div class="course-tags">
+                  <span class="ctag" style="background:var(--purple-t);color:var(--purple)">AI & Tech</span>
+                  <span class="ctag" style="background:var(--blue-t);color:var(--blue)">Strategy</span>
+                </div>
+                <div class="course-title">AI Tools for African Startup Growth</div>
+                <div class="course-desc">Use ChatGPT, Claude, Midjourney and automation tools to 10x your startup's productivity. Real African business use cases throughout.</div>
+                <div class="course-instructor">
+                  <div class="instructor-avatar" style="background:var(--purple)">HN</div>
+                  <div class="instructor-name">Hanne Nuutinen · Executive Director</div>
+                </div>
+                <div class="course-meta">
+                  <span class="stars">★★★★★</span>
+                  <span>4.8 (987 reviews)</span>
+                  <span>·</span>
+                  <span><i class="ti ti-users"></i> 3,100 enrolled</span>
+                </div>
+                <div class="course-progress-wrap">
+                  <div class="cp-label"><span>Progress</span><span>12% complete</span></div>
+                  <div class="cp-track"><div class="cp-fill" style="width:12%;background:linear-gradient(90deg,var(--purple),#a78bfa)"></div></div>
+                </div>
+                <div class="course-footer">
+                  <div class="enrolled-badge"><i class="ti ti-check"></i> Enrolled</div>
+                  <button class="btn-enroll continue" onclick="event.stopPropagation();openCourse('ai')"><i class="ti ti-player-play"></i> Continue</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- DISCOVER TAB -->
+        <div class="content-tab" id="tab-discover">
+          <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+            <select style="padding:9px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:13px;font-family:var(--font-b);background:var(--white);outline:none;appearance:none;cursor:pointer">
+              <option>All topics</option><option>Entrepreneurship</option><option>Finance</option><option>Marketing</option><option>Tech & AI</option><option>Leadership</option><option>Legal</option>
+            </select>
+            <select style="padding:9px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:13px;font-family:var(--font-b);background:var(--white);outline:none;appearance:none;cursor:pointer">
+              <option>All levels</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+            </select>
+            <select style="padding:9px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:13px;font-family:var(--font-b);background:var(--white);outline:none;appearance:none;cursor:pointer">
+              <option>All durations</option><option>Under 2 hours</option><option>2–5 hours</option><option>5–10 hours</option><option>10h+</option>
+            </select>
+          </div>
+          <div class="courses-grid">
+            <div class="course-card" onclick="openCourse('agri')">
+              <div class="course-thumb" style="background:linear-gradient(135deg,#064e3b,#10b981)">
+                <span class="course-thumb-icon">🌱</span>
+                <span class="course-level" style="background:#10b981;color:var(--white)">Beginner</span>
+                <span class="course-duration"><i class="ti ti-clock"></i> 3h 45m</span>
+              </div>
+              <div class="course-body">
+                <div class="course-tags"><span class="ctag" style="background:var(--g-t);color:var(--g-deep)">Agritech</span><span class="ctag" style="background:var(--gold-t);color:#7a5000">Business</span></div>
+                <div class="course-title">Agribusiness 101 for African Founders</div>
+                <div class="course-desc">Launch and scale an agri-business in Africa. Supply chains, farmer networks, mobile money payments and government partnerships covered.</div>
+                <div class="course-instructor"><div class="instructor-avatar" style="background:#10b981">FY</div><div class="instructor-name">Faustina Esi Yankson · Agripreneur</div></div>
+                <div class="course-meta"><span class="stars">★★★★★</span><span>4.9 (3,210 reviews)</span><span>·</span><span><i class="ti ti-users"></i> 12,400 enrolled</span></div>
+                <div class="course-footer">
+                  <div class="course-price free">Free</div>
+                  <button class="btn-enroll green" onclick="event.stopPropagation();enrollCourse(this)"><i class="ti ti-plus"></i> Enroll free</button>
+                </div>
+              </div>
+            </div>
+            <div class="course-card" onclick="openCourse('pitch')">
+              <div class="course-thumb" style="background:linear-gradient(135deg,#1e1b4b,#4338ca)">
+                <span class="course-thumb-icon">🎤</span>
+                <span class="course-level" style="background:#4338ca;color:var(--white)">Intermediate</span>
+                <span class="course-duration"><i class="ti ti-clock"></i> 5h 20m</span>
+                <div class="course-ai-badge"><i class="ti ti-sparkles" style="color:var(--gold)"></i> Bestseller</div>
+              </div>
+              <div class="course-body">
+                <div class="course-tags"><span class="ctag" style="background:var(--blue-t);color:var(--blue)">Pitching</span><span class="ctag" style="background:var(--g-t);color:var(--g-deep)">Investors</span></div>
+                <div class="course-title">The African Founder's Guide to Investor Pitching</div>
+                <div class="course-desc">Craft a pitch that resonates with African and global investors. Storytelling, slide structure, handling objections and follow-up strategies.</div>
+                <div class="course-instructor"><div class="instructor-avatar" style="background:#4338ca">RM</div><div class="instructor-name">Rene Moerman · Season Entrepreneur</div></div>
+                <div class="course-meta"><span class="stars">★★★★★</span><span>4.9 (4,820 reviews)</span><span>·</span><span><i class="ti ti-users"></i> 15,600 enrolled</span></div>
+                <div class="course-footer">
+                  <div class="course-price">$49</div>
+                  <button class="btn-enroll green" onclick="event.stopPropagation();enrollCourse(this)"><i class="ti ti-shopping-cart"></i> Enroll</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PATHS TAB -->
+        <div class="content-tab" id="tab-paths">
+          <div class="path-card">
+            <div class="path-header">
+              <div class="path-icon" style="background:var(--g-t);color:var(--g)"><i class="ti ti-rocket"></i></div>
+              <div>
+                <div class="path-name">Certified African Startup Founder</div>
+                <div class="path-meta">4 courses · 1 capstone · ~12 weeks · HopeFusion certified</div>
+              </div>
+              <div class="path-progress">
+                <div class="path-pct">75%</div>
+                <div class="path-pct-lbl">complete</div>
+              </div>
+            </div>
+            <div class="path-steps">
+              <div class="path-step" onclick="openCourse('founder')">
+                <div class="path-step-num" style="background:var(--g);color:var(--white)"><i class="ti ti-check" style="font-size:14px"></i></div>
+                <div><div class="path-step-title">Building a Fundable Startup</div><div class="path-step-meta">6h 30m · Completed</div></div>
+                <span class="path-step-status" style="background:var(--g-t);color:var(--g-deep)">✓ Done</span>
+              </div>
+              <div class="path-step" onclick="openCourse('finance')">
+                <div class="path-step-num" style="background:var(--g);color:var(--white)"><i class="ti ti-check" style="font-size:14px"></i></div>
+                <div><div class="path-step-title">Startup Finance for Founders</div><div class="path-step-meta">4h 15m · In progress — 35%</div></div>
+                <span class="path-step-status" style="background:var(--gold-t);color:#7a5000">In progress</span>
+              </div>
+              <div class="path-step" onclick="openCourse('agri')">
+                <div class="path-step-num" style="background:var(--g);color:var(--white)"><i class="ti ti-check" style="font-size:14px"></i></div>
+                <div><div class="path-step-title">Agribusiness 101</div><div class="path-step-meta">3h 45m · Completed</div></div>
+                <span class="path-step-status" style="background:var(--g-t);color:var(--g-deep)">✓ Done</span>
+              </div>
+              <div class="path-step">
+                <div class="path-step-num" style="background:var(--bg);color:var(--txt2);border:1.5px solid var(--border-l)">4</div>
+                <div><div class="path-step-title">Investor Pitching Masterclass</div><div class="path-step-meta">5h 20m · Not started</div></div>
+                <span class="path-step-status" style="background:var(--bg);color:var(--txt2)">Locked</span>
+              </div>
+              <div class="path-step" style="opacity:.5">
+                <div class="path-step-num" style="background:var(--bg);color:var(--txt2);border:1.5px solid var(--border-l)">5</div>
+                <div><div class="path-step-title">Capstone: Build your investor package</div><div class="path-step-meta">~3 weeks · Project-based</div></div>
+                <span class="path-step-status" style="background:var(--bg);color:var(--txt2)">Locked</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIVE SESSIONS TAB -->
+        <div class="content-tab" id="tab-live">
+          <div style="font-family:var(--font-h);font-size:15px;font-weight:600;color:#111;margin-bottom:14px;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.5s infinite;display:inline-block"></span> Live now</div>
+
+          <div class="live-card" onclick="openCourse('live1')">
+            <span class="live-dot" style="background:var(--red)"></span>
+            <div class="live-thumb" style="background:var(--red-t);color:var(--red)"><i class="ti ti-users"></i></div>
+            <div>
+              <div class="live-title">Office Hours: Ask an Investor Anything</div>
+              <div class="live-meta">Rene Moerman · 847 watching now · Started 22 min ago</div>
+            </div>
+            <div class="live-badge">
+              <div class="live-now"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 1s infinite"></span> LIVE</div>
+            </div>
+          </div>
+
+          <div style="font-family:var(--font-h);font-size:15px;font-weight:600;color:#111;margin:20px 0 14px;display:flex;align-items:center;gap:8px"><i class="ti ti-calendar" style="color:var(--g)"></i> Upcoming sessions</div>
+
+          <div class="live-card">
+            <div class="live-thumb" style="background:var(--g-t);color:var(--g)"><i class="ti ti-chart-bar"></i></div>
+            <div>
+              <div class="live-title">Fundraising in a Tough Market — West Africa Edition</div>
+              <div class="live-meta">Benjamin Acheampong · Tomorrow · 10:00 AM GMT</div>
+            </div>
+            <div class="live-badge">
+              <div class="live-upcoming"><div class="live-time">Tomorrow</div><div style="font-size:11px;color:var(--txt2);font-family:var(--font-m)">10:00 AM GMT</div></div>
+            </div>
+          </div>
+
+          <div class="live-card">
+            <div class="live-thumb" style="background:var(--purple-t);color:var(--purple)"><i class="ti ti-brain"></i></div>
+            <div>
+              <div class="live-title">AI Tools Workshop: Build Your Startup's AI Stack</div>
+              <div class="live-meta">Hanne Nuutinen · Thu 22 May · 2:00 PM GMT</div>
+            </div>
+            <div class="live-badge">
+              <div class="live-upcoming"><div class="live-time">Thu 22 May</div><div style="font-size:11px;color:var(--txt2);font-family:var(--font-m)">2:00 PM GMT</div></div>
+            </div>
+          </div>
+
+          <div class="live-card">
+            <div class="live-thumb" style="background:var(--gold-t);color:var(--gold)"><i class="ti ti-leaf"></i></div>
+            <div>
+              <div class="live-title">Agribusiness Masterclass: Scaling Across Borders</div>
+              <div class="live-meta">Faustina Esi Yankson · Fri 23 May · 11:00 AM GMT</div>
+            </div>
+            <div class="live-badge">
+              <div class="live-upcoming"><div class="live-time">Fri 23 May</div><div style="font-size:11px;color:var(--txt2);font-family:var(--font-m)">11:00 AM GMT</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end left -->
+
+      <!-- RIGHT PANEL -->
+      <div class="right-panel">
+
+        <!-- STREAK CARD -->
+        <div class="streak-card">
+          <div class="streak-title">🔥 Learning streak</div>
+          <div class="streak-sub">Keep it going every day!</div>
+          <div class="streak-num">14</div>
+          <div class="streak-lbl">days in a row</div>
+          <div class="streak-days">
+            <div class="streak-day done">M</div>
+            <div class="streak-day done">T</div>
+            <div class="streak-day done">W</div>
+            <div class="streak-day done">T</div>
+            <div class="streak-day done">F</div>
+            <div class="streak-day today">S</div>
+            <div class="streak-day upcoming">S</div>
+          </div>
+        </div>
+
+        <!-- AI RECOMMENDED -->
+        <div class="rec-card">
+          <div class="rec-header"><i class="ti ti-sparkles" style="color:var(--gold)"></i> AI recommended for you</div>
+          <div class="rec-item" onclick="openCourse('pitch')">
+            <div class="rec-thumb" style="background:var(--blue-t);color:var(--blue)">🎤</div>
+            <div><div class="rec-title">Investor Pitching Guide</div><div class="rec-meta">5h 20m · Intermediate</div></div>
+            <div class="rec-match">98%</div>
+          </div>
+          <div class="rec-item" onclick="openCourse('agri')">
+            <div class="rec-thumb" style="background:var(--g-t);color:var(--g)">🌱</div>
+            <div><div class="rec-title">Agribusiness 101</div><div class="rec-meta">3h 45m · Beginner</div></div>
+            <div class="rec-match">94%</div>
+          </div>
+          <div class="rec-item" onclick="openCourse('founder')">
+            <div class="rec-thumb" style="background:var(--g-t)">🚀</div>
+            <div><div class="rec-title">Legal for Founders</div><div class="rec-meta">2h 30m · Beginner</div></div>
+            <div class="rec-match">88%</div>
+          </div>
+          <div class="rec-item" onclick="openCourse('ai')">
+            <div class="rec-thumb" style="background:var(--purple-t);color:var(--purple)">🤖</div>
+            <div><div class="rec-title">AI for Startups</div><div class="rec-meta">8h · Advanced</div></div>
+            <div class="rec-match">85%</div>
+          </div>
+        </div>
+
+        <!-- LEADERBOARD -->
+        <div class="leaderboard-card">
+          <div class="lb-header">
+            <span><i class="ti ti-trophy" style="color:var(--gold);margin-right:6px"></i> Weekly leaderboard</span>
+            <span style="font-size:11px;color:var(--txt2);font-family:var(--font-m)">This week</span>
+          </div>
+          <div class="lb-item">
+            <div class="lb-rank" style="color:var(--gold)">1</div>
+            <div class="lb-avatar" style="background:linear-gradient(135deg,var(--gold),#f5c842)">KO</div>
+            <div><div class="lb-name">Kwame Osei</div><div class="lb-pts">4,120 XP</div></div>
+            <div class="lb-badge">🥇</div>
+          </div>
+          <div class="lb-item">
+            <div class="lb-rank" style="color:#aaa">2</div>
+            <div class="lb-avatar" style="background:linear-gradient(135deg,#aaa,#ccc)">NW</div>
+            <div><div class="lb-name">Ngozi Wobei</div><div class="lb-pts">3,890 XP</div></div>
+            <div class="lb-badge">🥈</div>
+          </div>
+          <div class="lb-item">
+            <div class="lb-rank" style="color:#cd7f32">3</div>
+            <div class="lb-avatar" style="background:linear-gradient(135deg,#cd7f32,#e8a060)">DU</div>
+            <div><div class="lb-name">Diane Uwase</div><div class="lb-pts">3,340 XP</div></div>
+            <div class="lb-badge">🥉</div>
+          </div>
+          <div class="lb-item me">
+            <div class="lb-rank" style="color:var(--g)">4</div>
+            <div class="lb-avatar" style="background:linear-gradient(135deg,var(--g),var(--gold))">AK</div>
+            <div><div class="lb-name">Ama Korantema <span style="font-size:10px;background:var(--g);color:#fff;padding:1px 6px;border-radius:4px;font-family:var(--font-m);font-weight:500">You</span></div><div class="lb-pts">2,840 XP</div></div>
+            <div class="lb-badge">⬆️</div>
+          </div>
+          <div class="lb-item">
+            <div class="lb-rank" style="color:var(--txt2)">5</div>
+            <div class="lb-avatar" style="background:linear-gradient(135deg,#4f8ef7,#2563eb)">AM</div>
+            <div><div class="lb-name">Aisha Mwangi</div><div class="lb-pts">2,610 XP</div></div>
+          </div>
+        </div>
+
+        <!-- ACHIEVEMENTS -->
+        <div class="achieve-card">
+          <div class="achieve-title"><i class="ti ti-medal" style="color:var(--gold)"></i> Achievements</div>
+          <div class="achieve-grid">
+            <div class="achieve-item" title="First lesson completed"><span class="achieve-icon">🎯</span><span class="achieve-name">First steps</span></div>
+            <div class="achieve-item" title="7-day streak"><span class="achieve-icon">🔥</span><span class="achieve-name">Week streak</span></div>
+            <div class="achieve-item" title="First certificate"><span class="achieve-icon">🏆</span><span class="achieve-name">Certified</span></div>
+            <div class="achieve-item" title="Joined community"><span class="achieve-icon">🤝</span><span class="achieve-name">Community</span></div>
+            <div class="achieve-item" title="Reviewed a course"><span class="achieve-icon locked">⭐</span><span class="achieve-name">Reviewer</span></div>
+            <div class="achieve-item" title="Top 10 leaderboard"><span class="achieve-icon locked">👑</span><span class="achieve-name">Top 10</span></div>
+            <div class="achieve-item" title="5 courses complete"><span class="achieve-icon locked">📚</span><span class="achieve-name">Scholar</span></div>
+            <div class="achieve-item" title="Helped a peer"><span class="achieve-icon locked">💡</span><span class="achieve-name">Mentor</span></div>
+          </div>
+        </div>
+
+      </div><!-- end right panel -->
+    </div><!-- end layout -->
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<!-- VIDEO / COURSE MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" style="max-width:820px">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Course player</div>
+      <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script>
+/* TABS */
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    const ts=['my-learning','discover','paths','live'];
+    b.classList.toggle('active',ts[i]===t);
+  });
+  document.querySelectorAll('.content-tab').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+/* COURSE DATA */
+const courses={
+  founder:{title:'Building a Fundable Startup in Africa',lessons:[
+    {title:'Introduction: The African startup landscape',dur:'8:24',done:true},
+    {title:'What investors really look for',dur:'14:12',done:true},
+    {title:'Building your pitch deck — structure',dur:'18:45',done:true},
+    {title:'Financial modelling basics',dur:'22:10',done:true},
+    {title:'Valuation: How to price your startup',dur:'19:33',done:false},
+    {title:'Term sheets demystified',dur:'16:48',done:false},
+    {title:'Closing the deal — negotiation tactics',dur:'21:05',done:false},
+  ]},
+  finance:{title:'Startup Finance for Non-Finance Founders',lessons:[
+    {title:'Why every founder needs finance basics',dur:'6:15',done:true},
+    {title:'Reading a P&L statement',dur:'12:40',done:true},
+    {title:'Cash flow vs profit — the difference that kills startups',dur:'18:22',done:false},
+    {title:'Building your 18-month runway model',dur:'24:15',done:false},
+    {title:'Investor-ready financial reports',dur:'19:48',done:false},
+  ]},
+  ai:{title:'AI Tools for African Startup Growth',lessons:[
+    {title:'The AI stack for African founders',dur:'10:20',done:true},
+    {title:'ChatGPT & Claude for business writing',dur:'16:35',done:false},
+    {title:'AI for customer support & sales',dur:'14:50',done:false},
+    {title:'Automating your back office with n8n',dur:'22:18',done:false},
+  ]},
+  agri:{title:'Agribusiness 101 for African Founders',lessons:[
+    {title:'The African agri opportunity',dur:'9:30',done:false},
+    {title:'Supply chain fundamentals',dur:'15:20',done:false},
+    {title:'Working with smallholder farmers',dur:'18:45',done:false},
+  ]},
+  pitch:{title:"The African Founder's Guide to Investor Pitching",lessons:[
+    {title:'The anatomy of a winning pitch',dur:'12:15',done:false},
+    {title:'Storytelling that moves investors',dur:'18:30',done:false},
+    {title:'Handling tough questions',dur:'14:20',done:false},
+  ]},
+  live1:{title:'Office Hours: Ask an Investor Anything',lessons:[]}
+};
+
+function openCourse(key){
+  const c=courses[key]||courses.founder;
+  document.getElementById('modal-title').textContent=c.title;
+  const curriculum=c.lessons.map(l=>`
+    <div class="curr-item ${l.done?'done':''}">
+      <i class="ti ${l.done?'ti-circle-check':'ti-player-play'}"></i>
+      <div class="curr-item-title">${l.title}</div>
+      <div class="curr-duration">${l.dur}</div>
+    </div>
+  `).join('');
+  document.getElementById('modal-body').innerHTML=`
+    <div class="video-player">
+      <div class="vp-overlay"></div>
+      <div class="play-btn" onclick="this.style.display='none';document.getElementById('playing').style.display='block'"><i class="ti ti-player-play"></i></div>
+      <div id="playing" style="display:none;text-align:center">
+        <div style="font-size:40px;margin-bottom:12px">▶️</div>
+        <div style="font-family:var(--font-h);font-size:15px;color:rgba(255,255,255,0.8)">Playing video…</div>
+      </div>
+      <div class="vp-title">${c.title}</div>
+      <div class="vp-controls">
+        <i class="ti ti-player-play vp-icon-btn"></i>
+        <div class="vp-bar"><div class="vp-bar-fill"></div></div>
+        <div class="vp-time">12:35 / 18:45</div>
+        <i class="ti ti-maximize vp-icon-btn"></i>
+        <i class="ti ti-volume vp-icon-btn"></i>
+      </div>
+    </div>
+    <div class="curriculum-list">
+      <div style="font-family:var(--font-h);font-size:15px;font-weight:600;color:#111;padding:20px 0 0">Course curriculum</div>
+      <div class="curr-section">
+        <div class="curr-section-title">Lessons</div>
+        ${curriculum||'<div style="padding:16px 0;color:var(--txt2);font-size:14px">Live session — no curriculum</div>'}
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn-mo outline" onclick="closeModal()">Close</button>
+    <button class="btn-mo primary" onclick="markComplete()"><i class="ti ti-check"></i> Mark lesson complete</button>
+  `;
+  document.getElementById('modal-overlay').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+
+function markComplete(){
+  document.getElementById('modal-footer').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;flex:1">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px">✓</div>
+      <span style="font-family:var(--font-h);font-size:14px;font-weight:600;color:var(--g)">+120 XP earned! Lesson marked complete.</span>
+    </div>
+    <button class="btn-mo primary" onclick="closeModal()">Next lesson →</button>
+  `;
+}
+
+function enrollCourse(btn){
+  btn.textContent='✓ Enrolled!';
+  btn.style.background='var(--g-t)';
+  btn.style.color='var(--g-deep)';
+  btn.style.border='1.5px solid rgba(45,181,98,0.3)';
+}
+
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modal-overlay'))return;
+  document.getElementById('modal-overlay').classList.remove('show');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+document.addEventListener('DOMContentLoaded', function() {
+  HFA.Auth.guard(['startup', 'investor', 'mentor', 'admin']);
+  HFA.UI.renderUserProfile();
+});
+</script>
+
+<script>
+  window.addEventListener('load', () => {
+    if (window.hfai18n) {
+      window.hfai18n.createSwitcher('lang-switcher');
+    }
+  });
+</script>
+</body>
+</html>

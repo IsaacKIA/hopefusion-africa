@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- HFA_CONFIG_START -->
+<script>
+  window.HFA_CONFIG = {
+    API_URL: "http://localhost:3000",
+    AI_URL: "http://localhost:3001",
+    WS_URL: "ws://localhost:3000",
+    ENV: "development"
+  };
+</script>
+<!-- HFA_CONFIG_END -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HopeFusion Africa — Empower. Innovate. Thrive.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<!-- Scripts loaded at bottom of body to prevent duplicate execution -->
+<style>
+/* ===== RESET & ROOT ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --g:       #2DB562;
+  --g-dark:  #1e8a48;
+  --g-deep:  #0f5233;
+  --g-t:     #E9F9EF;
+  --gold:    #E8A020;
+  --gold-t:  #FEF7E8;
+  --red:     #E02020;
+  --blk:     #1A1A1A;
+  --blk2:    #242424;
+  --blk3:    #2e2e2e;
+  --bg:      #F7F7F7;
+  --white:   #ffffff;
+  --txt:     #3D3D3D;
+  --txt2:    #6b6b6b;
+  --border:  rgba(255,255,255,0.08);
+  --border-l:rgba(0,0,0,0.08);
+  --font-h:  'Sora', sans-serif;
+  --font-b:  'DM Sans', sans-serif;
+  --font-m:  'Space Grotesk', sans-serif;
+}
+body{font-family:var(--font-b);background:var(--bg);color:var(--txt);overflow-x:hidden}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--blk)}
+::-webkit-scrollbar-thumb{background:var(--g);border-radius:2px}
+
+/* ===== NAV ===== */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:rgba(26,26,26,0.92);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 2.5rem;
+  height:66px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:all .3s ease;
+}
+nav.scrolled{background:rgba(26,26,26,0.98);box-shadow:0 4px 40px rgba(0,0,0,0.4)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-icon{width:36px;height:36px}
+.nav-brand{font-family:var(--font-h);font-size:17px;font-weight:600}
+.nav-brand .hope{color:var(--g)}
+.nav-brand .fusion{color:var(--white)}
+.nav-brand .africa{color:var(--gold);font-size:11px;display:block;font-weight:400;letter-spacing:.18em;margin-top:-3px;font-family:var(--font-m)}
+.nav-links{display:flex;align-items:center;gap:.25rem;list-style:none}
+.nav-links a{color:rgba(255,255,255,0.6);text-decoration:none;font-size:13.5px;padding:8px 14px;border-radius:8px;transition:all .2s;font-family:var(--font-m)}
+.nav-links a:hover{color:var(--white);background:rgba(255,255,255,0.06)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.lang-holder{margin-right:12px}
+.btn-nav-outline{background:transparent;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.18);padding:9px 18px;border-radius:8px;font-size:13px;cursor:pointer;transition:all .2s;font-family:var(--font-m)}
+.btn-nav-outline:hover{color:var(--white);border-color:rgba(255,255,255,0.4)}
+.btn-nav-primary{background:var(--g);color:var(--white);border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;font-family:var(--font-m)}
+.btn-nav-primary:hover{background:var(--g-dark);transform:translateY(-1px)}
+/* ===== HERO ===== */
+.hero{
+  min-height:100vh;
+  background:var(--blk);
+  position:relative;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+/* animated background grid */
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(45,181,98,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45,181,98,0.07) 1px, transparent 1px);
+  background-size:60px 60px;
+  animation:gridShift 20s linear infinite;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+}
+@keyframes gridShift{0%{transform:translateY(0)}100%{transform:translateY(60px)}}
+/* glowing orbs */
+.orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
+.orb-1{width:500px;height:500px;background:rgba(45,181,98,0.12);top:-100px;right:-100px;animation:orbFloat 8s ease-in-out infinite}
+.orb-2{width:400px;height:400px;background:rgba(232,160,32,0.08);bottom:-80px;left:-80px;animation:orbFloat 10s ease-in-out infinite reverse}
+.orb-3{width:300px;height:300px;background:rgba(224,32,32,0.06);top:40%;left:30%;animation:orbFloat 12s ease-in-out infinite 2s}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-20px) scale(1.05)}}
+
+.hero-content{
+  position:relative;z-index:2;
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:120px 2rem 60px;
+  text-align:center;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(45,181,98,0.1);
+  border:1px solid rgba(45,181,98,0.3);
+  color:#6fdfa3;
+  padding:7px 16px;border-radius:100px;
+  font-size:12.5px;font-family:var(--font-m);
+  margin-bottom:28px;
+  animation:fadeInDown .8s ease both;
+}
+.badge-dot{width:7px;height:7px;background:var(--g);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+@keyframes fadeInDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.hero-eyebrow{
+  font-family:var(--font-m);font-size:11px;letter-spacing:.2em;
+  color:var(--gold);text-transform:uppercase;margin-bottom:16px;
+  animation:fadeInDown .8s ease .1s both;
+}
+.hero h1{
+  font-family:var(--font-h);
+  font-size:clamp(36px,5.5vw,68px);
+  font-weight:700;
+  line-height:1.1;
+  letter-spacing:-1.5px;
+  color:var(--white);
+  max-width:820px;
+  margin:0 auto 24px;
+  animation:fadeInUp .9s ease .2s both;
+}
+.hero h1 .line-green{color:var(--g)}
+.hero h1 .line-gold{color:var(--gold)}
+.hero-sub{
+  font-size:clamp(15px,2vw,18px);
+  color:rgba(255,255,255,0.55);
+  max-width:520px;margin:0 auto 40px;
+  line-height:1.75;
+  animation:fadeInUp .9s ease .35s both;
+}
+.hero-btns{
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  animation:fadeInUp .9s ease .5s both;
+  margin-bottom:60px;
+}
+.btn-hero-primary{
+  background:var(--g);color:var(--white);
+  border:none;padding:16px 32px;border-radius:10px;
+  font-size:15px;font-weight:600;font-family:var(--font-h);
+  cursor:pointer;transition:all .25s;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 0 0 0 rgba(45,181,98,0.4);
+}
+.btn-hero-primary:hover{background:var(--g-dark);transform:translateY(-2px);box-shadow:0 8px 30px rgba(45,181,98,0.35)}
+.btn-hero-secondary{
+  background:rgba(255,255,255,0.06);color:var(--white);
+  border:1px solid rgba(255,255,255,0.15);
+  padding:16px 32px;border-radius:10px;
+  font-size:15px;font-family:var(--font-h);
+  cursor:pointer;transition:all .25s;
+  display:flex;align-items:center;gap:8px;
+  backdrop-filter:blur(10px);
+}
+.btn-hero-secondary:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.3);transform:translateY(-2px)}
+
+/* hero stats bar */
+.hero-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--border);
+  animation:fadeIn 1s ease .8s both;
+}
+.hero-stat{
+  padding:28px 24px;
+  border-right:1px solid var(--border);
+  text-align:center;
+  transition:background .3s;
+}
+.hero-stat:last-child{border-right:none}
+.hero-stat:hover{background:rgba(255,255,255,0.03)}
+.stat-num{
+  font-family:var(--font-h);
+  font-size:clamp(26px,3vw,38px);
+  font-weight:700;color:var(--white);
+  line-height:1;
+}
+.stat-num .accent-g{color:var(--g)}
+.stat-num .accent-gold{color:var(--gold)}
+.stat-num .accent-r{color:var(--red)}
+.stat-label{font-size:12px;color:rgba(255,255,255,0.4);margin-top:6px;font-family:var(--font-m);letter-spacing:.03em}
+
+/* live ticker */
+.ticker-bar{
+  background:rgba(45,181,98,0.08);
+  border-top:1px solid rgba(45,181,98,0.15);
+  border-bottom:1px solid rgba(45,181,98,0.15);
+  padding:10px 0;overflow:hidden;
+  position:relative;
+}
+.ticker-inner{
+  display:flex;gap:0;white-space:nowrap;
+  animation:ticker 30s linear infinite;
+}
+.ticker-item{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:0 32px;font-size:12.5px;font-family:var(--font-m);
+  color:rgba(255,255,255,0.6);
+  border-right:1px solid rgba(255,255,255,0.08);
+}
+.ticker-item .tv{color:var(--g);font-weight:500}
+.ticker-item .ti{font-size:14px}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ===== SECTION BASE ===== */
+.section{padding:96px 2.5rem}
+.section-inner{max-width:1160px;margin:0 auto}
+.section-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-family:var(--font-m);font-weight:500;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:5px 14px;border-radius:100px;
+  margin-bottom:16px;
+}
+.tag-green{background:var(--g-t);color:var(--g-deep)}
+.tag-gold{background:var(--gold-t);color:#7a5000}
+.tag-red{background:#fde8e8;color:#8b1515}
+.tag-dark{background:rgba(45,181,98,0.12);color:#6fdfa3}
+.section-h2{
+  font-family:var(--font-h);
+  font-size:clamp(28px,3.5vw,44px);
+  font-weight:700;letter-spacing:-0.5px;
+  color:#111;line-height:1.15;
+  margin-bottom:12px;
+}
+.section-h2.light{color:var(--white)}
+.section-sub{
+  font-size:16px;color:var(--txt2);line-height:1.75;
+  max-width:520px;
+}
+.section-sub.light{color:rgba(255,255,255,0.5)}
+
+/* ===== HOW IT WORKS ===== */
+.how-section{background:var(--white)}
+.how-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:0;margin-top:48px;
+  border:1px solid var(--border-l);
+  border-radius:16px;overflow:hidden;
+}
+.how-card{
+  padding:36px 28px;border-right:1px solid var(--border-l);
+  cursor:pointer;transition:all .3s;position:relative;
+  overflow:hidden;
+}
+.how-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:var(--g);transform:scaleX(0);transition:transform .3s;
+}
+.how-card.active::after,.how-card:hover::after{transform:scaleX(1)}
+.how-card:last-child{border-right:none}
+.how-card:hover,.how-card.active{background:var(--g-t)}
+.how-num{
+  width:38px;height:38px;
+  background:var(--blk);color:var(--white);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-h);font-size:14px;font-weight:600;
+  margin-bottom:18px;transition:background .3s;
+}
+.how-card.active .how-num,.how-card:hover .how-num{background:var(--g)}
+.how-card h3{font-family:var(--font-h);font-size:15px;font-weight:600;color:#111;margin-bottom:8px}
+.how-card p{font-size:13px;color:var(--txt2);line-height:1.65}
+.how-detail{
+  background:linear-gradient(135deg,var(--g-t),#fff);
+  border:1px solid rgba(45,181,98,0.2);
+  border-radius:12px;padding:28px 32px;
+  margin-top:20px;
+  display:none;animation:fadeInUp .4s ease;
+}
+.how-detail.show{display:flex;align-items:flex-start;gap:20px}
+.how-detail-icon{
+  width:48px;height:48px;background:var(--g);color:var(--white);
+  border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+.how-detail h4{font-family:var(--font-h);font-size:16px;font-weight:600;color:#111;margin-bottom:6px}
+.how-detail p{font-size:14px;color:var(--txt2);line-height:1.7}
+
+/* ===== MODULES ===== */
+.modules-section{background:var(--bg)}
+.modules-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;margin-top:48px;
+}
+.module-card{
+  background:var(--white);
+  border:1px solid var(--border-l);
+  border-radius:16px;padding:32px;
+  cursor:pointer;transition:all .3s;
+  position:relative;overflow:hidden;
+}
+.module-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--g),var(--gold));
+  transform:scaleX(0);transform-origin:left;transition:transform .35s;
+}
+.module-card:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,0.1);border-color:transparent}
+.module-card:hover::before{transform:scaleX(1)}
+.module-icon{
+  width:52px;height:52px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin-bottom:20px;
+  transition:all .3s;
+}
+.module-card:hover .module-icon{transform:scale(1.08)}
+.module-card h3{font-family:var(--font-h);font-size:16px;font-weight:600;color:#111;margin-bottom:8px}
+.module-card p{font-size:13.5px;color:var(--txt2);line-height:1.65;margin-bottom:18px}
+.module-tag{
+  display:inline-block;font-size:11px;font-family:var(--font-m);
+  padding:4px 10px;border-radius:6px;font-weight:500;
+}
+.module-arrow{
+  position:absolute;bottom:24px;right:24px;
+  width:32px;height:32px;border-radius:8px;
+  background:var(--bg);display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:var(--txt2);transition:all .3s;
+}
+.module-card:hover .module-arrow{background:var(--g);color:var(--white);transform:translate(2px,-2px)}
+
+/* ===== IMPACT ===== */
+.impact-section{background:var(--blk);position:relative;overflow:hidden}
+.impact-section::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(45,181,98,0.08),transparent 70%);
+  pointer-events:none;
+}
+.impact-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:16px;margin-top:48px;
+}
+.impact-card{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:14px;padding:28px;
+  transition:all .3s;cursor:pointer;
+}
+.impact-card:hover{background:rgba(45,181,98,0.07);border-color:rgba(45,181,98,0.3);transform:translateY(-3px)}
+.impact-icon{font-size:26px;color:var(--g);margin-bottom:14px}
+.impact-card h3{font-family:var(--font-h);font-size:15px;font-weight:600;color:var(--white);margin-bottom:8px}
+.impact-card p{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.65}
+
+/* ===== USP ===== */
+.usp-section{background:var(--white)}
+.usp-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;margin-top:48px}
+.usp-visual{position:relative}
+.usp-box{
+  background:var(--blk);border-radius:20px;padding:36px;
+  position:relative;overflow:hidden;
+}
+.usp-box::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:200px;height:200px;
+  background:radial-gradient(circle,rgba(45,181,98,0.15),transparent 70%);
+}
+.usp-box-title{
+  font-family:var(--font-h);font-size:13px;font-weight:500;
+  color:rgba(255,255,255,0.4);letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:20px;font-family:var(--font-m);
+}
+.usp-metric{display:flex;align-items:center;gap:16px;margin-bottom:18px;padding:16px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.06)}
+.usp-metric-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.usp-metric-val{font-family:var(--font-h);font-size:22px;font-weight:700;color:var(--white)}
+.usp-metric-label{font-size:12px;color:rgba(255,255,255,0.45);margin-top:2px}
+.usp-points{list-style:none;display:flex;flex-direction:column;gap:20px}
+.usp-point{display:flex;align-items:flex-start;gap:16px}
+.usp-point-icon{
+  width:40px;height:40px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.usp-point h4{font-family:var(--font-h);font-size:15px;font-weight:600;color:#111;margin-bottom:4px}
+.usp-point p{font-size:13.5px;color:var(--txt2);line-height:1.6}
+
+/* ===== SDGs ===== */
+.sdg-section{background:var(--bg)}
+.sdg-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:40px}
+.sdg-pill{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 18px;border-radius:10px;
+  font-family:var(--font-m);font-size:13px;
+  cursor:pointer;transition:all .25s;
+  border:1px solid transparent;
+}
+.sdg-pill:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.1)}
+.sdg-num{font-weight:600;font-size:12px}
+
+/* ===== PARTNERS ===== */
+.partners-section{background:var(--white)}
+.partners-label{font-size:12px;font-family:var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--txt2);text-align:center;margin-bottom:32px}
+.partners-row{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
+.partner-logo{
+  font-family:var(--font-h);font-size:16px;font-weight:600;
+  color:rgba(0,0,0,0.2);transition:color .3s;cursor:default;
+  letter-spacing:-0.3px;
+}
+.partner-logo:hover{color:rgba(0,0,0,0.5)}
+
+/* ===== TESTIMONIALS ===== */
+.testi-section{background:var(--blk)}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
+.testi-card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;padding:28px;
+  transition:all .3s;
+}
+.testi-card:hover{background:rgba(45,181,98,0.06);border-color:rgba(45,181,98,0.2)}
+.testi-stars{color:var(--gold);font-size:14px;margin-bottom:16px;letter-spacing:2px}
+.testi-text{font-size:14px;color:rgba(255,255,255,0.7);line-height:1.75;margin-bottom:20px;font-style:italic}
+.testi-author{display:flex;align-items:center;gap:12px}
+.testi-avatar{
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-h);font-size:15px;font-weight:600;color:var(--white);
+}
+.testi-name{font-family:var(--font-h);font-size:14px;font-weight:600;color:var(--white)}
+.testi-role{font-size:12px;color:rgba(255,255,255,0.4);font-family:var(--font-m)}
+
+/* ===== CTA SECTION ===== */
+.cta-section{
+  background:linear-gradient(135deg,var(--g-deep) 0%,var(--g) 50%,#1ea855 100%);
+  padding:96px 2.5rem;text-align:center;position:relative;overflow:hidden;
+}
+.cta-section::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.05) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.cta-inner{position:relative;z-index:1}
+.cta-section h2{
+  font-family:var(--font-h);font-size:clamp(30px,4vw,50px);
+  font-weight:700;color:var(--white);
+  letter-spacing:-0.5px;margin-bottom:16px;
+}
+.cta-section p{font-size:17px;color:rgba(255,255,255,0.8);margin-bottom:40px;line-height:1.65}
+.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-cta-white{
+  background:var(--white);color:var(--g-deep);
+  border:none;padding:16px 32px;border-radius:10px;
+  font-size:15px;font-weight:600;font-family:var(--font-h);
+  cursor:pointer;transition:all .25s;
+}
+.btn-cta-white:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+.btn-cta-ghost{
+  background:transparent;color:var(--white);
+  border:1px solid rgba(255,255,255,0.35);
+  padding:16px 32px;border-radius:10px;
+  font-size:15px;font-family:var(--font-h);
+  cursor:pointer;transition:all .25s;
+}
+.btn-cta-ghost:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.6);transform:translateY(-2px)}
+
+/* ===== FOOTER ===== */
+footer{background:#111;padding:64px 2.5rem 28px;color:rgba(255,255,255,0.5)}
+.footer-inner{max-width:1160px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:16px;text-decoration:none}
+.footer-logo-text{font-family:var(--font-h);font-size:16px;font-weight:600}
+.footer-logo-text .h{color:var(--g)}
+.footer-logo-text .f{color:var(--white)}
+.footer-logo-text .a{color:var(--gold);font-size:10px;display:block;letter-spacing:.2em;font-family:var(--font-m);font-weight:400}
+.footer-desc{font-size:13px;line-height:1.7;max-width:240px;margin-bottom:20px}
+.footer-contact a{display:block;font-size:12.5px;color:var(--g);text-decoration:none;margin-bottom:6px}
+.footer-contact a:hover{color:#6fdfa3}
+.footer-col h4{font-family:var(--font-h);font-size:13px;font-weight:600;color:var(--white);margin-bottom:18px}
+.footer-col a{display:block;font-size:13px;color:rgba(255,255,255,0.4);text-decoration:none;margin-bottom:10px;transition:color .2s}
+.footer-col a:hover{color:var(--white)}
+.footer-bottom{
+  border-top:1px solid rgba(255,255,255,0.07);
+  padding-top:24px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.footer-bottom span{font-size:12px}
+.footer-socials{display:flex;gap:12px}
+.social-btn{
+  width:34px;height:34px;border-radius:8px;
+  background:rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,0.5);font-size:16px;
+  transition:all .2s;cursor:pointer;text-decoration:none;
+}
+.social-btn:hover{background:var(--g);color:var(--white)}
+
+/* ===== SCROLL ANIMATIONS ===== */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
+
+/* ===== RESPONSIVE ===== */
+/* hamburger */
+.hamburger{
+  display:none;flex-direction:column;justify-content:center;gap:5px;
+  width:36px;height:36px;background:none;border:none;
+  cursor:pointer;padding:4px;border-radius:8px;
+  transition:background .2s;
+}
+.hamburger:hover{background:rgba(255,255,255,0.08)}
+.hamburger span{
+  display:block;width:22px;height:2px;
+  background:rgba(255,255,255,0.75);border-radius:2px;
+  transition:all .3s;
+}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+/* mobile drawer */
+.mobile-nav{
+  position:fixed;top:66px;left:0;right:0;bottom:0;
+  background:rgba(15,15,15,0.97);backdrop-filter:blur(24px);
+  z-index:999;display:flex;flex-direction:column;
+  padding:32px 28px;gap:6px;
+  transform:translateX(-100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;
+}
+.mobile-nav.open{transform:translateX(0)}
+.mobile-nav a{
+  color:rgba(255,255,255,0.75);text-decoration:none;
+  font-size:20px;font-family:var(--font-h);font-weight:600;
+  padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:space-between;
+  transition:color .2s;
+}
+.mobile-nav a:hover{color:var(--g)}
+.mobile-nav a i{font-size:16px;color:rgba(255,255,255,0.2)}
+.mobile-nav-divider{height:1px;background:rgba(255,255,255,0.06);margin:12px 0}
+.mobile-nav-btns{
+  display:flex;flex-direction:column;gap:10px;margin-top:16px;
+}
+.mobile-nav-btns .btn-nav-outline,
+.mobile-nav-btns .btn-nav-primary{
+  width:100%;text-align:center;padding:14px;font-size:15px;
+  border-radius:10px;
+}
+@media(max-width:900px){
+  .hero-stats{grid-template-columns:repeat(2,1fr)}
+  .hero-stat:nth-child(2){border-right:none}
+  .hero-stat:nth-child(3){border-top:1px solid var(--border)}
+  .hero-stat:nth-child(4){border-top:1px solid var(--border);border-right:none}
+  .how-grid{grid-template-columns:repeat(2,1fr)}
+  .how-card:nth-child(2){border-right:none}
+  .how-card:nth-child(3){border-top:1px solid var(--border-l)}
+  .how-card:nth-child(4){border-top:1px solid var(--border-l);border-right:none}
+  .modules-grid{grid-template-columns:repeat(2,1fr)}
+  .impact-grid{grid-template-columns:repeat(2,1fr)}
+  .usp-grid{grid-template-columns:1fr}
+  .testi-grid{grid-template-columns:1fr}
+  .footer-top{grid-template-columns:1fr 1fr}
+  .nav-links{display:none}
+  .hamburger{display:flex}
+}
+@media(max-width:600px){
+  nav{padding:0 1.25rem}
+  .section{padding:64px 1.25rem}
+  .hero-content{padding:100px 1.25rem 40px}
+  .modules-grid{grid-template-columns:1fr}
+  .impact-grid{grid-template-columns:1fr}
+  .hero-stats{grid-template-columns:repeat(2,1fr)}
+  .footer-top{grid-template-columns:1fr}
+  .cta-section{padding:64px 1.25rem}
+</style>
+<script src="/hopefusion-connection-layer.js"></script>
+<script src="/hopefusion-i18n.js" type="module"></script>
+
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#2DB562"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="HopeFusion"/>
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png"/>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav id="navbar">
+  <a class="nav-logo" href="#">
+    <svg class="nav-logo-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 28 Q5 18 11 10" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M13 30 Q9 19 16 11" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <path d="M18 31 Q14 20 21 12" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M23 30 Q19 19 25 12" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="21" cy="8" r="2.5" fill="#E02020"/>
+      <circle cx="26" cy="13" r="2.5" fill="#E02020"/>
+    </svg>
+    <div>
+      <div class="nav-brand">
+        <span class="hope">Hope</span><span class="fusion">Fusion</span>
+        <span class="africa">A F R I C A</span>
+      </div>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#how" data-i18n="nav.how_it_works">How it works</a></li>
+    <li><a href="#modules" data-i18n="nav.platform">Platform</a></li>
+    <li><a href="#impact" data-i18n="nav.impact">Impact</a></li>
+    <li><a href="#sdgs" data-i18n="nav.sdgs">SDGs</a></li>
+    <li><a href="#about" data-i18n="nav.about">About</a></li>
+  </ul>
+  <div class="nav-right">
+    <div id="lang-switcher" style="margin-right:12px"></div>
+    <button class="btn-nav-outline" data-i18n="nav.sign_in">Sign in</button>
+    <button class="btn-nav-primary" data-i18n="nav.get_started">Get started →</button>
+    <button class="hamburger" id="hamburger-btn" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== MOBILE DRAWER ===== -->
+<nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+  <a href="#how" onclick="closeMobileNav()">How it works <i class="ti ti-chevron-right"></i></a>
+  <a href="#modules" onclick="closeMobileNav()">Platform <i class="ti ti-chevron-right"></i></a>
+  <a href="#impact" onclick="closeMobileNav()">Impact <i class="ti ti-chevron-right"></i></a>
+  <a href="#sdgs" onclick="closeMobileNav()">SDGs <i class="ti ti-chevron-right"></i></a>
+  <a href="#about" onclick="closeMobileNav()">About <i class="ti ti-chevron-right"></i></a>
+  <div class="mobile-nav-divider"></div>
+  <a href="/hopefusion-grant-platform.html">Grant Platform <i class="ti ti-chevron-right"></i></a>
+  <a href="/hopefusion-ai-matching.html">AI Matching <i class="ti ti-chevron-right"></i></a>
+  <a href="/hopefusion-elearning.html">E-Learning Hub <i class="ti ti-chevron-right"></i></a>
+  <a href="/hopefusion-marketplace.html">Marketplace <i class="ti ti-chevron-right"></i></a>
+  <div class="mobile-nav-divider"></div>
+  <div class="mobile-nav-btns">
+    <button class="btn-nav-outline" onclick="showLoginModal();closeMobileNav()">Sign in</button>
+    <button class="btn-nav-primary" onclick="window.location.href='/hopefusion-register.html?role=startup'">Get started →</button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      <span data-i18n="home.hero_badge">Beta launch — 5,000 startups. $50M in impact funding.</span>
+    </div>
+    <p class="hero-eyebrow" data-i18n="home.eyebrow">Africa's #1 startup ecosystem</p>
+    <h1 data-i18n="home.hero_headline" data-i18n-html="true">
+      Where African <span class="line-green">Innovation</span><br/>
+      meets <span class="line-gold">Opportunity</span>
+    </h1>
+    <p class="hero-sub" data-i18n="home.hero_sub">
+      One unified platform connecting startups, investors, mentors, and resources across the continent. Empower. Innovate. Thrive.
+    </p>
+    <div class="hero-btns">
+      <button class="btn-hero-primary" id="hero-launch-btn">
+        <i class="ti ti-rocket"></i> <span data-i18n="home.launch_startup">Launch your startup</span>
+      </button>
+      <button class="btn-hero-secondary" id="hero-watch-btn">
+        <i class="ti ti-player-play"></i> <span data-i18n="home.watch_story">Watch the story</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- live ticker -->
+  <div class="ticker-bar">
+    <div class="ticker-inner" id="ticker">
+      <span class="ticker-item"><i class="ti ti-trending-up"></i> Startups onboarded <span class="tv" id="live-count">4,872</span></span>
+      <span class="ticker-item"><i class="ti ti-currency-dollar"></i> Impact funding target <span class="tv">$50 Million</span></span>
+      <span class="ticker-item"><i class="ti ti-handshake"></i> Collaborations <span class="tv" id="live-collab">87</span></span>
+      <span class="ticker-item"><i class="ti ti-world"></i> Countries active <span class="tv">14</span></span>
+      <span class="ticker-item"><i class="ti ti-briefcase"></i> Jobs target by 2030 <span class="tv">10% unemployment↓</span></span>
+      <span class="ticker-item"><i class="ti ti-building-bank"></i> Market size <span class="tv">$3 Trillion</span></span>
+      <span class="ticker-item"><i class="ti ti-trending-up"></i> Startups onboarded <span class="tv">4,872</span></span>
+      <span class="ticker-item"><i class="ti ti-currency-dollar"></i> Impact funding target <span class="tv">$50 Million</span></span>
+      <span class="ticker-item"><i class="ti ti-handshake"></i> Collaborations <span class="tv">87</span></span>
+      <span class="ticker-item"><i class="ti ti-world"></i> Countries active <span class="tv">14</span></span>
+      <span class="ticker-item"><i class="ti ti-briefcase"></i> Jobs target by 2030 <span class="tv">10% unemployment↓</span></span>
+      <span class="ticker-item"><i class="ti ti-building-bank"></i> Market size <span class="tv">$3 Trillion</span></span>
+    </div>
+  </div>
+
+  <!-- hero stats -->
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="stat-num"><span class="counter accent-g" data-target="5000" data-suffix="+">0+</span></div>
+      <div class="stat-label" data-i18n="home.stat_startups">Startups in beta</div>
+    </div>
+    <div class="hero-stat">
+      <div class="stat-num">$<span class="counter accent-gold" data-target="50" data-suffix="M">0M</span></div>
+      <div class="stat-label" data-i18n="home.stat_funding">Impact funding goal</div>
+    </div>
+    <div class="hero-stat">
+      <div class="stat-num"><span class="counter accent-r" data-target="10" data-suffix="%">0%</span></div>
+      <div class="stat-label" data-i18n="home.stat_unemployment">Unemployment reduction by 2030</div>
+    </div>
+    <div class="hero-stat">
+      <div class="stat-num">$<span class="counter accent-gold" data-target="3" data-suffix="T">0T</span></div>
+      <div class="stat-label" data-i18n="home.stat_market">African market opportunity</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="section how-section" id="how">
+  <div class="section-inner">
+    <div class="reveal">
+      <span class="section-tag tag-green"><i class="ti ti-route"></i> <span data-i18n="home.how_badge">How it works</span></span>
+      <h2 class="section-h2" data-i18n="home.how_title">From idea to impact<br/>in four steps</h2>
+      <p class="section-sub" data-i18n="home.how_sub">A seamless journey designed for African entrepreneurs navigating real challenges on the ground.</p>
+    </div>
+    <div class="how-grid reveal">
+      <div class="how-card active" onclick="selectStep(this,0)">
+        <div class="how-num">01</div>
+        <h3 data-i18n="home.step1_title">Register your startup</h3>
+        <p data-i18n="home.step1_desc">Create your profile, describe your vision and get verified in under 10 minutes.</p>
+      </div>
+      <div class="how-card" onclick="selectStep(this,1)">
+        <div class="how-num">02</div>
+        <h3 data-i18n="home.step2_title">Get matched by AI</h3>
+        <p data-i18n="home.step2_desc">Our engine connects you with the right investors, mentors and resources instantly.</p>
+      </div>
+      <div class="how-card" onclick="selectStep(this,2)">
+        <div class="how-num">03</div>
+        <h3 data-i18n="home.step3_title">Access funding</h3>
+        <p data-i18n="home.step3_desc">Apply to grants, VC, angel and crowdfunding from one unified dashboard.</p>
+      </div>
+      <div class="how-card" onclick="selectStep(this,3)">
+        <div class="how-num">04</div>
+        <h3 data-i18n="home.step4_title">Scale and thrive</h3>
+        <p data-i18n="home.step4_desc">Use our marketplace, e-learning and global partnerships to grow beyond borders.</p>
+      </div>
+    </div>
+    <div class="how-detail show" id="how-detail">
+      <div class="how-detail-icon" id="how-icon"><i class="ti ti-user-plus"></i></div>
+      <div>
+        <h4 id="how-title" data-i18n="home.step1_title">Register your startup</h4>
+        <p id="how-body" data-i18n="home.step1_body">Build your startup profile with pitch details, team info, sector and funding needs. Our AI begins working immediately — analyzing your pitch and queuing smart matches before you even finish registration.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PLATFORM MODULES ===== -->
+<section class="section modules-section" id="modules">
+  <div class="section-inner">
+    <div class="reveal">
+      <span class="section-tag tag-gold"><i class="ti ti-layout-grid"></i> Platform modules</span>
+      <h2 class="section-h2">Everything your startup needs,<br/>in one place</h2>
+      <p class="section-sub">Six integrated modules designed to solve Africa's startup challenges end to end — from funding to scale.</p>
+    </div>
+    <div class="modules-grid">
+      <div class="module-card reveal reveal-delay-1" onclick="window.location.href='/hopefusion-grant-platform.html'" style="cursor:pointer">
+        <div class="module-icon" style="background:#E9F9EF;color:#1e8a48"><i class="ti ti-award"></i></div>
+        <h3>Grant Platform</h3>
+        <p>Discover and apply for curated grants matched to your sector, location and stage automatically.</p>
+        <span class="module-tag" style="background:#E9F9EF;color:#1e8a48">Funding</span>
+        <div class="module-arrow"><i class="ti ti-arrow-up-right"></i></div>
+      </div>
+      <div class="module-card reveal reveal-delay-2" onclick="window.location.href='/hopefusion-ai-matching.html'" style="cursor:pointer">
+        <div class="module-icon" style="background:#FEF7E8;color:#c07000"><i class="ti ti-chart-line"></i></div>
+        <h3>Impact Investment Platform</h3>
+        <p>Connect with investors who care about returns and African development. AI-powered matching included.</p>
+        <span class="module-tag" style="background:#FEF7E8;color:#c07000">Investment</span>
+        <div class="module-arrow"><i class="ti ti-arrow-up-right"></i></div>
+      </div>
+      <div class="module-card reveal reveal-delay-3" onclick="window.location.href='/hopefusion-marketplace.html'" style="cursor:pointer">
+        <div class="module-icon" style="background:#fde8e8;color:#b01515"><i class="ti ti-shopping-bag"></i></div>
+        <h3>AI-Driven E-Commerce</h3>
+        <p>Sell your products across Africa with AI recommendations, smart logistics and mobile money payments.</p>
+        <span class="module-tag" style="background:#fde8e8;color:#b01515">Commerce</span>
+        <div class="module-arrow"><i class="ti ti-arrow-up-right"></i></div>
+      </div>
+      <div class="module-card reveal reveal-delay-1" onclick="window.location.href='/hopefusion-marketplace.html'" style="cursor:pointer">
+        <div class="module-icon" style="background:#eef0fe;color:#3535cc"><i class="ti ti-settings-automation"></i></div>
+        <h3>Process Automation</h3>
+        <p>Automate compliance, payroll, reporting and back-office tasks so you can focus entirely on growth.</p>
+        <span class="module-tag" style="background:#eef0fe;color:#3535cc">Automation</span>
+        <div class="module-arrow"><i class="ti ti-arrow-up-right"></i></div>
+      </div>
+      <div class="module-card reveal reveal-delay-2" onclick="window.location.href='/hopefusion-elearning.html'" style="cursor:pointer">
+        <div class="module-icon" style="background:#f0fef4;color:#1e8a48"><i class="ti ti-school"></i></div>
+        <h3>E-Learning Hub</h3>
+        <p>World-class courses, mentorship sessions and founder certifications designed for the African context.</p>
+        <span class="module-tag" style="background:#f0fef4;color:#1e8a48">Education</span>
+        <div class="module-arrow"><i class="ti ti-arrow-up-right"></i></div>
+      </div>
+      <div class="module-card reveal reveal-delay-3" onclick="window.location.href='/hopefusion-govt-support.html'" style="cursor:pointer">
+        <div class="module-icon" style="background:#fef9e8;color:#c07000"><i class="ti ti-building-bank"></i></div>
+        <h3>Government Support Platform</h3>
+        <p>Navigate regulatory landscapes, access public sector contracts and advocacy for founder-friendly policies.</p>
+        <span class="module-tag" style="background:#fef9e8;color:#c07000">Policy</span>
+        <div class="module-arrow"><i class="ti ti-arrow-up-right"></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== IMPACT ===== -->
+<section class="section impact-section" id="impact">
+  <div class="section-inner">
+    <div class="reveal">
+      <span class="section-tag tag-dark"><i class="ti ti-flame"></i> Our potential impact</span>
+      <h2 class="section-h2 light">Built to change<br/>Africa's future</h2>
+      <p class="section-sub light">Every startup that thrives on HopeFusion creates jobs, solves local problems and builds Africa's economic foundation.</p>
+    </div>
+    <div class="impact-grid">
+      <div class="impact-card reveal reveal-delay-1">
+        <div class="impact-icon"><i class="ti ti-trending-up"></i></div>
+        <h3>Economic Growth</h3>
+        <p>Contribute directly to GDP growth across 54 African nations through startup-led innovation and job creation.</p>
+      </div>
+      <div class="impact-card reveal reveal-delay-2">
+        <div class="impact-icon" style="color:var(--gold)"><i class="ti ti-users"></i></div>
+        <h3>Job Creation</h3>
+        <p>Target a 10% reduction in Africa's youth unemployment by 2030 through supported startups that hire locally.</p>
+      </div>
+      <div class="impact-card reveal reveal-delay-3">
+        <div class="impact-icon" style="color:var(--red)"><i class="ti ti-world"></i></div>
+        <h3>Global Market Access</h3>
+        <p>Give African startups direct pathways to international markets, investors and strategic global partnerships.</p>
+      </div>
+      <div class="impact-card reveal reveal-delay-4">
+        <div class="impact-icon" style="color:#a78bfa"><i class="ti ti-scale"></i></div>
+        <h3>Reduced Inequality</h3>
+        <p>Equal access to funding, mentorship and resources regardless of geography, gender or background.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== USP ===== -->
+<section class="section usp-section" id="about">
+  <div class="section-inner">
+    <div class="usp-grid">
+      <div class="usp-visual reveal">
+        <div class="usp-box">
+          <div class="usp-box-title">Platform metrics — Beta phase</div>
+          <div class="usp-metric">
+            <div class="usp-metric-icon" style="background:rgba(45,181,98,0.15);color:var(--g)"><i class="ti ti-building-store"></i></div>
+            <div>
+              <div class="usp-metric-val">5,000+</div>
+              <div class="usp-metric-label">Startups joining in beta phase</div>
+            </div>
+          </div>
+          <div class="usp-metric">
+            <div class="usp-metric-icon" style="background:rgba(232,160,32,0.15);color:var(--gold)"><i class="ti ti-currency-dollar"></i></div>
+            <div>
+              <div class="usp-metric-val">$50M</div>
+              <div class="usp-metric-label">Impact funding to be raised — Year 1</div>
+            </div>
+          </div>
+          <div class="usp-metric">
+            <div class="usp-metric-icon" style="background:rgba(224,32,32,0.15);color:var(--red)"><i class="ti ti-handshake"></i></div>
+            <div>
+              <div class="usp-metric-val">100</div>
+              <div class="usp-metric-label">Successful collaborations target</div>
+            </div>
+          </div>
+          <div class="usp-metric">
+            <div class="usp-metric-icon" style="background:rgba(167,139,250,0.15);color:#a78bfa"><i class="ti ti-world"></i></div>
+            <div>
+              <div class="usp-metric-val">$3 Trillion</div>
+              <div class="usp-metric-label">Total African market opportunity</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <span class="section-tag tag-green"><i class="ti ti-star"></i> Why HopeFusion</span>
+        <h2 class="section-h2" style="margin-top:12px">More than a platform.<br/>A <span style="color:var(--g)">movement.</span></h2>
+        <p class="section-sub" style="margin-bottom:36px">What sets us apart is our holistic approach. We don't just provide funding — we build the entire ecosystem around each startup.</p>
+        <ul class="usp-points">
+          <li class="usp-point">
+            <div class="usp-point-icon" style="background:var(--g-t);color:var(--g)"><i class="ti ti-brain"></i></div>
+            <div>
+              <h4>AI-powered matching</h4>
+              <p>Our engine analyzes your pitch, sector and goals to match you with the perfect investors, mentors and resources — not random lists.</p>
+            </div>
+          </li>
+          <li class="usp-point">
+            <div class="usp-point-icon" style="background:var(--gold-t);color:var(--gold)"><i class="ti ti-planet"></i></div>
+            <div>
+              <h4>Africa-first by design</h4>
+              <p>Built for low-bandwidth environments, mobile money payments and multi-language support across the continent.</p>
+            </div>
+          </li>
+          <li class="usp-point">
+            <div class="usp-point-icon" style="background:#fde8e8;color:var(--red)"><i class="ti ti-users-group"></i></div>
+            <div>
+              <h4>Community not competition</h4>
+              <p>We partner with existing hubs, accelerators and governments — building one united force for African startups.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SDGs ===== -->
+<section class="section sdg-section" id="sdgs">
+  <div class="section-inner">
+    <div class="reveal">
+      <span class="section-tag tag-gold"><i class="ti ti-globe"></i> UN sustainable development goals</span>
+      <h2 class="section-h2">Aligned with what<br/>matters globally</h2>
+      <p class="section-sub">HopeFusion Africa directly advances 9 of the 17 UN SDGs — making us a credible partner for international impact funding and development organizations.</p>
+    </div>
+    <div class="sdg-grid reveal">
+      <div class="sdg-pill" style="background:#fce8ea;color:#c0102a;border-color:#e5243b30"><span class="sdg-num">SDG 1</span> No Poverty</div>
+      <div class="sdg-pill" style="background:#fdf3e7;color:#8a5000;border-color:#dda83630"><span class="sdg-num">SDG 3</span> Good Health &amp; Well-Being</div>
+      <div class="sdg-pill" style="background:#fce8eb;color:#8b0f1e;border-color:#c5192d30"><span class="sdg-num">SDG 4</span> Quality Education</div>
+      <div class="sdg-pill" style="background:#e6f3fa;color:#004d75;border-color:#00689d30"><span class="sdg-num">SDG 6</span> Clean Water &amp; Sanitation</div>
+      <div class="sdg-pill" style="background:#fce8f0;color:#6b1030;border-color:#a2194230"><span class="sdg-num">SDG 8</span> Decent Work &amp; Economic Growth</div>
+      <div class="sdg-pill" style="background:#fef0e8;color:#a0400a;border-color:#fd692530"><span class="sdg-num">SDG 9</span> Industry, Innovation &amp; Infrastructure</div>
+      <div class="sdg-pill" style="background:#fce8ea;color:#92091a;border-color:#dd132830"><span class="sdg-num">SDG 10</span> Reduced Inequality</div>
+      <div class="sdg-pill" style="background:#e8f3e8;color:#1e4a22;border-color:#3f7e4430"><span class="sdg-num">SDG 13</span> Climate Action</div>
+      <div class="sdg-pill" style="background:#e6eef4;color:#0f2d45;border-color:#19486a30"><span class="sdg-num">SDG 17</span> Partnerships for the Goals</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="section testi-section">
+  <div class="section-inner">
+    <div class="reveal">
+      <span class="section-tag tag-dark"><i class="ti ti-quote"></i> Voices from the ecosystem</span>
+      <h2 class="section-h2 light">What our community says</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card reveal reveal-delay-1">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"HopeFusion connected us with three investors in our first week. No other platform in Africa gives startups this level of structured access to capital."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:var(--g)">AK</div>
+          <div>
+            <div class="testi-name">Ama Korantema</div>
+            <div class="testi-role">Founder, GreenTech Ghana</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal reveal-delay-2">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"As an impact investor, finding African startups aligned with my thesis was nearly impossible — until HopeFusion. The AI matching is genuinely remarkable."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:var(--gold)">RM</div>
+          <div>
+            <div class="testi-name">Rene Moerman</div>
+            <div class="testi-role">Season Entrepreneur, Advisor</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal reveal-delay-3">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"The e-learning and mentorship modules gave my team skills we could not have accessed otherwise. This is what Africa's startup generation has been waiting for."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:var(--red)">FY</div>
+          <div>
+            <div class="testi-name">Faustina Esi Yankson</div>
+            <div class="testi-role">Agripreneur, Ghana</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PARTNERS ===== -->
+<section class="section partners-section" style="padding:48px 2.5rem">
+  <div class="section-inner">
+    <p class="partners-label">Trusted by partners across the continent</p>
+    <div class="partners-row">
+      <span class="partner-logo">Andela</span>
+      <span class="partner-logo">AfricInvest</span>
+      <span class="partner-logo">Flutterwave</span>
+      <span class="partner-logo">iHub</span>
+      <span class="partner-logo">CITI</span>
+      <span class="partner-logo">GIZ Africa</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <span class="section-tag" style="background:rgba(255,255,255,0.15);color:var(--white);margin-bottom:20px"><i class="ti ti-rocket"></i> <span data-i18n="home.ready_join">Ready to join the movement?</span></span>
+    <h2 data-i18n="home.cta_headline">Africa's future is built<br/>by people like you.</h2>
+    <p data-i18n="home.cta_sub">Join thousands of entrepreneurs, investors and mentors already shaping the continent's next chapter.</p>
+    <div class="cta-btns">
+      <button class="btn-cta-white" data-i18n="home.cta_startup">Launch my startup →</button>
+      <button class="btn-cta-ghost" data-i18n="home.cta_investor">I'm an investor</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <a class="footer-logo" href="#">
+          <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
+            <path d="M8 28 Q5 18 11 10" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+            <path d="M13 30 Q9 19 16 11" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+            <path d="M18 31 Q14 20 21 12" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+            <path d="M23 30 Q19 19 25 12" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="21" cy="8" r="2.5" fill="#E02020"/>
+            <circle cx="26" cy="13" r="2.5" fill="#E02020"/>
+          </svg>
+          <div class="footer-logo-text">
+            <span class="h">Hope</span><span class="f">Fusion</span>
+            <span class="a">A F R I C A</span>
+          </div>
+        </a>
+        <p class="footer-desc">Africa's first integrated startup ecosystem marketplace. Empowering entrepreneurs to innovate, collaborate and thrive.</p>
+        <div class="footer-contact">
+          <a href="mailto:info@hopefusionafrica.com"><i class="ti ti-mail"></i> info@hopefusionafrica.com</a>
+          <a href="tel:+233241332246"><i class="ti ti-phone"></i> +233 241 332 246</a>
+          <a href="https://www.hopefusionafrica.com" target="_blank"><i class="ti ti-world"></i> www.hopefusionafrica.com</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="/hopefusion-grant-platform.html">Grant Platform</a>
+        <a href="/hopefusion-ai-matching.html">Impact Investment</a>
+        <a href="/hopefusion-marketplace.html">AI E-Commerce</a>
+        <a href="/hopefusion-elearning.html">E-Learning</a>
+        <a href="/hopefusion-marketplace.html">Process Automation</a>
+        <a href="/hopefusion-govt-support.html">Govt. Support</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#about">About us</a>
+        <a href="#about">Our mission</a>
+        <a href="#impact">Impact report</a>
+        <a href="#about">Advisors</a>
+        <a href="mailto:press@hopefusionafrica.com">Press &amp; media</a>
+        <a href="mailto:careers@hopefusionafrica.com">Careers</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="mailto:info@hopefusionafrica.com">Blog</a>
+        <a href="#modules">Community</a>
+        <a href="mailto:info@hopefusionafrica.com">Documentation</a>
+        <a href="/hopefusion-register.html?role=startup">Startup toolkit</a>
+        <a href="/privacy.html">Privacy policy</a>
+        <a href="/terms.html">Terms of use</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 HopeFusion Africa. All rights reserved. Empower. Innovate. Thrive.</span>
+      <div class="footer-socials">
+        <a class="social-btn" href="https://twitter.com/hopefusionafrica" target="_blank" rel="noopener" aria-label="Twitter"><i class="ti ti-brand-twitter"></i></a>
+        <a class="social-btn" href="https://linkedin.com/company/hopefusion-africa" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="ti ti-brand-linkedin"></i></a>
+        <a class="social-btn" href="https://instagram.com/hopefusionafrica" target="_blank" rel="noopener" aria-label="Instagram"><i class="ti ti-brand-instagram"></i></a>
+        <a class="social-btn" href="https://facebook.com/hopefusionafrica" target="_blank" rel="noopener" aria-label="Facebook"><i class="ti ti-brand-facebook"></i></a>
+        <a class="social-btn" href="https://youtube.com/@hopefusionafrica" target="_blank" rel="noopener" aria-label="YouTube"><i class="ti ti-brand-youtube"></i></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+/* --- NAV SCROLL --- */
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+/* --- MOBILE HAMBURGER --- */
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const mobileNav = document.getElementById('mobile-nav');
+function closeMobileNav() {
+  hamburgerBtn.classList.remove('open');
+  hamburgerBtn.setAttribute('aria-expanded', 'false');
+  mobileNav.classList.remove('open');
+  document.body.style.overflow = '';
+}
+if (hamburgerBtn) {
+  hamburgerBtn.addEventListener('click', () => {
+    const isOpen = mobileNav.classList.toggle('open');
+    hamburgerBtn.classList.toggle('open', isOpen);
+    hamburgerBtn.setAttribute('aria-expanded', String(isOpen));
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  });
+}
+
+/* --- SESSION TOAST --- */
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('session') === 'required') {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;background:#222;border:1px solid rgba(232,160,32,0.4);color:#fff;padding:14px 20px;border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:13.5px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:hfaScaleUp .3s ease;max-width:90vw;white-space:nowrap';
+    toast.innerHTML = '<i class="ti ti-lock" style="color:#E8A020;font-size:18px"></i> Please sign in to access your dashboard.';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+    // Clean the URL
+    history.replaceState(null, '', window.location.pathname);
+  }
+})();
+
+/* --- COUNTER ANIMATION --- */
+function animateCounters() {
+  document.querySelectorAll('.counter').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    let current = 0;
+    const duration = 1800;
+    const step = target / (duration / 16);
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = (target >= 100
+        ? Math.round(current).toLocaleString()
+        : Math.round(current)) + suffix;
+      if (current >= target) clearInterval(timer);
+    }, 16);
+  });
+}
+
+/* --- SCROLL REVEAL --- */
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      revealObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12 });
+revealEls.forEach(el => revealObserver.observe(el));
+
+/* run counters when hero stats enter view */
+const heroStats = document.querySelector('.hero-stats');
+const statsObserver = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) { animateCounters(); statsObserver.disconnect(); }
+}, { threshold: 0.3 });
+if (heroStats) statsObserver.observe(heroStats);
+
+/* --- HOW IT WORKS STEPS --- */
+const stepData = [
+  { icon:'ti-user-plus', title:'Register your startup', body:'Build your startup profile with pitch details, team info, sector and funding needs. Our AI begins working immediately — analyzing your pitch and queuing smart matches before you finish registration.' },
+  { icon:'ti-brain', title:'Get matched by AI', body:'Our AI engine scans thousands of investors, mentors and resources to find your perfect match based on sector, stage, location and goals. You get precision-ranked recommendations, not random lists.' },
+  { icon:'ti-currency-dollar', title:'Access funding', body:'Apply to grants, VC funds, angel networks and crowdfunding from a single unified dashboard. Track applications, receive AI-generated feedback and manage term sheets — all in one place.' },
+  { icon:'ti-rocket', title:'Scale and thrive', body:'Access the integrated marketplace to sell products, enroll in founder courses, automate your back office and connect with global partners. Your growth beyond Africa starts here.' }
+];
+
+function selectStep(card, i) {
+  document.querySelectorAll('.how-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  const detail = document.getElementById('how-detail');
+  
+  // Dynamic translations
+  const titleKey = `home.step${i+1}_title`;
+  const bodyKey = `home.step${i+1}_body`;
+  const titleText = window.hfai18n ? window.hfai18n.t(titleKey) : stepData[i].title;
+  const bodyText = window.hfai18n ? window.hfai18n.t(bodyKey) : stepData[i].body;
+  const icon = stepData[i].icon;
+
+  detail.classList.remove('show');
+  setTimeout(() => {
+    document.getElementById('how-icon').innerHTML = `<i class="ti ${icon}"></i>`;
+    document.getElementById('how-title').textContent = titleText;
+    document.getElementById('how-body').textContent = bodyText;
+    detail.classList.add('show');
+  }, 200);
+}
+
+/* --- LIVE TICKER NUMBERS --- */
+let liveCount = 4872;
+let liveCollab = 87;
+setInterval(() => {
+  if (Math.random() > 0.5) {
+    liveCount += Math.floor(Math.random() * 3);
+    const el = document.getElementById('live-count');
+    if (el) el.textContent = liveCount.toLocaleString();
+  }
+  if (Math.random() > 0.75) {
+    liveCollab++;
+    const el = document.getElementById('live-collab');
+    if (el) el.textContent = liveCollab;
+  }
+}, 4000);
+
+/* --- FRONTEND INTERACTION FLOWS --- */
+document.addEventListener('DOMContentLoaded', () => {
+  // Bind Get Started / Launch startup buttons (Startup Founders onboarding)
+  document.querySelectorAll('.btn-nav-primary, .btn-hero-primary, .btn-cta-white').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.location.href = '/hopefusion-register.html?role=startup';
+    });
+  });
+
+  // Bind Sign In button — opens login modal with no pre-filled credentials
+  const signInBtn = document.querySelector('.btn-nav-outline');
+  if (signInBtn) {
+    signInBtn.addEventListener('click', () => {
+      showLoginModal();
+    });
+  }
+
+  // Bind "I'm an investor" CTA button (Impact Investors onboarding)
+  const investorCta = document.querySelector('.btn-cta-ghost');
+  if (investorCta) {
+    investorCta.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = '/hopefusion-register.html?role=investor';
+    });
+  }
+
+  // Bind Watch the Story button — opens YouTube modal
+  const watchBtn = document.getElementById('hero-watch-btn');
+  if (watchBtn) {
+    watchBtn.addEventListener('click', () => showVideoModal());
+  }
+
+  // Bind dynamic language switching for active stepper cards
+  window.addEventListener('hfai18n:ready', () => {
+    if (window.hfai18n) {
+      window.hfai18n.onChange(() => {
+        const activeCard = document.querySelector('.how-card.active');
+        if (activeCard) {
+          const cards = Array.from(document.querySelectorAll('.how-card'));
+          const idx = cards.indexOf(activeCard);
+          if (idx !== -1) {
+            const titleKey = `home.step${idx+1}_title`;
+            const bodyKey = `home.step${idx+1}_body`;
+            const titleEl = document.getElementById('how-title');
+            const bodyEl = document.getElementById('how-body');
+            if (titleEl) titleEl.textContent = window.hfai18n.t(titleKey);
+            if (bodyEl) bodyEl.textContent = window.hfai18n.t(bodyKey);
+          }
+        }
+      });
+    }
+  });
+});
+
+/* --- VIDEO MODAL --- */
+function showVideoModal() {
+  if (document.getElementById('hfa-video-modal')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'hfa-video-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);z-index:10000;display:flex;align-items:center;justify-content:center;animation:hfaFadeIn .25s ease';
+  overlay.innerHTML = `
+    <div style="position:relative;width:90%;max-width:860px;aspect-ratio:16/9;border-radius:16px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6)">
+      <button onclick="document.getElementById('hfa-video-modal').remove()" style="position:absolute;top:-44px;right:0;background:none;border:none;color:rgba(255,255,255,0.7);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;z-index:1">
+        <i class="ti ti-x" style="font-size:18px"></i> Close
+      </button>
+      <iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" frameborder="0" allow="autoplay;encrypted-media" allowfullscreen style="display:block"></iframe>
+    </div>
+  `;
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function showLoginModal(activeTab = 'founder') {
+  // Check if modal already exists
+  if (document.getElementById('hfa-login-modal')) return;
+
+  // Add styles
+  const style = document.createElement('style');
+  style.id = 'hfa-login-styles';
+  style.textContent = `
+    .login-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      z-index: 10000; display: flex; align-items: center; justify-content: center;
+      animation: hfaFadeIn .25s ease;
+    }
+    .login-modal {
+      background: #222; border: 1.5px solid rgba(255,255,255,0.07);
+      border-radius: 18px; width: 100%; max-width: 420px; padding: 36px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4); text-align: center;
+      font-family: 'DM Sans', sans-serif; color: #fff;
+      animation: hfaScaleUp .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .login-title { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .login-title span { color: #2DB562; }
+    .login-sub { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 20px; }
+    .login-tabs {
+      display: flex; background: rgba(255,255,255,0.05); padding: 4px;
+      border-radius: 10px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.05);
+    }
+    .login-tab {
+      flex: 1; padding: 10px; border-radius: 8px; font-size: 12.5px;
+      font-family: 'Space Grotesk', sans-serif; font-weight: 500;
+      color: rgba(255,255,255,0.6); cursor: pointer; transition: all .2s; border: none; background: none;
+    }
+    .login-tab.active { background: #2DB562; color: #fff; box-shadow: 0 4px 12px rgba(45,181,98,0.25); }
+    .login-group { margin-bottom: 18px; text-align: left; }
+    .login-label { font-size: 12px; font-family: 'Space Grotesk', sans-serif; color: rgba(255,255,255,0.6); margin-bottom: 6px; display: block; }
+    .login-input {
+      width: 100%; padding: 12px 16px; background: #2a2a2a; border: 1.5px solid rgba(255,255,255,0.07);
+      border-radius: 10px; color: #fff; font-size: 14px; outline: none; transition: border-color .2s;
+    }
+    .login-input:focus { border-color: #2DB562; }
+    .login-forgot { font-size: 12px; color: rgba(255,255,255,0.35); text-align: right; display: block; margin-top: 6px; cursor: pointer; }
+    .login-forgot:hover { color: #2DB562; }
+    .login-btn {
+      width: 100%; padding: 14px; background: #2DB562; border: none; border-radius: 10px;
+      color: #fff; font-size: 14px; font-family: 'Sora', sans-serif; font-weight: 600; cursor: pointer;
+      transition: all .2s; box-shadow: 0 4px 14px rgba(45,181,98,0.3); margin-top: 10px;
+    }
+    .login-btn:hover { background: #1e8a48; transform: translateY(-1px); }
+    .login-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; transform: none; }
+    .login-err {
+      font-size: 12.5px; color: #fff; background: rgba(224,32,32,0.15); border: 1px solid rgba(224,32,32,0.3);
+      border-radius: 8px; padding: 10px 14px; margin-top: 12px; display: none; text-align: left;
+    }
+    .login-close {
+      background: none; border: none; color: rgba(255,255,255,0.4); font-size: 18px;
+      cursor: pointer; position: absolute; top: 18px; right: 18px; transition: color .2s;
+    }
+    .login-close:hover { color: #fff; }
+    @keyframes hfaScaleUp { from { transform: scale(0.93); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes hfaFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  `;
+  document.head.appendChild(style);
+
+  const isInvestor = activeTab === 'investor';
+
+  // Create markup — NO pre-filled credentials for security
+  const overlay = document.createElement('div');
+  overlay.className = 'login-overlay';
+  overlay.id = 'hfa-login-modal';
+  overlay.innerHTML = `
+    <div class="login-modal" style="position: relative">
+      <button class="login-close" onclick="document.getElementById('hfa-login-modal').remove()"><i class="ti ti-x"></i></button>
+      <div class="login-title"><span>Hope</span>Fusion</div>
+      <div class="login-sub">Sign in to your HopeFusion Africa account.</div>
+      
+      <div class="login-tabs">
+        <button type="button" class="login-tab ${!isInvestor ? 'active' : ''}" id="tab-founder" onclick="switchLoginRole('founder')">Founder Portal</button>
+        <button type="button" class="login-tab ${isInvestor ? 'active' : ''}" id="tab-investor" onclick="switchLoginRole('investor')">Investor Portal</button>
+      </div>
+
+      <form id="hfa-login-form" autocomplete="on">
+        <div class="login-group">
+          <label class="login-label">EMAIL ADDRESS</label>
+          <input type="email" id="login-email" class="login-input" required autocomplete="email"
+            placeholder="${isInvestor ? 'investor@example.com' : 'founder@example.com'}" />
+        </div>
+        <div class="login-group">
+          <label class="login-label">PASSWORD</label>
+          <input type="password" id="login-password" class="login-input" required autocomplete="current-password" placeholder="Your password" />
+          <span class="login-forgot" onclick="">Forgot password?</span>
+        </div>
+        <button type="submit" class="login-btn" id="login-submit-btn"><i class="ti ti-login"></i> Sign in</button>
+        <div class="login-err" id="login-error-msg"></div>
+      </form>
+      <div style="margin-top: 20px; font-size: 12.5px; color: rgba(255,255,255,0.35)">
+        Don't have an account? <a href="/hopefusion-register.html" style="color: #2DB562; text-decoration: none" onclick="document.getElementById('hfa-login-modal').remove()">Register here</a>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Close on backdrop click
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+  // Tab switching helper
+  window.switchLoginRole = (role) => {
+    const isInv = role === 'investor';
+    document.getElementById('tab-founder').classList.toggle('active', !isInv);
+    document.getElementById('tab-investor').classList.toggle('active', isInv);
+    document.getElementById('login-email').placeholder = isInv ? 'investor@example.com' : 'founder@example.com';
+    document.getElementById('login-email').value = '';
+  };
+
+  // Handle Form Submit
+  const form = document.getElementById('hfa-login-form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('login-submit-btn');
+    const errEl = document.getElementById('login-error-msg');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Signing in...';
+    errEl.style.display = 'none';
+
+    try {
+      const email = document.getElementById('login-email').value.trim();
+      const pwd = document.getElementById('login-password').value;
+      
+      const res = await HFA.Auth.login(email, pwd);
+      
+      if (res && res.success) {
+        // Route by actual role from API response — never by email string
+        const userRole = res.user?.role;
+        if (userRole === 'investor') {
+          window.location.replace('/hopefusion-investor-dashboard.html');
+        } else if (userRole === 'admin') {
+          window.location.replace('/hopefusion-admin-dashboard.html');
+        } else if (userRole === 'mentor') {
+          window.location.replace('/hopefusion-mentor-dashboard.html');
+        } else {
+          window.location.replace('/hopefusion-startup-dashboard.html');
+        }
+      } else {
+        throw new Error(res?.error || 'Invalid credentials. Please check your email and password.');
+      }
+    } catch (error) {
+      errEl.innerHTML = '<i class="ti ti-alert-circle"></i> ' + (error.message || 'Something went wrong. Please try again.');
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-login"></i> Sign in';
+    }
+  });
+}
+</script>
+
+<script>
+  // i18n switcher: listen for module-ready event (ES modules fire after window.load)
+  window.addEventListener('hfai18n:ready', (e) => {
+    if (e.detail && e.detail.createSwitcher) {
+      e.detail.createSwitcher('lang-switcher');
+    }
+  });
+  // Fallback: also try on load in case event already fired
+  window.addEventListener('load', () => {
+    if (window.hfai18n) {
+      window.hfai18n.createSwitcher('lang-switcher');
+    }
+  });
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('[HFA] Service worker registered:', r.scope))
+      .catch(e => console.error('[HFA] SW registration failed:', e));
+  });
+}
+</script>
+</body>
+</html>

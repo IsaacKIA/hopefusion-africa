@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- HFA_CONFIG_START -->
+<script>
+  window.HFA_CONFIG = {
+    API_URL: "http://localhost:3000",
+    AI_URL: "http://localhost:3001",
+    WS_URL: "ws://localhost:3000",
+    ENV: "development"
+  };
+</script>
+<!-- HFA_CONFIG_END -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>You're offline — HopeFusion Africa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#1A1A1A;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;color:#fff}
+.card{background:#222;border-radius:24px;border:1px solid rgba(255,255,255,0.08);padding:48px 40px;text-align:center;max-width:440px;width:100%}
+.icon{font-size:56px;margin-bottom:24px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.title{font-family:'Sora',sans-serif;font-size:26px;font-weight:700;color:#fff;margin-bottom:10px}
+.sub{font-size:15px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:32px;font-family:'Space Grotesk',sans-serif}
+.logo{font-family:'Sora',sans-serif;font-size:16px;font-weight:600;margin-bottom:32px}
+.logo .h{color:#2DB562}.logo .f{color:#fff}.logo .a{color:#E8A020;font-size:9px;display:block;letter-spacing:.18em;font-weight:400;font-family:'Space Grotesk',sans-serif}
+.btn{display:inline-flex;align-items:center;gap:8px;background:#2DB562;color:#fff;border:none;padding:14px 28px;border-radius:10px;font-size:15px;font-family:'Space Grotesk',sans-serif;font-weight:500;cursor:pointer;transition:all .2s;text-decoration:none;margin-bottom:12px}
+.btn:hover{background:#1e8a48;transform:translateY(-1px)}
+.btn-outline{background:none;border:1.5px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6)}
+.btn-outline:hover{border-color:rgba(255,255,255,0.3);color:#fff;transform:translateY(-1px)}
+.cached-pages{margin-top:28px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.07)}
+.cached-title{font-size:12px;font-family:'Space Grotesk',sans-serif;color:rgba(255,255,255,0.3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
+.cached-link{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);margin-bottom:8px;text-decoration:none;color:rgba(255,255,255,0.6);font-size:13.5px;font-family:'Space Grotesk',sans-serif;transition:all .2s}
+.cached-link:hover{background:rgba(45,181,98,0.1);border-color:rgba(45,181,98,0.2);color:#fff}
+.cached-link .dot{width:6px;height:6px;border-radius:50%;background:#2DB562;flex-shrink:0}
+.status{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12.5px;font-family:'Space Grotesk',sans-serif;color:rgba(255,255,255,0.3);margin-top:20px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#E02020;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#2DB562"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="HopeFusion"/>
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png"/>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><span class="h">Hope</span><span class="f">Fusion</span><span class="a">A F R I C A</span></div>
+  <div class="icon">📡</div>
+  <h1 class="title">You're offline</h1>
+  <p class="sub">No internet connection detected. Some pages are available from cache. Your unsaved data will sync automatically when you reconnect.</p>
+  <button class="btn" onclick="tryReconnect()">↻ Try reconnecting</button>
+  <div class="cached-pages">
+    <div class="cached-title">Available offline</div>
+    <a class="cached-link" href="/hopefusion-homepage.html"><span class="dot"></span> Homepage</a>
+    <a class="cached-link" href="/hopefusion-investor-dashboard.html"><span class="dot"></span> Dashboard</a>
+    <a class="cached-link" href="/hopefusion-ai-matching.html"><span class="dot"></span> AI Matches (cached)</a>
+    <a class="cached-link" href="/hopefusion-grant-platform.html"><span class="dot"></span> Grant Platform (cached)</a>
+    <a class="cached-link" href="/hopefusion-elearning.html"><span class="dot"></span> E-Learning (cached)</a>
+  </div>
+  <div class="status"><span class="status-dot"></span> Waiting for connection…</div>
+</div>
+<script>
+function tryReconnect(){
+  fetch('/api/health',{cache:'no-store'})
+    .then(()=>window.location.reload())
+    .catch(()=>{
+      const btn=document.querySelector('.btn');
+      btn.textContent='Still offline — try again';
+      setTimeout(()=>{btn.innerHTML='↻ Try reconnecting';},2000);
+    });
+}
+// Auto-reconnect every 10 seconds
+setInterval(()=>{
+  fetch('/api/health',{cache:'no-store'})
+    .then(()=>window.location.reload())
+    .catch(()=>{});
+},10000);
+</script>
+</body>
+</html>

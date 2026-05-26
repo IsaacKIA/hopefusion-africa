@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- HFA_CONFIG_START -->
+<script>
+  window.HFA_CONFIG = {
+    API_URL: "http://localhost:3000",
+    AI_URL: "http://localhost:3001",
+    WS_URL: "ws://localhost:3000",
+    ENV: "development"
+  };
+</script>
+<!-- HFA_CONFIG_END -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Marketplace — HopeFusion Africa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<script src="/hopefusion-connection-layer.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --g:#2DB562;--g-dark:#1e8a48;--g-deep:#0f5233;--g-t:#E9F9EF;
+  --gold:#E8A020;--gold-t:#FEF7E8;--red:#E02020;--red-t:#fde8e8;
+  --purple:#7c3aed;--purple-t:#f3e8ff;--blue:#2563eb;--blue-t:#eef3fe;
+  --blk:#1A1A1A;--blk2:#222;--bg:#F4F5F7;--white:#fff;
+  --txt:#3D3D3D;--txt2:#6b6b6b;--border:rgba(255,255,255,0.07);--border-l:#e4e4e4;
+  --sidebar:240px;
+  --font-h:'Sora',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'Space Grotesk',sans-serif;
+}
+body{font-family:var(--font-b);background:var(--bg);color:var(--txt);display:flex;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--blk)}::-webkit-scrollbar-thumb{background:var(--g);border-radius:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+@keyframes modalPop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--blk);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;border-right:1px solid var(--border);z-index:200}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;text-decoration:none}
+.sidebar-brand{font-family:var(--font-h);font-size:15px;font-weight:600}
+.sidebar-brand .h{color:var(--g)}.sidebar-brand .f{color:#fff}
+.sidebar-brand .a{color:var(--gold);font-size:9px;display:block;letter-spacing:.18em;font-family:var(--font-m);font-weight:400}
+.sidebar-section{padding:16px 12px 8px;font-size:10px;font-family:var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.25)}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 16px;margin:2px 8px;border-radius:10px;color:rgba(255,255,255,0.45);font-size:13.5px;font-family:var(--font-m);cursor:pointer;transition:all .2s;text-decoration:none;position:relative}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,0.06)}
+.nav-item.active{color:#fff;background:rgba(45,181,98,0.15)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--g);border-radius:0 3px 3px 0}
+.nav-item i{font-size:18px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--g);color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px}
+.sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border)}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gold));display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-family:var(--font-h);font-size:13px;font-weight:600;color:#fff}
+.user-role{font-size:11px;color:rgba(255,255,255,0.35);font-family:var(--font-m)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border-l);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.page-title{font-family:var(--font-h);font-size:18px;font-weight:700;color:#111}
+.page-sub{font-size:13px;color:var(--txt2);font-family:var(--font-m)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.tbtn{display:flex;align-items:center;gap:6px;padding:9px 16px;border-radius:9px;font-size:13px;font-family:var(--font-m);font-weight:500;cursor:pointer;transition:all .2s;border:none}
+.tbtn.primary{background:var(--g);color:#fff;box-shadow:0 2px 10px rgba(45,181,98,0.25)}.tbtn.primary:hover{background:var(--g-dark)}
+.tbtn.gold{background:var(--gold);color:#fff}.tbtn.gold:hover{background:#c07000}
+.tbtn.outline{background:none;border:1.5px solid var(--border-l);color:var(--txt2)}.tbtn.outline:hover{border-color:#999;color:var(--txt)}
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border-l);border-radius:9px;padding:8px 14px;transition:border .2s;min-width:240px}
+.search-bar:focus-within{border-color:var(--g)}
+.search-bar input{background:none;border:none;outline:none;font-size:13px;font-family:var(--font-m);color:var(--txt);width:100%}
+.search-bar input::placeholder{color:#bbb}
+
+/* CONTENT */
+.content{padding:32px;flex:1}
+
+/* HERO BANNER */
+.market-banner{background:var(--blk);border-radius:20px;padding:40px 48px;margin-bottom:28px;position:relative;overflow:hidden;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center}
+.market-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 100% at 85% 50%,rgba(232,160,32,0.12),transparent),radial-gradient(ellipse 40% 80% at 15% 50%,rgba(45,181,98,0.08),transparent)}
+.banner-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(45,181,98,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(45,181,98,0.05) 1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(ellipse 90% 100% at 50% 50%,black,transparent)}
+.banner-tag{display:inline-flex;align-items:center;gap:7px;background:rgba(232,160,32,0.12);border:1px solid rgba(232,160,32,0.3);color:#f5c842;padding:5px 14px;border-radius:100px;font-size:11.5px;font-family:var(--font-m);margin-bottom:14px}
+.banner-dot{width:7px;height:7px;background:var(--gold);border-radius:50%;animation:pulse 2s infinite}
+.market-banner h2{font-family:var(--font-h);font-size:clamp(22px,2.5vw,32px);font-weight:700;color:#fff;line-height:1.2;letter-spacing:-.5px;margin-bottom:10px;position:relative;z-index:1}
+.market-banner h2 em{color:var(--g);font-style:normal}
+.market-banner p{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;max-width:500px;position:relative;z-index:1}
+.banner-stats{display:flex;gap:32px;margin-top:24px;position:relative;z-index:1}
+.bstat .val{font-family:var(--font-h);font-size:26px;font-weight:700;color:#fff}
+.bstat .val em{color:var(--g);font-style:normal}
+.bstat .lbl{font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--font-m);margin-top:2px}
+
+/* TABS */
+.tabs-wrap{display:flex;align-items:center;gap:4px;background:#fff;border-radius:12px;padding:6px;border:1px solid var(--border-l);margin-bottom:24px;width:fit-content}
+.tab-btn{padding:9px 20px;border-radius:9px;font-size:13.5px;font-family:var(--font-m);font-weight:500;cursor:pointer;border:none;background:none;color:var(--txt2);transition:all .2s;display:flex;align-items:center;gap:7px}
+.tab-btn.active{background:var(--g);color:#fff;box-shadow:0 2px 10px rgba(45,181,98,0.3)}
+.tab-btn:hover:not(.active){background:var(--bg)}
+.tab-count{font-size:11px;padding:2px 7px;border-radius:100px;font-weight:600}
+.tab-btn.active .tab-count{background:rgba(255,255,255,0.25);color:#fff}
+.tab-btn:not(.active) .tab-count{background:var(--bg);color:var(--txt2)}
+.content-tab{display:none}.content-tab.active{display:block;animation:fadeUp .3s ease}
+
+/* FILTERS */
+.filter-bar{background:#fff;border-radius:14px;border:1px solid var(--border-l);padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-select{padding:9px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:13px;font-family:var(--font-b);background:#fff;outline:none;appearance:none;cursor:pointer;transition:border .2s;color:var(--txt)}
+.filter-select:focus{border-color:var(--g)}
+.filter-tag{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;border:1.5px solid var(--border-l);font-size:12.5px;font-family:var(--font-m);cursor:pointer;background:#fff;color:var(--txt2);transition:all .2s}
+.filter-tag:hover,.filter-tag.on{border-color:var(--g);color:var(--g-deep);background:var(--g-t);font-weight:500}
+.results-lbl{margin-left:auto;font-size:13px;color:var(--txt2);font-family:var(--font-m)}
+.results-lbl strong{color:var(--g);font-weight:600}
+
+/* LAYOUT */
+.market-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+
+/* PRODUCT GRID */
+.products-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.product-card{background:#fff;border-radius:16px;border:1px solid var(--border-l);overflow:hidden;transition:all .3s;cursor:pointer}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.1);border-color:var(--g)}
+.product-card.featured{border:1.5px solid var(--gold);box-shadow:0 4px 20px rgba(232,160,32,0.12)}
+.product-thumb{height:180px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.product-thumb-icon{font-size:56px}
+.product-badge{position:absolute;top:12px;left:12px;font-size:11px;font-family:var(--font-m);font-weight:600;padding:4px 10px;border-radius:6px}
+.product-verified{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:5px;background:rgba(45,181,98,0.9);color:#fff;font-size:11px;font-family:var(--font-m);padding:4px 10px;border-radius:6px}
+.product-body{padding:18px}
+.product-seller{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.seller-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.seller-name{font-size:12.5px;font-family:var(--font-m);color:var(--txt2)}
+.seller-verified{color:var(--g);font-size:14px}
+.product-title{font-family:var(--font-h);font-size:15px;font-weight:700;color:#111;margin-bottom:6px;line-height:1.3}
+.product-desc{font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:12px}
+.product-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.ptag{font-size:11px;font-family:var(--font-m);font-weight:500;padding:3px 9px;border-radius:5px}
+.product-meta{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--txt2);font-family:var(--font-m);margin-bottom:14px}
+.stars{color:var(--gold);letter-spacing:1px}
+.product-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border-l)}
+.product-price{font-family:var(--font-h);font-size:18px;font-weight:700;color:#111}
+.product-price .period{font-size:12px;color:var(--txt2);font-family:var(--font-m);font-weight:400}
+.product-price.free{color:var(--g)}
+.btn-buy{padding:9px 18px;border-radius:9px;font-size:13px;font-family:var(--font-m);font-weight:500;cursor:pointer;border:none;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn-buy.green{background:var(--g);color:#fff}.btn-buy.green:hover{background:var(--g-dark)}
+.btn-buy.gold{background:var(--gold);color:#fff}.btn-buy.gold:hover{background:#c07000}
+.btn-buy.outline{background:none;border:1.5px solid var(--border-l);color:var(--txt2)}.btn-buy.outline:hover{border-color:var(--g);color:var(--g-deep)}
+
+/* SERVICE CARDS (list view) */
+.services-list{display:flex;flex-direction:column;gap:16px}
+.service-card{background:#fff;border-radius:16px;border:1px solid var(--border-l);padding:22px 24px;display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;cursor:pointer;transition:all .3s}
+.service-card:hover{box-shadow:0 8px 30px rgba(0,0,0,0.08);border-color:var(--g);transform:translateX(3px)}
+.service-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.service-title{font-family:var(--font-h);font-size:15px;font-weight:700;color:#111;margin-bottom:5px}
+.service-desc{font-size:13.5px;color:var(--txt2);line-height:1.6;margin-bottom:10px}
+.service-meta{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--txt2);font-family:var(--font-m)}
+.service-price{text-align:right}
+.service-price .amount{font-family:var(--font-h);font-size:20px;font-weight:700;color:#111}
+.service-price .period{font-size:12px;color:var(--txt2);font-family:var(--font-m);margin-top:2px}
+
+/* SELLER STATS */
+.seller-card{background:#fff;border-radius:16px;border:1px solid var(--border-l);overflow:hidden;margin-bottom:20px}
+.seller-header{padding:20px;border-bottom:1px solid var(--border-l);text-align:center}
+.seller-big-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gold));display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:22px;font-weight:700;color:#fff;margin:0 auto 12px}
+.seller-big-name{font-family:var(--font-h);font-size:16px;font-weight:700;color:#111;margin-bottom:3px}
+.seller-big-role{font-size:12.5px;color:var(--txt2);font-family:var(--font-m);margin-bottom:10px}
+.seller-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border-l)}
+.ss-item{padding:14px 0;text-align:center;border-right:1px solid var(--border-l)}
+.ss-item:last-child{border-right:none}
+.ss-val{font-family:var(--font-h);font-size:16px;font-weight:700;color:#111}
+.ss-lbl{font-size:10.5px;color:var(--txt2);font-family:var(--font-m);margin-top:2px}
+
+/* AI RECOMMENDATIONS */
+.ai-rec-card{background:var(--blk);border-radius:16px;padding:22px;border:1px solid var(--border);margin-bottom:20px;position:relative;overflow:hidden}
+.ai-rec-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(232,160,32,0.15),transparent 70%)}
+.ai-rec-title{font-family:var(--font-h);font-size:14px;font-weight:600;color:#fff;margin-bottom:4px}
+.ai-rec-sub{font-size:12px;color:rgba(255,255,255,0.4);font-family:var(--font-m);margin-bottom:16px}
+.ai-rec-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .2s}
+.ai-rec-item:last-child{border-bottom:none}
+.ai-rec-item:hover{opacity:.8}
+.ai-rec-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ai-rec-name{font-family:var(--font-h);font-size:13px;font-weight:600;color:#fff;margin-bottom:2px}
+.ai-rec-meta{font-size:11.5px;color:rgba(255,255,255,0.4);font-family:var(--font-m)}
+.ai-rec-match{margin-left:auto;font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--gold)}
+
+/* TRENDING */
+.trending-card{background:#fff;border-radius:16px;border:1px solid var(--border-l);overflow:hidden}
+.trending-header{padding:16px 20px;border-bottom:1px solid var(--border-l);font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;display:flex;align-items:center;gap:8px}
+.trending-item{display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--border-l);cursor:pointer;transition:background .2s}
+.trending-item:last-child{border-bottom:none}
+.trending-item:hover{background:var(--bg)}
+.trend-rank{font-family:var(--font-h);font-size:18px;font-weight:700;color:#ddd;min-width:28px}
+.trend-rank.top{color:var(--gold)}
+.trend-info{flex:1}
+.trend-name{font-family:var(--font-h);font-size:13px;font-weight:600;color:#111;margin-bottom:2px}
+.trend-meta{font-size:11.5px;color:var(--txt2);font-family:var(--font-m)}
+.trend-price{font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--g)}
+
+/* MY STORE */
+.store-empty{text-align:center;padding:48px 24px}
+.store-item{background:#fff;border-radius:14px;border:1px solid var(--border-l);padding:18px 20px;display:flex;align-items:center;gap:14px;margin-bottom:12px;cursor:pointer;transition:all .25s}
+.store-item:hover{box-shadow:0 4px 16px rgba(0,0,0,0.07);transform:translateY(-1px)}
+.store-item-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.store-item-title{font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;margin-bottom:3px}
+.store-item-meta{font-size:12px;color:var(--txt2);font-family:var(--font-m)}
+.store-item-stats{margin-left:auto;text-align:right}
+.store-item-revenue{font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--g)}
+.store-item-sales{font-size:11px;color:var(--txt2);font-family:var(--font-m)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(5px);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:620px;max-height:92vh;overflow-y:auto;animation:modalPop .3s cubic-bezier(.34,1.56,.64,1)}
+.modal-header{padding:22px 26px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-title{font-family:var(--font-h);font-size:17px;font-weight:700;color:#111}
+.modal-close{width:34px;height:34px;border-radius:8px;background:var(--bg);border:none;cursor:pointer;font-size:18px;color:var(--txt2);display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:var(--red-t);color:var(--red)}
+.modal-body{padding:26px}
+.modal-footer{padding:18px 26px;border-top:1px solid var(--border-l);display:flex;gap:10px;justify-content:flex-end}
+.btn-mo{padding:10px 20px;border-radius:9px;font-size:13.5px;font-family:var(--font-m);font-weight:500;cursor:pointer;transition:all .2s;border:none}
+.btn-mo.outline{background:none;border:1.5px solid var(--border-l);color:var(--txt2)}.btn-mo.outline:hover{border-color:#999}
+.btn-mo.primary{background:var(--g);color:#fff;box-shadow:0 4px 14px rgba(45,181,98,0.3)}.btn-mo.primary:hover{background:var(--g-dark)}
+.btn-mo.gold{background:var(--gold);color:#fff}.btn-mo.gold:hover{background:#c07000}
+.f-group{margin-bottom:18px}
+.f-label{font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px}
+.f-input{width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);color:var(--txt);background:#fff;outline:none;transition:border .2s}
+.f-input:focus{border-color:var(--g)}.f-input::placeholder{color:#bbb}
+textarea.f-input{resize:vertical;min-height:80px;line-height:1.6}
+select.f-input{appearance:none;cursor:pointer}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.upload-zone{border:2px dashed var(--border-l);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .25s;background:var(--bg);position:relative}
+.upload-zone:hover{border-color:var(--g);background:var(--g-t)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border-l);font-size:14px}
+.detail-row:last-child{border-bottom:none}
+.detail-lbl{color:var(--txt2);font-family:var(--font-m)}
+.detail-val{font-family:var(--font-h);font-weight:600;color:#111}
+
+@media(max-width:1100px){.market-layout{grid-template-columns:1fr}.products-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}.content{padding:20px 16px}.market-banner{grid-template-columns:1fr;padding:28px}.products-grid{grid-template-columns:1fr}.service-card{grid-template-columns:auto 1fr}}
+</style>
+<script src="/hopefusion-i18n.js" type="module"></script>
+
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#2DB562"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="HopeFusion"/>
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a class="sidebar-logo" href="hopefusion-homepage.html">
+    <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+      <path d="M8 28 Q5 18 11 10" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M13 30 Q9 19 16 11" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <path d="M18 31 Q14 20 21 12" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M23 30 Q19 19 25 12" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="21" cy="8" r="2.5" fill="#E02020"/>
+      <circle cx="26" cy="13" r="2.5" fill="#E02020"/>
+    </svg>
+    <div><div class="sidebar-brand"><span class="h">Hope</span><span class="f">Fusion</span><span class="a">A F R I C A</span></div></div>
+  </a>
+  <div class="sidebar-section">Main</div>
+  <a class="nav-item" href="hopefusion-investor-dashboard.html"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a class="nav-item" href="hopefusion-ai-matching.html"><i class="ti ti-brain"></i> AI Matching <span class="nav-badge">12</span></a>
+  <a class="nav-item" href="hopefusion-grant-platform.html"><i class="ti ti-award"></i> Grant Platform</a>
+  <a class="nav-item" href="hopefusion-elearning.html"><i class="ti ti-school"></i> E-Learning</a>
+  <div class="sidebar-section">Platform</div>
+  <a class="nav-item" href="hopefusion-mentor-dashboard.html"><i class="ti ti-users"></i> Mentorship</a>
+  <a class="nav-item" href="hopefusion-govt-support.html"><i class="ti ti-building-bank"></i> Govt. Support</a>
+  <a class="nav-item active"><i class="ti ti-shopping-bag"></i> Marketplace</a>
+  <div class="sidebar-section">Account</div>
+  <a class="nav-item"><i class="ti ti-settings"></i> Settings</a>
+  <a class="nav-item" href="#" id="logout-btn" data-hfa-logout><i class="ti ti-logout"></i> Sign out</a>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar" data-hfa-user-initials>AK</div>
+      <div><div class="user-name" data-hfa-user-name>Ama Korantema</div><div class="user-role" data-hfa-user-role>Startup founder · Ghana</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div><div class="page-title">Marketplace</div><div class="page-sub">Buy, sell and trade products, services and tools across Africa</div></div>
+    <div class="topbar-right">
+      <div id="lang-switcher" style="margin-right:12px"></div>
+      <div class="search-bar">
+        <i class="ti ti-search" style="color:#bbb;font-size:16px"></i>
+        <input type="text" placeholder="Search products, services, tools…" oninput="filterProducts(this.value)"/>
+      </div>
+      <button class="tbtn outline" onclick="showTab('my-store')"><i class="ti ti-store"></i> My store</button>
+      <button class="tbtn gold" onclick="openModal('list')"><i class="ti ti-plus"></i> List a product</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- BANNER -->
+    <div class="market-banner">
+      <div class="banner-grid"></div>
+      <div>
+        <div class="banner-tag"><span class="banner-dot"></span> AI-powered · 1,240 listings · 14 countries</div>
+        <h2>Africa's startup <em>ecosystem store.</em></h2>
+        <p>Buy software tools, hire services, sell your products and access resources from African startups — all in one place. Pay with card or mobile money.</p>
+        <div class="banner-stats">
+          <div class="bstat"><div class="val"><em>1,240</em></div><div class="lbl">Active listings</div></div>
+          <div class="bstat"><div class="val"><em>$840K</em></div><div class="lbl">GMV this month</div></div>
+          <div class="bstat"><div class="val"><em>94%</em></div><div class="lbl">Satisfaction rate</div></div>
+          <div class="bstat"><div class="val"><em>14</em></div><div class="lbl">Countries</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs-wrap">
+      <button class="tab-btn active" onclick="showTab('products')"><i class="ti ti-package"></i> Products <span class="tab-count">482</span></button>
+      <button class="tab-btn" onclick="showTab('services')"><i class="ti ti-tools"></i> Services <span class="tab-count">318</span></button>
+      <button class="tab-btn" onclick="showTab('software')"><i class="ti ti-cpu"></i> SaaS Tools <span class="tab-count">224</span></button>
+      <button class="tab-btn" onclick="showTab('resources')"><i class="ti ti-file-text"></i> Resources <span class="tab-count">216</span></button>
+      <button class="tab-btn" onclick="showTab('my-store')"><i class="ti ti-store"></i> My Store</button>
+    </div>
+
+    <!-- LAYOUT -->
+    <div class="market-layout">
+
+      <!-- LEFT -->
+      <div>
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar">
+          <select class="filter-select" onchange="filterProducts()">
+            <option>All categories</option>
+            <option>Agritech</option><option>Fintech</option><option>Healthtech</option>
+            <option>Edtech</option><option>Logistics</option><option>Manufacturing</option>
+          </select>
+          <select class="filter-select" onchange="filterProducts()">
+            <option>All countries</option>
+            <option>Ghana</option><option>Nigeria</option><option>Kenya</option>
+            <option>Rwanda</option><option>South Africa</option><option>Senegal</option>
+          </select>
+          <select class="filter-select" onchange="filterProducts()">
+            <option>Any price</option>
+            <option>Free</option><option>Under $50</option><option>$50–$200</option><option>$200+</option>
+          </select>
+          <div class="filter-tag on" onclick="this.classList.toggle('on')"><i class="ti ti-shield-check"></i> Verified only</div>
+          <div class="filter-tag" onclick="this.classList.toggle('on')"><i class="ti ti-star"></i> Top rated</div>
+          <div class="filter-tag" onclick="this.classList.toggle('on')"><i class="ti ti-flame"></i> Trending</div>
+          <div class="results-lbl">Showing <strong>482 products</strong></div>
+        </div>
+
+        <!-- PRODUCTS TAB -->
+        <div class="content-tab active" id="tab-products">
+          <div class="products-grid" id="products-grid">
+
+            <div class="product-card featured" onclick="openModal('product','CropShield AI')">
+              <div class="product-thumb" style="background:linear-gradient(135deg,#064e3b,#2DB562)">
+                <span class="product-thumb-icon">🌱</span>
+                <span class="product-badge" style="background:var(--gold);color:#fff">⭐ Featured</span>
+                <span class="product-verified"><i class="ti ti-shield-check"></i> Verified</span>
+              </div>
+              <div class="product-body">
+                <div class="product-seller">
+                  <div class="seller-avatar" style="background:var(--g)">GH</div>
+                  <span class="seller-name">GreenHarvest Ghana</span>
+                  <i class="ti ti-circle-check seller-verified"></i>
+                </div>
+                <div class="product-title">CropShield AI — Satellite Crop Insurance API</div>
+                <div class="product-desc">Real-time satellite-based crop insurance risk scoring API. Integrate into your agri-fintech product in under 30 minutes.</div>
+                <div class="product-tags">
+                  <span class="ptag" style="background:var(--g-t);color:var(--g-deep)">Agritech</span>
+                  <span class="ptag" style="background:var(--blue-t);color:var(--blue)">API</span>
+                  <span class="ptag" style="background:var(--gold-t);color:#7a5000">Ghana</span>
+                  <span class="ptag" style="background:var(--purple-t);color:var(--purple)">SDG 2</span>
+                </div>
+                <div class="product-meta">
+                  <span class="stars">★★★★★</span>
+                  <span>4.9 (184 reviews)</span>
+                  <span>·</span>
+                  <span><i class="ti ti-download"></i> 1,240 users</span>
+                </div>
+                <div class="product-footer">
+                  <div class="product-price">$49<span class="period">/month</span></div>
+                  <button class="btn-buy gold" onclick="event.stopPropagation();openModal('buy','CropShield AI')"><i class="ti ti-shopping-cart"></i> Buy now</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="product-card" onclick="openModal('product','AfriPay SDK')">
+              <div class="product-thumb" style="background:linear-gradient(135deg,#1e3a5f,#2563eb)">
+                <span class="product-thumb-icon">💳</span>
+                <span class="product-verified"><i class="ti ti-shield-check"></i> Verified</span>
+              </div>
+              <div class="product-body">
+                <div class="product-seller">
+                  <div class="seller-avatar" style="background:var(--blue)">PW</div>
+                  <span class="seller-name">PayWave Rwanda</span>
+                  <i class="ti ti-circle-check seller-verified"></i>
+                </div>
+                <div class="product-title">AfriPay SDK — Cross-Border Mobile Payments</div>
+                <div class="product-desc">Accept payments in 12 African currencies via one SDK. MTN MoMo, Airtel Money, M-Pesa, Paystack — all unified.</div>
+                <div class="product-tags">
+                  <span class="ptag" style="background:var(--gold-t);color:#7a5000">Fintech</span>
+                  <span class="ptag" style="background:var(--blue-t);color:var(--blue)">SDK</span>
+                  <span class="ptag" style="background:var(--g-t);color:var(--g-deep)">Pan-African</span>
+                </div>
+                <div class="product-meta">
+                  <span class="stars">★★★★★</span>
+                  <span>4.8 (92 reviews)</span>
+                  <span>·</span>
+                  <span><i class="ti ti-download"></i> 840 users</span>
+                </div>
+                <div class="product-footer">
+                  <div class="product-price">$99<span class="period">/month</span></div>
+                  <button class="btn-buy green" onclick="event.stopPropagation();openModal('buy','AfriPay SDK')"><i class="ti ti-shopping-cart"></i> Buy now</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="product-card" onclick="openModal('product','TeleHealth Kit')">
+              <div class="product-thumb" style="background:linear-gradient(135deg,#7a0000,#E02020)">
+                <span class="product-thumb-icon">🏥</span>
+                <span class="product-badge" style="background:var(--g);color:#fff">New</span>
+              </div>
+              <div class="product-body">
+                <div class="product-seller">
+                  <div class="seller-avatar" style="background:var(--gold)">AL</div>
+                  <span class="seller-name">AfriHealth Labs</span>
+                  <i class="ti ti-circle-check seller-verified"></i>
+                </div>
+                <div class="product-title">TeleHealth Africa Kit — Complete Telemedicine Stack</div>
+                <div class="product-desc">White-label telemedicine solution. Patient booking, video consults, prescription management, mobile money billing. Ready in 1 week.</div>
+                <div class="product-tags">
+                  <span class="ptag" style="background:var(--red-t);color:#8b1515">Healthtech</span>
+                  <span class="ptag" style="background:var(--blue-t);color:var(--blue)">White-label</span>
+                  <span class="ptag" style="background:var(--gold-t);color:#7a5000">Kenya</span>
+                </div>
+                <div class="product-meta">
+                  <span class="stars">★★★★☆</span>
+                  <span>4.6 (47 reviews)</span>
+                  <span>·</span>
+                  <span><i class="ti ti-download"></i> 210 users</span>
+                </div>
+                <div class="product-footer">
+                  <div class="product-price">$199<span class="period">/month</span></div>
+                  <button class="btn-buy green" onclick="event.stopPropagation();openModal('buy','TeleHealth Kit')"><i class="ti ti-shopping-cart"></i> Buy now</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="product-card" onclick="openModal('product','EduContent Pack')">
+              <div class="product-thumb" style="background:linear-gradient(135deg,#3730a3,#7c3aed)">
+                <span class="product-thumb-icon">📚</span>
+              </div>
+              <div class="product-body">
+                <div class="product-seller">
+                  <div class="seller-avatar" style="background:var(--purple)">EB</div>
+                  <span class="seller-name">EduBridge Nigeria</span>
+                  <i class="ti ti-circle-check seller-verified"></i>
+                </div>
+                <div class="product-title">STEM Africa Content Pack — 200 Offline Lessons</div>
+                <div class="product-desc">200 curriculum-aligned STEM lessons built for African students. Works offline, in English and French. Government-approved in 3 states.</div>
+                <div class="product-tags">
+                  <span class="ptag" style="background:var(--purple-t);color:var(--purple)">Edtech</span>
+                  <span class="ptag" style="background:var(--g-t);color:var(--g-deep)">Offline</span>
+                  <span class="ptag" style="background:var(--red-t);color:#8b1515">Nigeria</span>
+                </div>
+                <div class="product-meta">
+                  <span class="stars">★★★★★</span>
+                  <span>4.9 (310 reviews)</span>
+                  <span>·</span>
+                  <span><i class="ti ti-download"></i> 4,800 users</span>
+                </div>
+                <div class="product-footer">
+                  <div class="product-price free">Free</div>
+                  <button class="btn-buy outline" onclick="event.stopPropagation();openModal('buy','EduContent Pack')"><i class="ti ti-download"></i> Download</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- SERVICES TAB -->
+        <div class="content-tab" id="tab-services">
+          <div class="services-list">
+
+            <div class="service-card" onclick="openModal('service','Pitch Deck Design')">
+              <div class="service-icon" style="background:var(--g-t);color:var(--g)"><i class="ti ti-presentation"></i></div>
+              <div>
+                <div class="service-title">Investor Pitch Deck Design — Africa-focused</div>
+                <div class="service-desc">Professional pitch deck design by ex-McKinsey consultants who have helped raise over $20M for African startups. 7-day delivery, unlimited revisions.</div>
+                <div class="service-meta">
+                  <span class="stars" style="font-size:12px">★★★★★</span>
+                  <span>4.9 · 84 projects</span>
+                  <span>·</span>
+                  <span><i class="ti ti-clock"></i> 7 days</span>
+                  <span>·</span>
+                  <span>🇬🇭 Ghana</span>
+                </div>
+              </div>
+              <div class="service-price">
+                <div class="amount">$350</div>
+                <div class="period">per project</div>
+                <button class="btn-buy green" style="margin-top:10px" onclick="event.stopPropagation();openModal('hire','Pitch Deck Design')">Hire</button>
+              </div>
+            </div>
+
+            <div class="service-card" onclick="openModal('service','Legal Registration')">
+              <div class="service-icon" style="background:var(--blue-t);color:var(--blue)"><i class="ti ti-building-bank"></i></div>
+              <div>
+                <div class="service-title">Business Registration in 5 African Countries</div>
+                <div class="service-desc">Full business registration service in Ghana, Nigeria, Kenya, Rwanda and South Africa. Handles all paperwork, follow-ups and digital certificates. 100% success rate.</div>
+                <div class="service-meta">
+                  <span class="stars" style="font-size:12px">★★★★★</span>
+                  <span>4.8 · 210 projects</span>
+                  <span>·</span>
+                  <span><i class="ti ti-clock"></i> 7–21 days</span>
+                  <span>·</span>
+                  <span>🌍 Pan-African</span>
+                </div>
+              </div>
+              <div class="service-price">
+                <div class="amount">$299</div>
+                <div class="period">per country</div>
+                <button class="btn-buy green" style="margin-top:10px" onclick="event.stopPropagation();openModal('hire','Legal Registration')">Hire</button>
+              </div>
+            </div>
+
+            <div class="service-card" onclick="openModal('service','Financial Model')">
+              <div class="service-icon" style="background:var(--gold-t);color:var(--gold)"><i class="ti ti-chart-bar"></i></div>
+              <div>
+                <div class="service-title">Investor-Ready Financial Model — 3-Year Projection</div>
+                <div class="service-desc">Custom 3-year financial model with unit economics, scenario analysis, fundraising waterfall and investor KPI dashboard. Built by Tarik Amiar, CFA.</div>
+                <div class="service-meta">
+                  <span class="stars" style="font-size:12px">★★★★★</span>
+                  <span>4.9 · 128 projects</span>
+                  <span>·</span>
+                  <span><i class="ti ti-clock"></i> 5 days</span>
+                  <span>·</span>
+                  <span>🇲🇦 Morocco</span>
+                </div>
+              </div>
+              <div class="service-price">
+                <div class="amount">$450</div>
+                <div class="period">per project</div>
+                <button class="btn-buy green" style="margin-top:10px" onclick="event.stopPropagation();openModal('hire','Financial Model')">Hire</button>
+              </div>
+            </div>
+
+            <div class="service-card" onclick="openModal('service','Mobile App Dev')">
+              <div class="service-icon" style="background:var(--purple-t);color:var(--purple)"><i class="ti ti-device-mobile"></i></div>
+              <div>
+                <div class="service-title">React Native Mobile App Development</div>
+                <div class="service-desc">Full-stack React Native app for iOS and Android. Offline-first, mobile money integrated, optimised for low-bandwidth African networks. 8-week delivery.</div>
+                <div class="service-meta">
+                  <span class="stars" style="font-size:12px">★★★★☆</span>
+                  <span>4.7 · 56 projects</span>
+                  <span>·</span>
+                  <span><i class="ti ti-clock"></i> 8 weeks</span>
+                  <span>·</span>
+                  <span>🇳🇬 Nigeria</span>
+                </div>
+              </div>
+              <div class="service-price">
+                <div class="amount">$2,400</div>
+                <div class="period">per project</div>
+                <button class="btn-buy green" style="margin-top:10px" onclick="event.stopPropagation();openModal('hire','Mobile App Dev')">Hire</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- SOFTWARE TAB -->
+        <div class="content-tab" id="tab-software">
+          <div class="products-grid">
+            <div class="product-card" onclick="openModal('product','SolarTrack IoT')">
+              <div class="product-thumb" style="background:linear-gradient(135deg,#065f46,#10b981)">
+                <span class="product-thumb-icon">☀️</span>
+                <span class="product-verified"><i class="ti ti-shield-check"></i> Verified</span>
+              </div>
+              <div class="product-body">
+                <div class="product-seller"><div class="seller-avatar" style="background:var(--red)">SN</div><span class="seller-name">SolarNow Kenya</span><i class="ti ti-circle-check seller-verified"></i></div>
+                <div class="product-title">SolarTrack IoT Dashboard</div>
+                <div class="product-desc">Monitor and manage off-grid solar installations at scale. Real-time energy data, predictive maintenance alerts, mobile money billing automation.</div>
+                <div class="product-tags"><span class="ptag" style="background:var(--g-t);color:var(--g-deep)">Cleantech</span><span class="ptag" style="background:var(--blue-t);color:var(--blue)">SaaS</span><span class="ptag" style="background:var(--gold-t);color:#7a5000">IoT</span></div>
+                <div class="product-meta"><span class="stars">★★★★★</span><span>4.9 (72 reviews)</span><span>·</span><span><i class="ti ti-users"></i> 340 users</span></div>
+                <div class="product-footer"><div class="product-price">$79<span class="period">/month</span></div><button class="btn-buy green" onclick="event.stopPropagation();openModal('buy','SolarTrack IoT')"><i class="ti ti-shopping-cart"></i> Buy</button></div>
+              </div>
+            </div>
+            <div class="product-card" onclick="openModal('product','FarmPulse')">
+              <div class="product-thumb" style="background:linear-gradient(135deg,#451a03,#b45309)">
+                <span class="product-thumb-icon">🌾</span>
+              </div>
+              <div class="product-body">
+                <div class="product-seller"><div class="seller-avatar" style="background:#b45309">AG</div><span class="seller-name">AgriLink Senegal</span><i class="ti ti-circle-check seller-verified"></i></div>
+                <div class="product-title">FarmPulse — Farmer CRM & Supply Chain</div>
+                <div class="product-desc">Manage your farmer network, track produce from field to market, automate payments and generate impact reports for grant applications.</div>
+                <div class="product-tags"><span class="ptag" style="background:var(--g-t);color:var(--g-deep)">Agritech</span><span class="ptag" style="background:var(--gold-t);color:#7a5000">CRM</span><span class="ptag" style="background:var(--purple-t);color:var(--purple)">Senegal</span></div>
+                <div class="product-meta"><span class="stars">★★★★☆</span><span>4.7 (58 reviews)</span><span>·</span><span><i class="ti ti-users"></i> 520 users</span></div>
+                <div class="product-footer"><div class="product-price">$29<span class="period">/month</span></div><button class="btn-buy green" onclick="event.stopPropagation();openModal('buy','FarmPulse')"><i class="ti ti-shopping-cart"></i> Buy</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESOURCES TAB -->
+        <div class="content-tab" id="tab-resources">
+          <div class="products-grid">
+            <div class="product-card" onclick="openModal('product','Investor Contacts')">
+              <div class="product-thumb" style="background:linear-gradient(135deg,#1e3a5f,#1e8a48)"><span class="product-thumb-icon">📋</span></div>
+              <div class="product-body">
+                <div class="product-seller"><div class="seller-avatar" style="background:var(--navy,#1e3a5f)">HF</div><span class="seller-name">HopeFusion Research</span><i class="ti ti-circle-check seller-verified"></i></div>
+                <div class="product-title">African Impact Investor Database 2026</div>
+                <div class="product-desc">Verified contacts for 840 active impact investors across Africa and globally, with investment thesis, ticket size and sector focus. Updated quarterly.</div>
+                <div class="product-tags"><span class="ptag" style="background:var(--g-t);color:var(--g-deep)">Research</span><span class="ptag" style="background:var(--gold-t);color:#7a5000">Database</span><span class="ptag" style="background:var(--blue-t);color:var(--blue)">2026</span></div>
+                <div class="product-meta"><span class="stars">★★★★★</span><span>4.9 (420 reviews)</span><span>·</span><span><i class="ti ti-download"></i> 2,100 downloads</span></div>
+                <div class="product-footer"><div class="product-price">$149</div><button class="btn-buy gold" onclick="event.stopPropagation();openModal('buy','Investor Contacts')"><i class="ti ti-download"></i> Buy</button></div>
+              </div>
+            </div>
+            <div class="product-card" onclick="openModal('product','Grant Templates')">
+              <div class="product-thumb" style="background:linear-gradient(135deg,#4a1d96,#7c3aed)"><span class="product-thumb-icon">📝</span><span class="product-badge" style="background:var(--g);color:#fff">Free</span></div>
+              <div class="product-body">
+                <div class="product-seller"><div class="seller-avatar" style="background:var(--purple)">HF</div><span class="seller-name">HopeFusion Africa</span><i class="ti ti-circle-check seller-verified"></i></div>
+                <div class="product-title">Grant Application Templates Pack</div>
+                <div class="product-desc">10 proven grant application templates for TEF, World Bank, GIZ, Mastercard Foundation and more. Used by 500+ successful applicants.</div>
+                <div class="product-tags"><span class="ptag" style="background:var(--purple-t);color:var(--purple)">Templates</span><span class="ptag" style="background:var(--g-t);color:var(--g-deep)">Grants</span><span class="ptag" style="background:var(--gold-t);color:#7a5000">Free</span></div>
+                <div class="product-meta"><span class="stars">★★★★★</span><span>4.9 (840 reviews)</span><span>·</span><span><i class="ti ti-download"></i> 8,400 downloads</span></div>
+                <div class="product-footer"><div class="product-price free">Free</div><button class="btn-buy outline" onclick="event.stopPropagation();openModal('buy','Grant Templates')"><i class="ti ti-download"></i> Download</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MY STORE TAB -->
+        <div class="content-tab" id="tab-my-store">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <div>
+              <div style="font-family:var(--font-h);font-size:16px;font-weight:600;color:#111">GreenHarvest Ghana Store</div>
+              <div style="font-size:13px;color:var(--txt2);font-family:var(--font-m)">2 active listings · $4,840 total revenue</div>
+            </div>
+            <button class="tbtn gold" onclick="openModal('list')"><i class="ti ti-plus"></i> Add listing</button>
+          </div>
+          <div class="store-item">
+            <div class="store-item-icon" style="background:var(--g-t);color:var(--g)"><i class="ti ti-satellite"></i></div>
+            <div>
+              <div class="store-item-title">CropShield AI API</div>
+              <div class="store-item-meta">SaaS · $49/month · Active</div>
+            </div>
+            <div class="store-item-stats">
+              <div class="store-item-revenue">$3,430</div>
+              <div class="store-item-sales">70 subscribers</div>
+            </div>
+            <button class="tbtn outline" style="margin-left:16px;font-size:12px;padding:7px 14px" onclick="openModal('edit')"><i class="ti ti-edit"></i> Edit</button>
+          </div>
+          <div class="store-item">
+            <div class="store-item-icon" style="background:var(--gold-t);color:var(--gold)"><i class="ti ti-file-text"></i></div>
+            <div>
+              <div class="store-item-title">Agri-Insurance Whitepaper 2026</div>
+              <div class="store-item-meta">Resource · $29 one-time · Active</div>
+            </div>
+            <div class="store-item-stats">
+              <div class="store-item-revenue">$1,410</div>
+              <div class="store-item-sales">48 purchases</div>
+            </div>
+            <button class="tbtn outline" style="margin-left:16px;font-size:12px;padding:7px 14px" onclick="openModal('edit')"><i class="ti ti-edit"></i> Edit</button>
+          </div>
+          <div style="background:var(--g-t);border:1px solid rgba(45,181,98,0.2);border-radius:12px;padding:18px 20px;margin-top:16px;display:flex;align-items:center;gap:14px">
+            <i class="ti ti-sparkles" style="color:var(--g);font-size:22px;flex-shrink:0"></i>
+            <div>
+              <div style="font-family:var(--font-h);font-size:14px;font-weight:600;color:var(--g-deep);margin-bottom:3px">AI listing suggestion</div>
+              <div style="font-size:13px;color:var(--g-deep);opacity:.8">Based on your startup profile, you could also sell your satellite data analysis methodology as a consulting template. Similar products earn $200–$500/month.</div>
+            </div>
+            <button class="tbtn primary" style="flex-shrink:0;font-size:12px" onclick="openModal('list')">Create listing</button>
+          </div>
+        </div>
+
+      </div><!-- end left -->
+
+      <!-- RIGHT PANEL -->
+      <div style="display:flex;flex-direction:column;gap:20px;position:sticky;top:96px">
+
+        <!-- AI RECOMMENDATIONS -->
+        <div class="ai-rec-card">
+          <div class="ai-rec-title">✨ AI recommended for you</div>
+          <div class="ai-rec-sub">Based on GreenHarvest Ghana profile</div>
+          <div class="ai-rec-item" onclick="openModal('product','AfriPay SDK')">
+            <div class="ai-rec-icon" style="background:rgba(37,99,235,0.15);color:var(--blue)"><i class="ti ti-credit-card"></i></div>
+            <div><div class="ai-rec-name">AfriPay SDK</div><div class="ai-rec-meta">Fintech · $99/mo</div></div>
+            <div class="ai-rec-match">96%</div>
+          </div>
+          <div class="ai-rec-item" onclick="openModal('product','FarmPulse')">
+            <div class="ai-rec-icon" style="background:rgba(45,181,98,0.15);color:var(--g)"><i class="ti ti-leaf"></i></div>
+            <div><div class="ai-rec-name">FarmPulse CRM</div><div class="ai-rec-meta">Agritech · $29/mo</div></div>
+            <div class="ai-rec-match">94%</div>
+          </div>
+          <div class="ai-rec-item" onclick="openModal('product','Investor Contacts')">
+            <div class="ai-rec-icon" style="background:rgba(232,160,32,0.15);color:var(--gold)"><i class="ti ti-address-book"></i></div>
+            <div><div class="ai-rec-name">Investor Database</div><div class="ai-rec-meta">Resource · $149</div></div>
+            <div class="ai-rec-match">91%</div>
+          </div>
+          <div class="ai-rec-item" onclick="openModal('service','Financial Model')">
+            <div class="ai-rec-icon" style="background:rgba(124,58,237,0.15);color:var(--purple)"><i class="ti ti-chart-bar"></i></div>
+            <div><div class="ai-rec-name">Financial Model</div><div class="ai-rec-meta">Service · $450</div></div>
+            <div class="ai-rec-match">88%</div>
+          </div>
+        </div>
+
+        <!-- MY SELLER CARD -->
+        <div class="seller-card">
+          <div class="seller-header">
+            <div class="seller-big-avatar">AK</div>
+            <div class="seller-big-name">Ama Korantema</div>
+            <div class="seller-big-role">GreenHarvest Ghana · Verified seller</div>
+            <div style="display:flex;justify-content:center;gap:4px;color:var(--gold);font-size:16px">★★★★★</div>
+          </div>
+          <div class="seller-stats-grid">
+            <div class="ss-item"><div class="ss-val">2</div><div class="ss-lbl">Listings</div></div>
+            <div class="ss-item"><div class="ss-val" style="color:var(--g)">$4.8K</div><div class="ss-lbl">Revenue</div></div>
+            <div class="ss-item"><div class="ss-val">118</div><div class="ss-lbl">Customers</div></div>
+          </div>
+        </div>
+
+        <!-- TRENDING -->
+        <div class="trending-card">
+          <div class="trending-header"><i class="ti ti-flame" style="color:var(--red)"></i> Trending this week</div>
+          <div class="trending-item" onclick="openModal('product','CropShield AI')">
+            <div class="trend-rank top">1</div>
+            <div class="trend-info"><div class="trend-name">CropShield AI API</div><div class="trend-meta">1,240 users · Agritech</div></div>
+            <div class="trend-price">$49/mo</div>
+          </div>
+          <div class="trending-item" onclick="openModal('product','Grant Templates')">
+            <div class="trend-rank top">2</div>
+            <div class="trend-info"><div class="trend-name">Grant Templates Pack</div><div class="trend-meta">8,400 downloads · Free</div></div>
+            <div class="trend-price">Free</div>
+          </div>
+          <div class="trending-item" onclick="openModal('product','Investor Contacts')">
+            <div class="trend-rank">3</div>
+            <div class="trend-info"><div class="trend-name">Investor Database 2026</div><div class="trend-meta">2,100 downloads · Research</div></div>
+            <div class="trend-price">$149</div>
+          </div>
+          <div class="trending-item" onclick="openModal('product','AfriPay SDK')">
+            <div class="trend-rank">4</div>
+            <div class="trend-info"><div class="trend-name">AfriPay SDK</div><div class="trend-meta">840 users · Fintech</div></div>
+            <div class="trend-price">$99/mo</div>
+          </div>
+          <div class="trending-item" onclick="openModal('service','Pitch Deck Design')">
+            <div class="trend-rank">5</div>
+            <div class="trend-info"><div class="trend-name">Pitch Deck Design</div><div class="trend-meta">84 projects · Service</div></div>
+            <div class="trend-price">$350</div>
+          </div>
+        </div>
+
+      </div><!-- end right panel -->
+    </div><!-- end layout -->
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modal-title">Details</div><button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script>
+/* TABS */
+function showTab(t){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    const ts=['products','services','software','resources','my-store'];
+    b.classList.toggle('active',ts[i]===t);
+  });
+  document.querySelectorAll('.content-tab').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+/* FILTER */
+function filterProducts(q){}
+
+/* MODALS */
+function openModal(type,name){
+  const titles={product:`${name}`,service:`${name}`,buy:`Purchase — ${name}`,hire:`Hire — ${name}`,list:'List a product or service',edit:'Edit listing'};
+  document.getElementById('modal-title').textContent=titles[type]||'Details';
+
+  if(type==='buy'||type==='hire'){
+    document.getElementById('modal-body').innerHTML=`
+      <div style="background:var(--g-t);border:1px solid rgba(45,181,98,0.2);border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px">
+        <i class="ti ti-shield-check" style="color:var(--g);font-size:20px"></i>
+        <div style="font-size:13px;color:var(--g-deep);font-family:var(--font-m)">Secure checkout · Paystack or MTN MoMo · 30-day money-back guarantee</div>
+      </div>
+      <div class="f-group"><label class="f-label">Payment method</label>
+      <select class="f-input"><option>💳 Card (Paystack)</option><option>📱 MTN Mobile Money</option><option>📱 Airtel Money</option><option>🏦 Bank transfer</option></select></div>
+      <div class="f-group"><label class="f-label">${type==='hire'?'Project brief / requirements':'Billing email'}</label>
+      ${type==='hire'?'<textarea class="f-input" placeholder="Describe what you need…"></textarea>':'<input class="f-input" type="email" placeholder="your@email.com"/>'}
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:14px 16px;font-size:13.5px;font-family:var(--font-m)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--txt2)">${name}</span><span style="font-family:var(--font-h);font-weight:700;color:#111">From $49</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">HopeFusion fee (5%)</span><span style="color:var(--txt2)">$2.45</span></div>
+        <div style="border-top:1px solid var(--border-l);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between"><span style="font-family:var(--font-h);font-weight:600;color:#111">Total</span><span style="font-family:var(--font-h);font-weight:700;color:var(--g)">$51.45</span></div>
+      </div>
+    `;
+    document.getElementById('modal-footer').innerHTML=`<button class="btn-mo outline" onclick="closeModal()">Cancel</button><button class="btn-mo primary" onclick="showSuccess('${type==='hire'?'Order placed! The seller will contact you within 24 hours.':'Purchase complete! Check your email for access details.'}')">${type==='hire'?'Place order':'Complete purchase'}</button>`;
+  } else if(type==='list'||type==='edit'){
+    document.getElementById('modal-body').innerHTML=`
+      <div class="f-row">
+        <div class="f-group"><label class="f-label">Listing type</label><select class="f-input"><option>Product / SaaS</option><option>Service</option><option>Resource / Template</option></select></div>
+        <div class="f-group"><label class="f-label">Category</label><select class="f-input"><option>Agritech</option><option>Fintech</option><option>Healthtech</option><option>Edtech</option><option>Other</option></select></div>
+      </div>
+      <div class="f-group"><label class="f-label">Title</label><input class="f-input" placeholder="Your product name"/></div>
+      <div class="f-group"><label class="f-label">Description</label><textarea class="f-input" placeholder="What does it do? Who is it for? What problem does it solve?"></textarea></div>
+      <div class="f-row">
+        <div class="f-group"><label class="f-label">Price (USD)</label><input class="f-input" type="number" placeholder="0 = Free"/></div>
+        <div class="f-group"><label class="f-label">Pricing model</label><select class="f-input"><option>One-time</option><option>Monthly subscription</option><option>Annual subscription</option><option>Per project</option></select></div>
+      </div>
+      <div class="f-group"><label class="f-label">Media (image or demo video)</label>
+        <div class="upload-zone"><input type="file" accept="image/*,video/*"/><i class="ti ti-cloud-upload" style="font-size:24px;color:var(--g);display:block;margin-bottom:8px"></i><div style="font-size:13px;color:var(--txt2)">Upload thumbnail or demo · Max 20MB</div></div>
+      </div>
+    `;
+    document.getElementById('modal-footer').innerHTML=`<button class="btn-mo outline" onclick="closeModal()">Cancel</button><button class="btn-mo primary" onclick="showSuccess('Listing published! It will appear in the marketplace within 30 minutes.')">Publish listing</button>`;
+  } else {
+    document.getElementById('modal-body').innerHTML=`
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--g),var(--g-dark));display:flex;align-items:center;justify-content:center;font-size:24px">🌱</div>
+        <div><div style="font-family:var(--font-h);font-size:17px;font-weight:700;color:#111">${name}</div><div style="font-size:13px;color:var(--txt2)">Verified product · HopeFusion Marketplace</div></div>
+        <div style="margin-left:auto;background:var(--g-t);color:var(--g-deep);font-family:var(--font-m);font-size:12px;font-weight:500;padding:5px 12px;border-radius:100px"><i class="ti ti-shield-check"></i> Verified</div>
+      </div>
+      <div class="detail-row"><span class="detail-lbl">Category</span><span class="detail-val">Agritech · API</span></div>
+      <div class="detail-row"><span class="detail-lbl">Seller</span><span class="detail-val">GreenHarvest Ghana ✓</span></div>
+      <div class="detail-row"><span class="detail-lbl">Rating</span><span class="detail-val" style="color:var(--gold)">★★★★★ 4.9 (184 reviews)</span></div>
+      <div class="detail-row"><span class="detail-lbl">Users</span><span class="detail-val">1,240 active</span></div>
+      <div class="detail-row"><span class="detail-lbl">Price</span><span class="detail-val" style="color:var(--g)">$49/month</span></div>
+      <div class="detail-row"><span class="detail-lbl">Free trial</span><span class="detail-val">14 days · No card required</span></div>
+      <div style="background:var(--bg);border-radius:10px;padding:14px 16px;margin-top:16px;font-size:13.5px;color:var(--txt2);line-height:1.65">${name} is a production-ready API that delivers real-time satellite-based crop insurance risk scores for any GPS coordinate in West Africa. Integrates in under 30 minutes via REST or SDK.</div>
+    `;
+    document.getElementById('modal-footer').innerHTML=`<button class="btn-mo outline" onclick="closeModal()">Close</button><button class="btn-mo gold" onclick="openModal('buy','${name}')"><i class="ti ti-shopping-cart"></i> Buy now — $49/mo</button>`;
+  }
+  document.getElementById('modal-overlay').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+
+function showSuccess(msg){
+  document.getElementById('modal-body').innerHTML=`<div style="text-align:center;padding:28px 0"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--g),#5ddfa0);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin:0 auto 20px">✓</div><div style="font-family:var(--font-h);font-size:20px;font-weight:700;color:#111;margin-bottom:10px">Done!</div><div style="font-size:14px;color:var(--txt2);line-height:1.7">${msg}</div></div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-mo primary" onclick="closeModal()">Close</button>`;
+}
+function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;document.getElementById('modal-overlay').classList.remove('show');document.body.style.overflow='';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+document.addEventListener('DOMContentLoaded', function() {
+  HFA.Auth.guard(['startup', 'investor', 'mentor', 'admin']);
+  HFA.UI.renderUserProfile();
+});
+</script>
+
+<script>
+  window.addEventListener('load', () => {
+    if (window.hfai18n) {
+      window.hfai18n.createSwitcher('lang-switcher');
+    }
+  });
+</script>
+</body>
+</html>

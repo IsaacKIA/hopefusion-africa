@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: hopefusion-api
+    env: node
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+
+  - type: web
+    name: hopefusion-ai
+    env: node
+    buildCommand: npm install
+    startCommand: node src/ai-engine.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001

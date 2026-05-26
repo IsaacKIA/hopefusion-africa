@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- HFA_CONFIG_START -->
+<script>
+  window.HFA_CONFIG = {
+    API_URL: "http://localhost:3000",
+    AI_URL: "http://localhost:3001",
+    WS_URL: "ws://localhost:3000",
+    ENV: "development"
+  };
+</script>
+<!-- HFA_CONFIG_END -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Analytics — HopeFusion Africa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<script src="/hopefusion-connection-layer.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g:#2DB562;--g-dark:#1e8a48;--g-t:#E9F9EF;
+  --gold:#E8A020;--gold-t:#FEF7E8;
+  --red:#E02020;--red-t:#fde8e8;
+  --navy:#1e3a5f;--blue:#2563eb;--blue-t:#eef3fe;
+  --purple:#7c3aed;--purple-t:#f3e8ff;
+  --blk:#1A1A1A;--blk2:#222;--blk3:#2e2e2e;
+  --bg:#F0F2F5;--white:#fff;--txt:#3D3D3D;--txt2:#6b6b6b;
+  --border:rgba(255,255,255,0.07);--border-l:#e4e4e4;
+  --sidebar:220px;
+  --font-h:'Sora',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'Space Grotesk',sans-serif;
+}
+body{font-family:var(--font-b);background:var(--bg);color:var(--txt);display:flex;min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--blk)}::-webkit-scrollbar-thumb{background:var(--g);border-radius:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes modalPop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--blk);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;border-right:1px solid var(--border);z-index:200}
+.sb-logo{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;text-decoration:none}
+.sb-brand{font-family:var(--font-h);font-size:14px;font-weight:600}
+.sb-brand .h{color:var(--g)}.sb-brand .f{color:#fff}
+.sb-brand .a{color:var(--gold);font-size:8.5px;display:block;letter-spacing:.18em;font-family:var(--font-m);font-weight:400}
+.sb-brand .badge{font-size:8px;background:var(--red);color:#fff;padding:1px 5px;border-radius:3px;margin-left:4px;font-family:var(--font-m);font-weight:600;vertical-align:middle}
+.sb-section{padding:14px 12px 6px;font-size:9.5px;font-family:var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.25)}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 14px;margin:1px 8px;border-radius:9px;color:rgba(255,255,255,0.45);font-size:13px;font-family:var(--font-m);cursor:pointer;transition:all .2s;text-decoration:none;position:relative}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,0.06)}
+.nav-item.active{color:#fff;background:rgba(45,181,98,0.15)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--g);border-radius:0 3px 3px 0}
+.nav-item i{font-size:17px;flex-shrink:0}
+.nb{margin-left:auto;font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:100px}
+.nb.red{background:var(--red);color:#fff}.nb.gold{background:var(--gold);color:#fff}.nb.green{background:var(--g);color:#fff}
+.sb-bottom{margin-top:auto;padding:14px;border-top:1px solid var(--border)}
+.admin-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid var(--border)}
+.admin-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--red),#c07000);display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.admin-name{font-family:var(--font-h);font-size:12px;font-weight:600;color:#fff}
+.admin-role{font-size:10px;color:rgba(255,255,255,0.35);font-family:var(--font-m)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border-l);padding:0 28px;height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-title{font-family:var(--font-h);font-size:16px;font-weight:700;color:#111}
+.topbar-sub{font-size:12px;color:var(--txt2);font-family:var(--font-m)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.tbtn{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:8px;font-size:12.5px;font-family:var(--font-m);font-weight:500;cursor:pointer;transition:all .2s;border:none}
+.tbtn.primary{background:var(--g);color:#fff}.tbtn.primary:hover{background:var(--g-dark)}
+.tbtn.outline{background:none;border:1.5px solid var(--border-l);color:var(--txt2)}.tbtn.outline:hover{border-color:#999;color:var(--txt)}
+.tbtn.red{background:var(--red);color:#fff}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--g);animation:pulse 1.5s infinite;flex-shrink:0}
+.content{padding:28px;flex:1;animation:fadeUp .3s ease}
+
+/* HERO METRICS */
+.hero-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px}
+.metric-card{background:#fff;border-radius:14px;padding:20px 22px;border:1px solid var(--border-l);transition:all .25s;cursor:pointer;position:relative;overflow:hidden}
+.metric-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.08)}
+.metric-card::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 14px 0 60px;opacity:.08}
+.mc-g::after{background:var(--g)}.mc-gold::after{background:var(--gold)}.mc-r::after{background:var(--red)}.mc-b::after{background:var(--blue)}.mc-p::after{background:var(--purple)}
+.mc-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px}
+.mc-val{font-family:var(--font-h);font-size:24px;font-weight:700;color:#111;line-height:1;margin-bottom:3px}
+.mc-lbl{font-size:12px;color:var(--txt2);margin-bottom:6px}
+.mc-chg{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-family:var(--font-m);font-weight:500;padding:2px 7px;border-radius:5px}
+.mc-chg.up{background:#edfaf3;color:#1a7a4a}.mc-chg.down{background:var(--red-t);color:#8b1515}.mc-chg.flat{background:var(--bg);color:var(--txt2)}
+
+/* CHARTS ROW */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:24px}
+.chart-card{background:#fff;border-radius:14px;border:1px solid var(--border-l);padding:22px}
+.cc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.cc-title{font-family:var(--font-h);font-size:14px;font-weight:600;color:#111}
+.cc-sub{font-size:12px;color:var(--txt2);font-family:var(--font-m);margin-top:2px}
+.chart-tabs{display:flex;gap:3px}
+.chart-tab{padding:5px 11px;border-radius:6px;font-size:11.5px;font-family:var(--font-m);cursor:pointer;background:none;border:none;color:var(--txt2);transition:all .2s}
+.chart-tab.active{background:var(--g-t);color:var(--g-deep);font-weight:500}
+.chart-tab:hover:not(.active){background:var(--bg)}
+
+/* LINE CHART SVG */
+.line-chart{width:100%;height:200px}
+
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:20px}
+.donut-legend{display:flex;flex-direction:column;gap:10px;flex:1}
+.legend-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px}
+.legend-dot{width:8px;height:8px;border-radius:2px;margin-right:7px;flex-shrink:0}
+
+/* MAIN BODY GRID */
+.body-grid{display:grid;grid-template-columns:1fr 1fr 360px;gap:18px;margin-bottom:24px}
+
+/* TABLE CARD */
+.table-card{background:#fff;border-radius:14px;border:1px solid var(--border-l);overflow:hidden}
+.tc-header{padding:16px 20px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between}
+.tc-title{font-family:var(--font-h);font-size:14px;font-weight:600;color:#111}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 16px;text-align:left;font-size:11px;font-family:var(--font-m);color:var(--txt2);border-bottom:1px solid var(--border-l);background:var(--bg);white-space:nowrap}
+td{padding:12px 16px;font-size:13px;border-bottom:1px solid var(--border-l);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(45,181,98,0.02);cursor:pointer}
+.pill{font-size:11px;font-family:var(--font-m);font-weight:500;padding:3px 8px;border-radius:5px}
+.user-cell{display:flex;align-items:center;gap:9px}
+.ua{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* ACTIVITY FEED */
+.feed-card{background:#fff;border-radius:14px;border:1px solid var(--border-l);overflow:hidden}
+.feed-item{display:flex;align-items:flex-start;gap:11px;padding:13px 18px;border-bottom:1px solid var(--border-l);cursor:pointer;transition:background .2s}
+.feed-item:last-child{border-bottom:none}
+.feed-item:hover{background:var(--bg)}
+.fi-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.fi-title{font-size:12.5px;font-weight:500;color:#111;font-family:var(--font-h);margin-bottom:2px}
+.fi-sub{font-size:11.5px;color:var(--txt2);font-family:var(--font-m)}
+.fi-time{font-size:10.5px;color:#bbb;font-family:var(--font-m);flex-shrink:0;margin-top:2px}
+
+/* BOTTOM ROW */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:24px}
+
+/* GEO MAP CARD */
+.map-card{background:#fff;border-radius:14px;border:1px solid var(--border-l);padding:20px}
+.country-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.country-row:last-child{margin-bottom:0}
+.country-flag{font-size:18px;flex-shrink:0}
+.country-name{font-size:13px;font-family:var(--font-m);flex:1}
+.country-bar-track{width:80px;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.country-bar-fill{height:100%;border-radius:3px;background:var(--g)}
+.country-val{font-family:var(--font-h);font-size:13px;font-weight:600;color:#111;min-width:36px;text-align:right}
+
+/* AI ENGINE STATUS */
+.ai-status-card{background:var(--blk);border-radius:14px;padding:20px;border:1px solid var(--border)}
+.ais-title{font-family:var(--font-h);font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.ais-sub{font-size:11.5px;color:rgba(255,255,255,0.4);font-family:var(--font-m);margin-bottom:16px}
+.ais-metric{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px;font-family:var(--font-m)}
+.ais-label{color:rgba(255,255,255,0.45)}
+.ais-bar-track{flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin:0 12px}
+.ais-bar-fill{height:100%;border-radius:2px}
+.ais-val{color:#fff;font-weight:600;min-width:40px;text-align:right}
+.ais-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.ais-row:last-child{border-bottom:none}
+.ais-row-label{color:rgba(255,255,255,0.5);font-family:var(--font-m)}
+.ais-row-val{font-family:var(--font-h);font-weight:600;color:#fff}
+
+/* REVENUE CARD */
+.rev-card{background:#fff;border-radius:14px;border:1px solid var(--border-l);padding:20px}
+.rev-total{font-family:var(--font-h);font-size:32px;font-weight:700;color:#111;margin-bottom:4px}
+.rev-label{font-size:12px;color:var(--txt2);font-family:var(--font-m);margin-bottom:16px}
+.rev-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-l);font-size:13px}
+.rev-row:last-child{border-bottom:none}
+.rev-source{display:flex;align-items:center;gap:8px;color:var(--txt2);font-family:var(--font-m)}
+.rev-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rev-amount{font-family:var(--font-h);font-weight:700;color:#111}
+.rev-pct{font-size:11px;font-family:var(--font-m);color:var(--txt2)}
+
+/* ALERTS PANEL */
+.alerts-card{background:#fff;border-radius:14px;border:1px solid var(--border-l);overflow:hidden;margin-bottom:18px}
+.alert-item{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border-l)}
+.alert-item:last-child{border-bottom:none}
+.alert-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.alert-title{font-size:13px;font-weight:500;font-family:var(--font-h);color:#111;margin-bottom:3px}
+.alert-desc{font-size:12px;color:var(--txt2);font-family:var(--font-m);line-height:1.5}
+.alert-time{font-size:11px;color:#bbb;font-family:var(--font-m);margin-top:4px}
+.alert-action{margin-left:auto;flex-shrink:0}
+
+/* PLATFORM HEALTH */
+.health-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}
+.health-item{background:#fff;border-radius:10px;padding:14px 16px;border:1px solid var(--border-l);display:flex;align-items:center;gap:12px}
+.health-status{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.health-label{font-size:12.5px;font-family:var(--font-m);flex:1;color:var(--txt)}
+.health-val{font-size:12px;font-family:var(--font-m);color:var(--txt2)}
+.health-uptime{font-size:11px;font-family:var(--font-m);color:var(--g);font-weight:500}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:18px;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;animation:modalPop .3s cubic-bezier(.34,1.56,.64,1)}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-title{font-family:var(--font-h);font-size:16px;font-weight:700;color:#111}
+.modal-close{width:32px;height:32px;border-radius:7px;background:var(--bg);border:none;cursor:pointer;font-size:17px;color:var(--txt2);display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:var(--red-t);color:var(--red)}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border-l);display:flex;gap:10px;justify-content:flex-end}
+.btn-mo{padding:9px 18px;border-radius:8px;font-size:13px;font-family:var(--font-m);font-weight:500;cursor:pointer;transition:all .2s;border:none}
+.btn-mo.outline{background:none;border:1.5px solid var(--border-l);color:var(--txt2)}.btn-mo.outline:hover{border-color:#999}
+.btn-mo.primary{background:var(--g);color:#fff}.btn-mo.primary:hover{background:var(--g-dark)}
+.btn-mo.danger{background:var(--red);color:#fff}
+.d-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-l);font-size:13.5px}
+.d-row:last-child{border-bottom:none}
+.d-lbl{color:var(--txt2);font-family:var(--font-m)}
+.d-val{font-family:var(--font-h);font-weight:600;color:#111}
+
+@media(max-width:1300px){.hero-metrics{grid-template-columns:repeat(3,1fr)}.body-grid{grid-template-columns:1fr 1fr}.bottom-row{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}.hero-metrics{grid-template-columns:1fr 1fr}.charts-row{grid-template-columns:1fr}.body-grid{grid-template-columns:1fr}.bottom-row{grid-template-columns:1fr}.content{padding:16px}}
+</style>
+<script src="/hopefusion-i18n.js" type="module"></script>
+
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#2DB562"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="HopeFusion"/>
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a class="sb-logo" href="hopefusion-homepage.html">
+    <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+      <path d="M8 28 Q5 18 11 10" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M13 30 Q9 19 16 11" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <path d="M18 31 Q14 20 21 12" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M23 30 Q19 19 25 12" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="21" cy="8" r="2.5" fill="#E02020"/>
+      <circle cx="26" cy="13" r="2.5" fill="#E02020"/>
+    </svg>
+    <div><div class="sb-brand"><span class="h">Hope</span><span class="f">Fusion</span> <span class="badge">ADMIN</span><span class="a">A F R I C A</span></div></div>
+  </a>
+  <div class="sb-section">Overview</div>
+  <a class="nav-item active" onclick="showSection('overview')"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a class="nav-item" onclick="showSection('users')"><i class="ti ti-users"></i> Users <span class="nb green">5,247</span></a>
+  <a class="nav-item" onclick="showSection('startups')"><i class="ti ti-building-store"></i> Startups <span class="nb green">1,240</span></a>
+  <a class="nav-item" onclick="showSection('matches')"><i class="ti ti-brain"></i> AI Matches <span class="nb gold">348</span></a>
+  <div class="sb-section">Platform</div>
+  <a class="nav-item" onclick="showSection('revenue')"><i class="ti ti-currency-dollar"></i> Revenue</a>
+  <a class="nav-item" onclick="showSection('grants')"><i class="ti ti-award"></i> Grants</a>
+  <a class="nav-item" onclick="showSection('sessions')"><i class="ti ti-calendar"></i> Sessions</a>
+  <a class="nav-item" onclick="showSection('compliance')"><i class="ti ti-shield-check"></i> Compliance</a>
+  <div class="sb-section">System</div>
+  <a class="nav-item" onclick="showSection('logs')"><i class="ti ti-terminal"></i> Audit logs <span class="nb red">3</span></a>
+  <a class="nav-item" onclick="showSection('health')"><i class="ti ti-server"></i> System health</a>
+  <a class="nav-item" onclick="showSection('settings')"><i class="ti ti-settings"></i> Settings</a>
+  <a class="nav-item" href="#" id="logout-btn" data-hfa-logout><i class="ti ti-logout"></i> Sign out</a>
+  <div class="sb-bottom">
+    <div class="admin-card">
+      <div class="admin-av" data-hfa-user-initials>SA</div>
+      <div><div class="admin-name" data-hfa-user-name>Super Admin</div><div class="admin-role" data-hfa-user-role>HopeFusion Africa HQ</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="page-title">Platform Dashboard</div>
+      <div class="topbar-sub">Real-time analytics · <span id="last-updated">Updated just now</span></div>
+    </div>
+    <div class="topbar-right">
+      <div id="lang-switcher" style="margin-right:12px"></div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-family:var(--font-m);color:var(--g)">
+        <span class="live-dot"></span> Live data
+      </div>
+      <button class="tbtn outline" onclick="exportReport()"><i class="ti ti-download"></i> Export</button>
+      <button class="tbtn outline" onclick="openModal('alert')"><i class="ti ti-bell"></i> Broadcast</button>
+      <button class="tbtn primary" onclick="openModal('action')"><i class="ti ti-plus"></i> Action</button>
+    </div>
+  </div>
+
+  <div class="content" id="main-content">
+
+    <!-- HERO METRICS -->
+    <div class="hero-metrics">
+      <div class="metric-card mc-g" onclick="showSection('users')">
+        <div class="mc-icon" style="background:var(--g-t);color:var(--g)"><i class="ti ti-users"></i></div>
+        <div class="mc-val" id="m-users">5,247</div>
+        <div class="mc-lbl">Total users</div>
+        <span class="mc-chg up"><i class="ti ti-trending-up"></i> +142 this week</span>
+      </div>
+      <div class="metric-card mc-gold" onclick="showSection('startups')">
+        <div class="mc-icon" style="background:var(--gold-t);color:var(--gold)"><i class="ti ti-building-store"></i></div>
+        <div class="mc-val" id="m-startups">1,240</div>
+        <div class="mc-lbl">Active startups</div>
+        <span class="mc-chg up"><i class="ti ti-trending-up"></i> +38 this week</span>
+      </div>
+      <div class="metric-card mc-r" onclick="showSection('revenue')">
+        <div class="mc-icon" style="background:var(--red-t);color:var(--red)"><i class="ti ti-currency-dollar"></i></div>
+        <div class="mc-val" id="m-revenue">$48.2K</div>
+        <div class="mc-lbl">MRR (monthly)</div>
+        <span class="mc-chg up"><i class="ti ti-trending-up"></i> +22% MoM</span>
+      </div>
+      <div class="metric-card mc-b" onclick="showSection('matches')">
+        <div class="mc-icon" style="background:var(--blue-t);color:var(--blue)"><i class="ti ti-brain"></i></div>
+        <div class="mc-val" id="m-matches">18,432</div>
+        <div class="mc-lbl">AI matches generated</div>
+        <span class="mc-chg up"><i class="ti ti-sparkles"></i> 94.2% avg score</span>
+      </div>
+      <div class="metric-card mc-p" onclick="showSection('grants')">
+        <div class="mc-icon" style="background:var(--purple-t);color:var(--purple)"><i class="ti ti-award"></i></div>
+        <div class="mc-val" id="m-funding">$2.4M</div>
+        <div class="mc-lbl">Funding facilitated</div>
+        <span class="mc-chg up"><i class="ti ti-trending-up"></i> +$380K this month</span>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="cc-header">
+          <div>
+            <div class="cc-title">Platform growth</div>
+            <div class="cc-sub">Users, startups and matches over 6 months</div>
+          </div>
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="switchTab(this)">6M</button>
+            <button class="chart-tab" onclick="switchTab(this)">1Y</button>
+            <button class="chart-tab" onclick="switchTab(this)">All</button>
+          </div>
+        </div>
+        <svg class="line-chart" viewBox="0 0 540 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- grid -->
+          <line x1="40" y1="20" x2="520" y2="20" stroke="#f0f0f0" stroke-width="1"/>
+          <line x1="40" y1="60" x2="520" y2="60" stroke="#f0f0f0" stroke-width="1"/>
+          <line x1="40" y1="100" x2="520" y2="100" stroke="#f0f0f0" stroke-width="1"/>
+          <line x1="40" y1="140" x2="520" y2="140" stroke="#f0f0f0" stroke-width="1"/>
+          <line x1="40" y1="170" x2="520" y2="170" stroke="#e8e8e8" stroke-width="1"/>
+          <!-- y labels -->
+          <text x="0" y="24" font-size="10" fill="#bbb" font-family="Space Grotesk,sans-serif">5K</text>
+          <text x="0" y="64" font-size="10" fill="#bbb" font-family="Space Grotesk,sans-serif">4K</text>
+          <text x="0" y="104" font-size="10" fill="#bbb" font-family="Space Grotesk,sans-serif">3K</text>
+          <text x="0" y="144" font-size="10" fill="#bbb" font-family="Space Grotesk,sans-serif">2K</text>
+          <!-- users line (green) -->
+          <defs>
+            <linearGradient id="gGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2DB562" stop-opacity=".15"/><stop offset="100%" stop-color="#2DB562" stop-opacity="0"/></linearGradient>
+            <linearGradient id="bGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity=".12"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0"/></linearGradient>
+            <linearGradient id="gldGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E8A020" stop-opacity=".12"/><stop offset="100%" stop-color="#E8A020" stop-opacity="0"/></linearGradient>
+          </defs>
+          <!-- users area -->
+          <polygon points="40,155 128,135 216,110 304,80 392,52 480,28 520,20 520,170 40,170" fill="url(#gGrad)"/>
+          <polyline points="40,155 128,135 216,110 304,80 392,52 480,28 520,20" fill="none" stroke="#2DB562" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- startups area -->
+          <polygon points="40,162 128,152 216,140 304,125 392,108 480,88 520,72 520,170 40,170" fill="url(#gldGrad)"/>
+          <polyline points="40,162 128,152 216,140 304,125 392,108 480,88 520,72" fill="none" stroke="#E8A020" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none"/>
+          <!-- matches area -->
+          <polygon points="40,166 128,160 216,150 304,138 392,120 480,98 520,82 520,170 40,170" fill="url(#bGrad)"/>
+          <polyline points="40,166 128,160 216,150 304,138 392,120 480,98 520,82" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5,3"/>
+          <!-- data points -->
+          <circle cx="520" cy="20" r="4" fill="#2DB562"/>
+          <circle cx="520" cy="72" r="4" fill="#E8A020"/>
+          <circle cx="520" cy="82" r="3" fill="#2563eb"/>
+          <!-- x labels -->
+          <text x="40"  y="188" font-size="10" fill="#bbb" text-anchor="middle" font-family="Space Grotesk,sans-serif">Dec</text>
+          <text x="128" y="188" font-size="10" fill="#bbb" text-anchor="middle" font-family="Space Grotesk,sans-serif">Jan</text>
+          <text x="216" y="188" font-size="10" fill="#bbb" text-anchor="middle" font-family="Space Grotesk,sans-serif">Feb</text>
+          <text x="304" y="188" font-size="10" fill="#bbb" text-anchor="middle" font-family="Space Grotesk,sans-serif">Mar</text>
+          <text x="392" y="188" font-size="10" fill="#bbb" text-anchor="middle" font-family="Space Grotesk,sans-serif">Apr</text>
+          <text x="480" y="188" font-size="10" fill="#bbb" text-anchor="middle" font-family="Space Grotesk,sans-serif">May</text>
+        </svg>
+        <div style="display:flex;gap:18px;margin-top:8px;font-size:11.5px;font-family:var(--font-m)">
+          <span style="display:flex;align-items:center;gap:5px;color:var(--txt2)"><span style="width:12px;height:3px;background:var(--g);border-radius:2px;display:inline-block"></span>Users</span>
+          <span style="display:flex;align-items:center;gap:5px;color:var(--txt2)"><span style="width:12px;height:3px;background:var(--gold);border-radius:2px;display:inline-block"></span>Startups</span>
+          <span style="display:flex;align-items:center;gap:5px;color:var(--txt2)"><span style="width:12px;height:3px;background:var(--blue);border-radius:2px;display:inline-block;border-top:2px dashed var(--blue)"></span>Matches</span>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="cc-header"><div><div class="cc-title">User breakdown</div><div class="cc-sub">By role</div></div></div>
+        <div class="donut-wrap">
+          <svg width="130" height="130" viewBox="0 0 130 130">
+            <circle cx="65" cy="65" r="52" fill="none" stroke="#f0f0f0" stroke-width="20"/>
+            <circle cx="65" cy="65" r="52" fill="none" stroke="#2DB562" stroke-width="20" stroke-dasharray="165 162" stroke-dashoffset="0" transform="rotate(-90 65 65)" stroke-linecap="round"/>
+            <circle cx="65" cy="65" r="52" fill="none" stroke="#E8A020" stroke-width="20" stroke-dasharray="98 162" stroke-dashoffset="-165" transform="rotate(-90 65 65)" stroke-linecap="round"/>
+            <circle cx="65" cy="65" r="52" fill="none" stroke="#2563eb" stroke-width="20" stroke-dasharray="59 162" stroke-dashoffset="-263" transform="rotate(-90 65 65)" stroke-linecap="round"/>
+            <text x="65" y="61" text-anchor="middle" font-family="Sora,sans-serif" font-size="18" font-weight="700" fill="#111">5.2K</text>
+            <text x="65" y="76" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-size="9" fill="#888">users</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="legend-row"><span style="display:flex;align-items:center"><span class="legend-dot" style="background:var(--g)"></span>Startups</span><span style="font-family:var(--font-h);font-weight:700;color:#111">3,180</span></div>
+            <div class="legend-row"><span style="display:flex;align-items:center"><span class="legend-dot" style="background:var(--gold)"></span>Investors</span><span style="font-family:var(--font-h);font-weight:700;color:#111">1,890</span></div>
+            <div class="legend-row"><span style="display:flex;align-items:center"><span class="legend-dot" style="background:var(--blue)"></span>Mentors</span><span style="font-family:var(--font-h);font-weight:700;color:#111">177</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BODY GRID -->
+    <div class="body-grid">
+
+      <!-- RECENT USERS -->
+      <div class="table-card">
+        <div class="tc-header">
+          <div class="tc-title"><i class="ti ti-users" style="color:var(--g);margin-right:6px"></i> Recent registrations</div>
+          <button class="tbtn outline" style="font-size:11.5px;padding:6px 12px" onclick="showSection('users')">View all</button>
+        </div>
+        <table>
+          <thead><tr><th>User</th><th>Role</th><th>Country</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr onclick="openModal('user','Ama Korantema')">
+              <td><div class="user-cell"><div class="ua" style="background:linear-gradient(135deg,var(--g),var(--gold))">AK</div><div><div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#111">Ama Korantema</div><div style="font-size:11px;color:var(--txt2)">ama@greenharvest.gh</div></div></div></td>
+              <td><span class="pill" style="background:var(--g-t);color:var(--g-deep)">Startup</span></td>
+              <td>🇬🇭 Ghana</td>
+              <td><span class="pill" style="background:#edfaf3;color:#1a7a4a">✓ Verified</span></td>
+              <td><button class="tbtn outline" style="padding:4px 10px;font-size:11px">View</button></td>
+            </tr>
+            <tr onclick="openModal('user','Rene Moerman')">
+              <td><div class="user-cell"><div class="ua" style="background:linear-gradient(135deg,var(--gold),#c07000)">RM</div><div><div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#111">Rene Moerman</div><div style="font-size:11px;color:var(--txt2)">rene@impact.vc</div></div></div></td>
+              <td><span class="pill" style="background:var(--blue-t);color:var(--blue)">Investor</span></td>
+              <td>🇳🇱 Netherlands</td>
+              <td><span class="pill" style="background:#edfaf3;color:#1a7a4a">✓ Verified</span></td>
+              <td><button class="tbtn outline" style="padding:4px 10px;font-size:11px">View</button></td>
+            </tr>
+            <tr onclick="openModal('user','Aisha Mwangi')">
+              <td><div class="user-cell"><div class="ua" style="background:linear-gradient(135deg,var(--red),#c07000)">AM</div><div><div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#111">Aisha Mwangi</div><div style="font-size:11px;color:var(--txt2)">aisha@solarnow.ke</div></div></div></td>
+              <td><span class="pill" style="background:var(--g-t);color:var(--g-deep)">Startup</span></td>
+              <td>🇰🇪 Kenya</td>
+              <td><span class="pill" style="background:var(--gold-t);color:#7a5000">Pending</span></td>
+              <td><button class="tbtn outline" style="padding:4px 10px;font-size:11px">View</button></td>
+            </tr>
+            <tr onclick="openModal('user','Benjamin Acheampong')">
+              <td><div class="user-cell"><div class="ua" style="background:linear-gradient(135deg,var(--purple),#5b21b6)">BA</div><div><div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#111">Benjamin Acheampong</div><div style="font-size:11px;color:var(--txt2)">ba@mentor.com</div></div></div></td>
+              <td><span class="pill" style="background:var(--purple-t);color:var(--purple)">Mentor</span></td>
+              <td>🇬🇧 UK</td>
+              <td><span class="pill" style="background:#edfaf3;color:#1a7a4a">✓ Verified</span></td>
+              <td><button class="tbtn outline" style="padding:4px 10px;font-size:11px">View</button></td>
+            </tr>
+            <tr>
+              <td><div class="user-cell"><div class="ua" style="background:linear-gradient(135deg,#10b981,#059669)">DU</div><div><div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#111">Diane Uwase</div><div style="font-size:11px;color:var(--txt2)">diane@paywave.rw</div></div></div></td>
+              <td><span class="pill" style="background:var(--g-t);color:var(--g-deep)">Startup</span></td>
+              <td>🇷🇼 Rwanda</td>
+              <td><span class="pill" style="background:var(--gold-t);color:#7a5000">Pending</span></td>
+              <td><button class="tbtn outline" style="padding:4px 10px;font-size:11px">View</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TOP MATCHES -->
+      <div class="table-card">
+        <div class="tc-header">
+          <div class="tc-title"><i class="ti ti-brain" style="color:var(--purple);margin-right:6px"></i> Top AI matches today</div>
+          <span style="font-size:12px;color:var(--txt2);font-family:var(--font-m)">348 total</span>
+        </div>
+        <table>
+          <thead><tr><th>Startup</th><th>Investor</th><th>Score</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#111">GreenHarvest</div><div style="font-size:11px;color:var(--txt2)">Agritech · Ghana</div></td><td style="font-size:12.5px">Rene Moerman</td><td><span style="font-family:var(--font-h);font-weight:700;color:var(--g)">98%</span></td><td><span class="pill" style="background:var(--blue-t);color:var(--blue)">Viewing</span></td></tr>
+            <tr><td><div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#111">AfriHealth Labs</div><div style="font-size:11px;color:var(--txt2)">Healthtech · Kenya</div></td><td style="font-size:12.5px">AfricInvest</td><td><span style="font-family:var(--font-h);font-weight:700;color:var(--g)">94%</span></td><td><span class="pill" style="background:var(--gold-t);color:#7a5000">Meeting</span></td></tr>
+            <tr><td><div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#111">SolarNow Kenya</div><div style="font-size:11px;color:var(--txt2)">Cleantech · Kenya</div></td><td style="font-size:12.5px">Novastar</td><td><span style="font-family:var(--font-h);font-weight:700;color:var(--g)">91%</span></td><td><span class="pill" style="background:var(--g-t);color:var(--g-deep)">Invested</span></td></tr>
+            <tr><td><div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#111">EduBridge NG</div><div style="font-size:11px;color:var(--txt2)">Edtech · Nigeria</div></td><td style="font-size:12.5px">Ventures Platform</td><td><span style="font-family:var(--font-h);font-weight:700;color:var(--g)">88%</span></td><td><span class="pill" style="background:var(--blue-t);color:var(--blue)">Contacted</span></td></tr>
+            <tr><td><div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:#111">PayWave Rwanda</div><div style="font-size:11px;color:var(--txt2)">Fintech · Rwanda</div></td><td style="font-size:12.5px">Partech Africa</td><td><span style="font-family:var(--font-h);font-weight:700;color:var(--g)">85%</span></td><td><span class="pill" style="background:var(--blue-t);color:var(--blue)">Viewing</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ACTIVITY FEED -->
+      <div class="feed-card">
+        <div class="tc-header" style="padding:14px 18px"><div class="tc-title"><i class="ti ti-activity" style="color:var(--g);margin-right:6px"></i> Live activity</div><span id="live-count" style="font-size:12px;color:var(--g);font-family:var(--font-m);font-weight:500">247 online</span></div>
+        <div class="feed-item"><div class="fi-icon" style="background:var(--g-t);color:var(--g)"><i class="ti ti-user-plus"></i></div><div class="fi-text"><div class="fi-title">New startup registered</div><div class="fi-sub">PayWave Rwanda · Fintech · Rwanda</div></div><div class="fi-time">2m ago</div></div>
+        <div class="feed-item"><div class="fi-icon" style="background:var(--purple-t);color:var(--purple)"><i class="ti ti-brain"></i></div><div class="fi-text"><div class="fi-title">AI match generated</div><div class="fi-sub">GreenHarvest ↔ Rene Moerman · 98%</div></div><div class="fi-time">4m ago</div></div>
+        <div class="feed-item"><div class="fi-icon" style="background:var(--gold-t);color:var(--gold)"><i class="ti ti-award"></i></div><div class="fi-text"><div class="fi-title">Grant application submitted</div><div class="fi-sub">Tony Elumelu · GreenHarvest Ghana</div></div><div class="fi-time">8m ago</div></div>
+        <div class="feed-item"><div class="fi-icon" style="background:var(--red-t);color:var(--red)"><i class="ti ti-video"></i></div><div class="fi-text"><div class="fi-title">Video session started</div><div class="fi-sub">Benjamin Acheampong ↔ Ama K.</div></div><div class="fi-time">12m ago</div></div>
+        <div class="feed-item"><div class="fi-icon" style="background:var(--blue-t);color:var(--blue)"><i class="ti ti-currency-dollar"></i></div><div class="fi-text"><div class="fi-title">Investment confirmed</div><div class="fi-sub">SolarNow Kenya · $150K via Paystack</div></div><div class="fi-time">18m ago</div></div>
+        <div class="feed-item"><div class="fi-icon" style="background:var(--g-t);color:var(--g)"><i class="ti ti-school"></i></div><div class="fi-text"><div class="fi-title">Course enrollment</div><div class="fi-sub">Pitch Mastery · 12 new enrollments</div></div><div class="fi-time">25m ago</div></div>
+        <div class="feed-item"><div class="fi-icon" style="background:var(--purple-t);color:var(--purple)"><i class="ti ti-credit-card"></i></div><div class="fi-text"><div class="fi-title">Subscription upgrade</div><div class="fi-sub">PayWave Rwanda → Startup Pro · $29/mo</div></div><div class="fi-time">31m ago</div></div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+
+      <!-- GEO DISTRIBUTION -->
+      <div class="map-card">
+        <div class="tc-header" style="padding:0 0 14px"><div class="tc-title"><i class="ti ti-map-pin" style="color:var(--g);margin-right:6px"></i> Top countries</div></div>
+        <div class="country-row"><span class="country-flag">🇬🇭</span><span class="country-name">Ghana</span><div class="country-bar-track"><div class="country-bar-fill" style="width:88%"></div></div><span class="country-val">1,820</span></div>
+        <div class="country-row"><span class="country-flag">🇳🇬</span><span class="country-name">Nigeria</span><div class="country-bar-track"><div class="country-bar-fill" style="width:72%;background:var(--gold)"></div></div><span class="country-val">1,490</span></div>
+        <div class="country-row"><span class="country-flag">🇰🇪</span><span class="country-name">Kenya</span><div class="country-bar-track"><div class="country-bar-fill" style="width:58%;background:var(--blue)"></div></div><span class="country-val">1,190</span></div>
+        <div class="country-row"><span class="country-flag">🇷🇼</span><span class="country-name">Rwanda</span><div class="country-bar-track"><div class="country-bar-fill" style="width:34%;background:var(--purple)"></div></div><span class="country-val">700</span></div>
+        <div class="country-row"><span class="country-flag">🇸🇳</span><span class="country-name">Senegal</span><div class="country-bar-track"><div class="country-bar-fill" style="width:18%;background:var(--red)"></div></div><span class="country-val">380</span></div>
+        <div class="country-row"><span class="country-flag">🌍</span><span class="country-name">Other (9)</span><div class="country-bar-track"><div class="country-bar-fill" style="width:22%;background:#bbb"></div></div><span class="country-val">450</span></div>
+      </div>
+
+      <!-- AI ENGINE STATUS -->
+      <div class="ai-status-card">
+        <div class="ais-title"><span class="live-dot"></span> AI engine status</div>
+        <div class="ais-sub">Claude API · claude-sonnet-4-20250514</div>
+        <div class="ais-metric"><span class="ais-label">Uptime</span><div class="ais-bar-track"><div class="ais-bar-fill" style="width:99.7%;background:var(--g)"></div></div><span class="ais-val">99.7%</span></div>
+        <div class="ais-metric"><span class="ais-label">Avg response</span><div class="ais-bar-track"><div class="ais-bar-fill" style="width:82%;background:var(--gold)"></div></div><span class="ais-val">1.4s</span></div>
+        <div class="ais-metric"><span class="ais-label">Match accuracy</span><div class="ais-bar-track"><div class="ais-bar-fill" style="width:94%;background:var(--g)"></div></div><span class="ais-val">94.2%</span></div>
+        <div class="ais-metric"><span class="ais-label">API cost/day</span><div class="ais-bar-track"><div class="ais-bar-fill" style="width:45%;background:var(--blue)"></div></div><span class="ais-val">$42</span></div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div class="ais-row"><span class="ais-row-label">Matches today</span><span class="ais-row-val" id="live-matches">348</span></div>
+          <div class="ais-row"><span class="ais-row-label">Pitch analyses</span><span class="ais-row-val">84</span></div>
+          <div class="ais-row"><span class="ais-row-label">Grant checks</span><span class="ais-row-val">127</span></div>
+          <div class="ais-row"><span class="ais-row-label">Chat sessions</span><span class="ais-row-val" id="live-chats">213</span></div>
+          <div class="ais-row"><span class="ais-row-label">Tokens used</span><span class="ais-row-val">1.84M</span></div>
+        </div>
+      </div>
+
+      <!-- REVENUE BREAKDOWN -->
+      <div class="rev-card">
+        <div class="tc-header" style="padding:0 0 14px"><div class="tc-title"><i class="ti ti-chart-pie" style="color:var(--gold);margin-right:6px"></i> Revenue breakdown (May)</div></div>
+        <div class="rev-total">$48,240</div>
+        <div class="rev-label">Monthly recurring revenue · +22% MoM</div>
+        <div class="rev-row"><span class="rev-source"><span class="rev-dot" style="background:var(--g)"></span>Startup Pro subscriptions</span><div><span class="rev-amount">$21,460</span> <span class="rev-pct">44%</span></div></div>
+        <div class="rev-row"><span class="rev-source"><span class="rev-dot" style="background:var(--blue)"></span>Investor Pro subscriptions</span><div><span class="rev-amount">$14,850</span> <span class="rev-pct">31%</span></div></div>
+        <div class="rev-row"><span class="rev-source"><span class="rev-dot" style="background:var(--purple)"></span>Transaction fees (2%)</span><div><span class="rev-amount">$8,400</span> <span class="rev-pct">17%</span></div></div>
+        <div class="rev-row"><span class="rev-source"><span class="rev-dot" style="background:var(--gold)"></span>Premium services</span><div><span class="rev-amount">$2,490</span> <span class="rev-pct">5%</span></div></div>
+        <div class="rev-row"><span class="rev-source"><span class="rev-dot" style="background:#bbb"></span>Partner API fees</span><div><span class="rev-amount">$1,040</span> <span class="rev-pct">2%</span></div></div>
+      </div>
+    </div>
+
+    <!-- PLATFORM HEALTH -->
+    <div style="margin-bottom:10px;font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;display:flex;align-items:center;gap:8px"><i class="ti ti-server" style="color:var(--g)"></i> System health</div>
+    <div class="health-grid">
+      <div class="health-item"><div class="health-status" style="background:var(--g)"></div><div class="health-label">API Backend (Render)</div><div style="text-align:right"><div class="health-uptime">99.8% uptime</div><div class="health-val">42ms avg</div></div></div>
+      <div class="health-item"><div class="health-status" style="background:var(--g)"></div><div class="health-label">PostgreSQL (Supabase)</div><div style="text-align:right"><div class="health-uptime">100% uptime</div><div class="health-val">8ms avg</div></div></div>
+      <div class="health-item"><div class="health-status" style="background:var(--g)"></div><div class="health-label">Redis Cache (Upstash)</div><div style="text-align:right"><div class="health-uptime">99.9% uptime</div><div class="health-val">2ms avg</div></div></div>
+      <div class="health-item"><div class="health-status" style="background:var(--g)"></div><div class="health-label">Claude AI Engine</div><div style="text-align:right"><div class="health-uptime">99.7% uptime</div><div class="health-val">1.4s avg</div></div></div>
+      <div class="health-item"><div class="health-status" style="background:var(--g)"></div><div class="health-label">Paystack Payments</div><div style="text-align:right"><div class="health-uptime">99.9% uptime</div><div class="health-val">Operational</div></div></div>
+      <div class="health-item"><div class="health-status" style="background:var(--g)"></div><div class="health-label">MTN MoMo API</div><div style="text-align:right"><div class="health-uptime">99.5% uptime</div><div class="health-val">Operational</div></div></div>
+      <div class="health-item"><div class="health-status" style="background:var(--gold)"></div><div class="health-label">WebSocket Server</div><div style="text-align:right"><div class="health-uptime" style="color:var(--gold)">247 active</div><div class="health-val">18ms avg</div></div></div>
+      <div class="health-item"><div class="health-status" style="background:var(--g)"></div><div class="health-label">CDN / Frontend (Netlify)</div><div style="text-align:right"><div class="health-uptime">100% uptime</div><div class="health-val">Global edge</div></div></div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modal-title">Details</div><button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script>
+/* NAVIGATION */
+function showSection(s){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  event?.currentTarget?.classList?.add('active');
+  const titles={overview:'Platform Dashboard',users:'User Management',startups:'Startup Directory',matches:'AI Match Analytics',revenue:'Revenue Analytics',grants:'Grant Platform',sessions:'Mentor Sessions',compliance:'Compliance Overview',logs:'Audit Logs',health:'System Health',settings:'Platform Settings'};
+  document.getElementById('page-title').textContent = titles[s]||'Dashboard';
+}
+
+function switchTab(el){
+  el.closest('.chart-tabs').querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function exportReport(){
+  const data = {
+    generated: new Date().toISOString(),
+    users: document.getElementById('m-users').textContent,
+    startups: document.getElementById('m-startups').textContent,
+    mrr: document.getElementById('m-revenue').textContent,
+    matches: document.getElementById('m-matches').textContent,
+    funding: document.getElementById('m-funding').textContent,
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `hopefusion-report-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+/* MODALS */
+const modals = {
+  action:{
+    title:'Quick action',
+    body:`
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button onclick="openModal('broadcast')" style="padding:14px 16px;border-radius:10px;border:1.5px solid var(--border-l);background:#fff;text-align:left;cursor:pointer;font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;display:flex;align-items:center;gap:12px;transition:all .2s" onmouseover="this.style.borderColor='var(--g)'" onmouseout="this.style.borderColor='var(--border-l)'"><i class="ti ti-broadcast" style="color:var(--g);font-size:20px"></i>Broadcast platform announcement</button>
+        <button onclick="closeModal()" style="padding:14px 16px;border-radius:10px;border:1.5px solid var(--border-l);background:#fff;text-align:left;cursor:pointer;font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;display:flex;align-items:center;gap:12px;transition:all .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border-l)'"><i class="ti ti-refresh" style="color:var(--gold);font-size:20px"></i>Trigger AI re-matching scan</button>
+        <button onclick="closeModal()" style="padding:14px 16px;border-radius:10px;border:1.5px solid var(--border-l);background:#fff;text-align:left;cursor:pointer;font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;display:flex;align-items:center;gap:12px;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border-l)'"><i class="ti ti-user-check" style="color:var(--blue);font-size:20px"></i>Bulk verify pending users</button>
+        <button onclick="closeModal()" style="padding:14px 16px;border-radius:10px;border:1.5px solid var(--border-l);background:#fff;text-align:left;cursor:pointer;font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;display:flex;align-items:center;gap:12px;transition:all .2s" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border-l)'"><i class="ti ti-database" style="color:var(--purple);font-size:20px"></i>Export full platform data (CSV)</button>
+      </div>
+    `,
+    footer:`<button class="btn-mo outline" onclick="closeModal()">Cancel</button>`
+  },
+  alert:{
+    title:'Broadcast announcement',
+    body:`
+      <div style="margin-bottom:16px"><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Target audience</label>
+      <select style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none;background:#fff;appearance:none"><option>All users (5,247)</option><option>Startups only (3,180)</option><option>Investors only (1,890)</option><option>Mentors only (177)</option><option>Unverified users (342)</option></select></div>
+      <div style="margin-bottom:16px"><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Message title</label>
+      <input style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none" placeholder="Platform announcement — New features live!"/></div>
+      <div style="margin-bottom:16px"><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Message body</label>
+      <textarea style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none;resize:vertical;min-height:80px;line-height:1.6" placeholder="Write your announcement here…"></textarea></div>
+      <div style="margin-bottom:8px"><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Send via</label>
+      <div style="display:flex;gap:8px"><label style="display:flex;align-items:center;gap:6px;font-size:13px;font-family:var(--font-m);cursor:pointer"><input type="checkbox" checked/> In-app notification</label><label style="display:flex;align-items:center;gap:6px;font-size:13px;font-family:var(--font-m);cursor:pointer"><input type="checkbox" checked/> Email</label><label style="display:flex;align-items:center;gap:6px;font-size:13px;font-family:var(--font-m);cursor:pointer"><input type="checkbox"/> Push notification</label></div></div>
+    `,
+    footer:`<button class="btn-mo outline" onclick="closeModal()">Cancel</button><button class="btn-mo primary" onclick="showSuccess('Announcement broadcast to 5,247 users successfully.')">Send broadcast</button>`
+  },
+  broadcast:{
+    title:'Platform broadcast',
+    body:`<p style="font-size:14px;color:var(--txt2);margin-bottom:16px">Same as the announcement modal above — redirecting…</p>`,
+    footer:`<button class="btn-mo outline" onclick="closeModal()">Close</button>`
+  }
+};
+
+function openModal(key, name){
+  let m = modals[key];
+  if(!m && key==='user'){
+    m = {
+      title:`User — ${name}`,
+      body:`
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gold));display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:18px;font-weight:700;color:#fff">${(name||'').split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+          <div><div style="font-family:var(--font-h);font-size:17px;font-weight:700;color:#111">${name}</div><div style="font-size:13px;color:var(--txt2)">HopeFusion Africa platform user</div></div>
+        </div>
+        <div class="d-row"><span class="d-lbl">Role</span><span class="d-val">Startup founder</span></div>
+        <div class="d-row"><span class="d-lbl">Country</span><span class="d-val">Ghana 🇬🇭</span></div>
+        <div class="d-row"><span class="d-lbl">Registered</span><span class="d-val">May 10, 2026</span></div>
+        <div class="d-row"><span class="d-lbl">Verification</span><span class="d-val" style="color:var(--g)">✓ Verified</span></div>
+        <div class="d-row"><span class="d-lbl">Plan</span><span class="d-val">Startup Pro · $29/mo</span></div>
+        <div class="d-row"><span class="d-lbl">Sessions</span><span class="d-val">8 logins · Last: today</span></div>
+        <div class="d-row"><span class="d-lbl">AI matches</span><span class="d-val">12 matches generated</span></div>
+        <div class="d-row"><span class="d-lbl">Grants applied</span><span class="d-val">3 applications</span></div>
+      `,
+      footer:`<button class="btn-mo outline" onclick="closeModal()">Close</button><button class="btn-mo danger" onclick="showSuccess('User suspended.')">Suspend user</button><button class="btn-mo primary" onclick="showSuccess('Admin message sent.')">Send message</button>`
+    };
+  }
+  if(!m) return;
+  document.getElementById('modal-title').textContent = m.title;
+  document.getElementById('modal-body').innerHTML = m.body;
+  document.getElementById('modal-footer').innerHTML = m.footer;
+  document.getElementById('modal-overlay').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+
+function showSuccess(msg){
+  document.getElementById('modal-body').innerHTML=`<div style="text-align:center;padding:24px 0"><div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--g),#5ddfa0);display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;margin:0 auto 16px">✓</div><div style="font-family:var(--font-h);font-size:18px;font-weight:700;color:#111;margin-bottom:8px">Done!</div><div style="font-size:14px;color:var(--txt2)">${msg}</div></div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-mo primary" onclick="closeModal()">Close</button>`;
+}
+
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modal-overlay'))return;
+  document.getElementById('modal-overlay').classList.remove('show');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+document.addEventListener('DOMContentLoaded', function() {
+  HFA.Auth.guard(['admin']);
+  HFA.UI.renderUserProfile();
+  
+  /* LIVE COUNTERS */
+  let users=5247, matches=348, chats=213, online=247;
+  setInterval(()=>{
+    if(Math.random()>.6){ 
+      const mu = document.getElementById('m-users');
+      if (mu) { users+=Math.floor(Math.random()*3); mu.textContent=users.toLocaleString(); }
+    }
+    if(Math.random()>.5){ 
+      const lm = document.getElementById('live-matches');
+      const mm = document.getElementById('m-matches');
+      matches+=Math.floor(Math.random()*4); 
+      if (lm) lm.textContent=matches; 
+      if (mm) mm.textContent=(18432+matches-348).toLocaleString(); 
+    }
+    if(Math.random()>.7){ 
+      const lc = document.getElementById('live-chats');
+      chats+=Math.floor(Math.random()*3)-1; 
+      if (lc) lc.textContent=Math.max(200,chats); 
+    }
+    if(Math.random()>.6){ 
+      const lo = document.getElementById('live-count');
+      online+=Math.floor(Math.random()*5)-2; 
+      if (lo) lo.textContent=Math.max(200,online)+' online'; 
+    }
+    const lu = document.getElementById('last-updated');
+    if (lu) lu.textContent='Updated '+new Date().toLocaleTimeString();
+  },4000);
+});
+</script>
+
+<script>
+  /* ===== AUTH GUARD — ADMIN ONLY ===== */
+  (function() {
+    if (!window.HFA || !window.HFA.Auth.isLoggedIn()) {
+      window.location.replace('/hopefusion-homepage.html?session=required');
+      return;
+    }
+    const role = window.HFA.Auth.getRole();
+    if (role && role !== 'admin') {
+      // Non-admins are redirected to their correct dashboard
+      if (role === 'investor') window.location.replace('/hopefusion-investor-dashboard.html');
+      else window.location.replace('/hopefusion-startup-dashboard.html');
+    }
+  })();
+
+  window.addEventListener('load', () => {
+    if (window.hfai18n) {
+      window.hfai18n.createSwitcher('lang-switcher');
+    }
+  });
+</script>
+</body>
+</html>
