@@ -14,9 +14,9 @@
 const IS_DEV = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 window.HFA = {
-  API_URL:  IS_DEV ? 'http://localhost:3000/api'  : 'https://hopefusion-api.onrender.com/api',
+  API_URL:  IS_DEV ? 'http://localhost:3000/api'  : 'https://hopefusion-africa.onrender.com/api',
   AI_URL:   IS_DEV ? 'http://localhost:3001/api'  : 'https://hopefusion-ai.onrender.com/api',
-  WS_URL:   IS_DEV ? 'http://localhost:3000'      : 'wss://hopefusion-api.onrender.com',
+  WS_URL:   IS_DEV ? 'http://localhost:3000'      : 'wss://hopefusion-africa.onrender.com',
   PUB_API:  IS_DEV ? 'http://localhost:3000/v1'   : 'https://api.hopefusionafrica.com/v1',
   ENV:      IS_DEV ? 'development' : 'production',
   VERSION:  '1.0.0',
@@ -24,9 +24,9 @@ window.HFA = {
 
 // Sync legacy config block dynamically for WebRTC and older pages
 if (window.HFA_CONFIG) {
-  window.HFA_CONFIG.API_URL = IS_DEV ? 'http://localhost:3000' : 'https://hopefusion-api.onrender.com';
+  window.HFA_CONFIG.API_URL = IS_DEV ? 'http://localhost:3000' : 'https://hopefusion-africa.onrender.com';
   window.HFA_CONFIG.AI_URL  = IS_DEV ? 'http://localhost:3001' : 'https://hopefusion-ai.onrender.com';
-  window.HFA_CONFIG.WS_URL  = IS_DEV ? 'ws://localhost:3000'   : 'wss://hopefusion-api.onrender.com';
+  window.HFA_CONFIG.WS_URL  = IS_DEV ? 'ws://localhost:3000'   : 'wss://hopefusion-africa.onrender.com';
   window.HFA_CONFIG.ENV     = window.HFA.ENV;
 }
 
@@ -863,5 +863,5 @@ const HFAWeb3 = {
 };
 window.HFA.Web3 = HFAWeb3;
 
-/* Export for ES module usage */
-export { API, Auth, HFAAuth, HFASocket, HFANotifications, HFAAI, HFAPayments, HFAData, HFAUI, HFAWeb3 };
+/* Export for ES module usage if needed */
+// export { API, Auth, HFAAuth, HFASocket, HFANotifications, HFAAI, HFAPayments, HFAData, HFAUI, HFAWeb3 };
