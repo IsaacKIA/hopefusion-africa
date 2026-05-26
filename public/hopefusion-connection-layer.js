@@ -22,6 +22,15 @@ window.HFA = {
   VERSION:  '1.0.0',
 };
 
+// Sync legacy config block dynamically for WebRTC and older pages
+if (window.HFA_CONFIG) {
+  window.HFA_CONFIG.API_URL = IS_DEV ? 'http://localhost:3000' : 'https://hopefusion-api.onrender.com';
+  window.HFA_CONFIG.AI_URL  = IS_DEV ? 'http://localhost:3001' : 'https://hopefusion-ai.onrender.com';
+  window.HFA_CONFIG.WS_URL  = IS_DEV ? 'ws://localhost:3000'   : 'wss://hopefusion-api.onrender.com';
+  window.HFA_CONFIG.ENV     = window.HFA.ENV;
+}
+
+
 /* ============================================================
    TOKEN MANAGEMENT
    ============================================================ */
