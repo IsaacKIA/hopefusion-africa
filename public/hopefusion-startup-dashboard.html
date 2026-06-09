@@ -336,7 +336,7 @@ tr:last-child td{border-bottom:none}
       <div class="glass-card" style="padding:32px;background:linear-gradient(135deg,rgba(45,181,98,0.06),rgba(0,0,0,0))">
         <div style="max-width:600px">
           <h2 style="font-family:var(--font-h);font-size:24px;font-weight:700;color:#fff;margin-bottom:8px">
-            Build your venture, Ama 🚀
+            Build your venture, <span id="founder-greeting-name">Ama</span> 🚀
           </h2>
           <p style="font-size:14px;color:var(--txt2);line-height:1.75;margin-bottom:24px">
             Welcome to your control center. Below, you can access advanced Claude AI tools to prepare your pitch, model your financials, discover impact grants, and connect with compatible investors.
@@ -668,6 +668,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (dash.profile) {
       document.getElementById('founder-fullname').textContent = `${dash.profile.first_name} ${dash.profile.last_name}`;
       document.getElementById('avatar-initials').textContent = `${dash.profile.first_name?.[0] || ''}${dash.profile.last_name?.[0] || ''}`;
+      
+      const greetingNameEl = document.getElementById('founder-greeting-name');
+      if (greetingNameEl) {
+        greetingNameEl.textContent = dash.profile.first_name;
+      }
       
       const unverified = !dash.profile.is_verified;
       document.getElementById('verification-pill').className = 'status-pill' + (unverified ? ' unverified' : '');
@@ -1155,10 +1160,10 @@ async function handleEvidenceSubmit(e) {
       return;
     }
     const role = window.HFA.Auth.getRole();
-    if (role === 'investor') {
-      window.location.replace('/hopefusion-investor-dashboard.html');
-    } else if (role === 'admin') {
-      window.location.replace('/hopefusion-admin-dashboard.html');
+    if (role && role !== 'startup' && role !== 'admin') {
+      if (role === 'investor') window.location.replace('/hopefusion-investor-dashboard.html');
+      else if (role === 'mentor') window.location.replace('/hopefusion-mentor-dashboard.html');
+      else window.location.replace('/hopefusion-homepage.html?access=denied');
     }
   })();
 

@@ -1,22 +1,47 @@
 services:
+  # ── Backend API ─────────────────────────────────────────────
   - type: web
     name: hopefusion-api
     env: node
-    buildCommand: npm install
-    startCommand: node src/server.js
+    region: oregon
+    plan: starter
+    buildCommand: npm ci --only=production
+    startCommand: node --experimental-specifier-resolution=node src/server.js
+    healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3000
-
-  - type: web
-    name: hopefusion-ai
-    env: node
-    buildCommand: npm install
-    startCommand: node src/ai-engine.js
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3001
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_WEBHOOK_SECRET
+        sync: false
+      - key: FLUTTERWAVE_SECRET_KEY
+        sync: false
+      - key: FLUTTERWAVE_WEBHOOK_SECRET
+        sync: false
+      - key: MTN_MOMO_SUBSCRIPTION_KEY
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

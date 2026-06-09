@@ -1,532 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- HFA_CONFIG_START -->
-<script>
-  window.HFA_CONFIG = {
-    API_URL: "http://localhost:3000",
-    AI_URL: "http://localhost:3001",
-    WS_URL: "ws://localhost:3000",
-    ENV: "development"
-  };
-</script>
-<!-- HFA_CONFIG_END -->
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Register Your Startup — HopeFusion Africa</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Join HopeFusion Africa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
-<script src="/hopefusion-connection-layer.js"></script>
-<script src="/hopefusion-i18n.js" type="module"></script>
 <style>
-/* ===== ROOT & RESET ===== */
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
 :root{
-  --g:       #2DB562;
-  --g-dark:  #1e8a48;
-  --g-deep:  #0f5233;
-  --g-t:     #E9F9EF;
-  --gold:    #E8A020;
-  --gold-t:  #FEF7E8;
-  --red:     #E02020;
-  --red-t:   #fde8e8;
-  --blk:     #1A1A1A;
-  --blk2:    #222222;
-  --blk3:    #2a2a2a;
-  --bg:      #F7F7F7;
-  --white:   #ffffff;
-  --txt:     #3D3D3D;
-  --txt2:    #6b6b6b;
-  --border:  rgba(255,255,255,0.08);
-  --border-l:#e4e4e4;
-  --font-h:  'Sora', sans-serif;
-  --font-b:  'DM Sans', sans-serif;
-  --font-m:  'Space Grotesk', sans-serif;
-  --radius:  12px;
-  --shadow:  0 4px 24px rgba(0,0,0,0.08);
+  --g:#2DB562;--g-dark:#1e8a48;--g-deep:#0f5233;--g-t:#E9F9EF;
+  --gold:#E8A020;--gold-t:#FEF7E8;--red:#E02020;--red-t:#fde8e8;
+  --blue:#2563eb;--blue-t:#eef3fe;
+  --blk:#1A1A1A;--bg:#F4F5F7;--white:#fff;
+  --txt:#3D3D3D;--txt2:#6b6b6b;--border-l:#e4e4e4;
+  --font-h:'Sora',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'Space Grotesk',sans-serif;
 }
-body{font-family:var(--font-b);background:var(--bg);color:var(--txt);min-height:100vh}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:var(--blk)}
-::-webkit-scrollbar-thumb{background:var(--g);border-radius:2px}
+body{font-family:var(--font-b);background:var(--bg);color:var(--txt);min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
 
-/* ===== NAV ===== */
-nav{
-  position:fixed;top:0;left:0;right:0;z-index:1000;
-  background:rgba(26,26,26,0.95);
-  backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-  padding:0 2.5rem;height:64px;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-brand{font-family:var(--font-h);font-size:16px;font-weight:600}
-.nav-brand .hope{color:var(--g)}
-.nav-brand .fusion{color:var(--white)}
-.nav-brand .africa{color:var(--gold);font-size:10px;display:block;font-weight:400;letter-spacing:.18em;margin-top:-2px;font-family:var(--font-m)}
-.nav-back{
-  display:flex;align-items:center;gap:6px;
-  color:rgba(255,255,255,0.5);font-size:13px;font-family:var(--font-m);
-  text-decoration:none;transition:color .2s;
-}
-.nav-back:hover{color:var(--white)}
-.nav-step-indicator{
-  display:flex;align-items:center;gap:8px;
-  font-size:12px;font-family:var(--font-m);color:rgba(255,255,255,0.4);
-}
-.nav-step-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:rgba(255,255,255,0.15);transition:all .3s;
-}
-.nav-step-dot.active{background:var(--g);box-shadow:0 0 8px rgba(45,181,98,0.5)}
-.nav-step-dot.done{background:var(--g-dark)}
+/* LEFT PANEL */
+.left-panel{background:var(--blk);display:flex;flex-direction:column;padding:48px;position:relative;overflow:hidden}
+.left-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 30% 80%,rgba(45,181,98,0.12),transparent),radial-gradient(ellipse 60% 40% at 80% 20%,rgba(232,160,32,0.08),transparent)}
+.dots-bg{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.06) 1px,transparent 1px);background-size:32px 32px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black,transparent)}
+.left-logo{display:flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:auto;position:relative;z-index:1}
+.left-brand{font-family:var(--font-h);font-size:16px;font-weight:600}
+.left-brand .h{color:var(--g)}.left-brand .f{color:#fff}
+.left-brand .a{color:var(--gold);font-size:9px;display:block;letter-spacing:.18em;font-family:var(--font-m);font-weight:400}
+.left-content{position:relative;z-index:1;margin-top:auto}
+.left-headline{font-family:var(--font-h);font-size:clamp(28px,3vw,42px);font-weight:700;color:#fff;line-height:1.15;letter-spacing:-.5px;margin-bottom:16px}
+.left-headline em{color:var(--g);font-style:normal}
+.left-sub{font-size:15px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:32px;max-width:380px}
+.trust-badges{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:32px}
+.trust-badge{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 14px;font-size:12.5px;font-family:var(--font-m);color:rgba(255,255,255,0.7)}
+.trust-badge i{font-size:15px;color:var(--g)}
+.social-proof{border-top:1px solid rgba(255,255,255,0.08);padding-top:24px}
+.sp-avatars{display:flex;margin-bottom:10px}
+.sp-av{width:36px;height:36px;border-radius:50%;border:2px solid var(--blk);display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:12px;font-weight:700;color:#fff;margin-left:-10px}
+.sp-av:first-child{margin-left:0}
+.sp-text{font-size:13px;color:rgba(255,255,255,0.5);font-family:var(--font-m)}
+.sp-text strong{color:#fff}
 
-/* ===== LAYOUT ===== */
-.page-wrap{
-  display:grid;
-  grid-template-columns:420px 1fr;
-  min-height:100vh;
-  padding-top:64px;
-}
+/* RIGHT PANEL */
+.right-panel{background:var(--bg);display:flex;flex-direction:column;overflow-y:auto;max-height:100vh}
+.right-inner{padding:48px 52px;flex:1;display:flex;flex-direction:column;justify-content:center;max-width:520px;width:100%;margin:0 auto}
 
-/* ===== LEFT PANEL ===== */
-.left-panel{
-  background:var(--blk);
-  position:sticky;top:64px;height:calc(100vh - 64px);
-  overflow-y:auto;
-  padding:48px 40px;
-  display:flex;flex-direction:column;
-  border-right:1px solid var(--border);
-}
-.left-panel::-webkit-scrollbar{width:3px}
-.left-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1)}
+/* STEP INDICATOR */
+.step-indicator{display:flex;align-items:center;gap:0;margin-bottom:32px}
+.step-dot{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.step-dot:last-child .step-line{display:none}
+.step-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;font-family:var(--font-m);transition:all .3s;border:2px solid var(--border-l);background:#fff;color:var(--txt2)}
+.step-num.done{background:var(--g);border-color:var(--g);color:#fff}
+.step-num.active{border-color:var(--g);color:var(--g);background:#fff}
+.step-lbl{font-size:10.5px;font-family:var(--font-m);color:var(--txt2);white-space:nowrap}
+.step-lbl.active{color:var(--g);font-weight:500}
+.step-lbl.done{color:var(--g)}
+.step-line{height:1px;flex:1;background:var(--border-l);margin-top:-20px;align-self:flex-start;margin-left:16px;margin-right:16px;transition:background .3s}
+.step-line.done{background:var(--g)}
 
-.panel-tag{
-  display:inline-flex;align-items:center;gap:6px;
-  background:rgba(45,181,98,0.12);border:1px solid rgba(45,181,98,0.25);
-  color:#6fdfa3;padding:5px 14px;border-radius:100px;
-  font-size:11.5px;font-family:var(--font-m);
-  margin-bottom:24px;
-}
-.panel-dot{width:6px;height:6px;background:var(--g);border-radius:50%;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+/* ROLE PICKER */
+.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px}
+.role-btn{background:#fff;border:2px solid var(--border-l);border-radius:14px;padding:18px 14px;text-align:center;cursor:pointer;transition:all .25s;position:relative}
+.role-btn:hover{border-color:#bbb;transform:translateY(-2px)}
+.role-btn.selected-startup{border-color:var(--g);background:var(--g-t)}
+.role-btn.selected-investor{border-color:var(--blue);background:var(--blue-t)}
+.role-btn.selected-mentor{border-color:var(--gold);background:var(--gold-t)}
+.role-btn .role-icon{font-size:28px;margin-bottom:10px;display:block}
+.role-btn .role-name{font-family:var(--font-h);font-size:13.5px;font-weight:600;color:#111;margin-bottom:4px}
+.role-btn .role-desc{font-size:11.5px;color:var(--txt2);font-family:var(--font-m);line-height:1.4}
+.role-btn .role-check{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.role-btn.selected-startup .role-check{display:flex;background:var(--g)}
+.role-btn.selected-investor .role-check{display:flex;background:var(--blue)}
+.role-btn.selected-mentor .role-check{display:flex;background:var(--gold)}
 
-.panel-title{
-  font-family:var(--font-h);font-size:28px;font-weight:700;
-  color:var(--white);line-height:1.2;letter-spacing:-.5px;
-  margin-bottom:12px;
-}
-.panel-title span{color:var(--g)}
-.panel-sub{
-  font-size:14px;color:rgba(255,255,255,0.5);
-  line-height:1.7;margin-bottom:36px;
-}
-
-/* progress steps */
-.steps-list{display:flex;flex-direction:column;gap:0;margin-bottom:40px}
-.step-item{
-  display:flex;align-items:flex-start;gap:16px;
-  padding:16px 0;
-  border-bottom:1px solid rgba(255,255,255,0.05);
-  cursor:pointer;transition:all .2s;
-}
-.step-item:last-child{border-bottom:none}
-.step-circle{
-  width:36px;height:36px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-family:var(--font-h);font-weight:600;
-  transition:all .3s;border:1.5px solid rgba(255,255,255,0.12);
-  color:rgba(255,255,255,0.3);
-}
-.step-item.active .step-circle{
-  background:var(--g);color:var(--white);
-  border-color:var(--g);
-  box-shadow:0 0 16px rgba(45,181,98,0.4);
-}
-.step-item.done .step-circle{
-  background:rgba(45,181,98,0.15);
-  color:var(--g);border-color:rgba(45,181,98,0.3);
-}
-.step-info{flex:1}
-.step-label{
-  font-size:11px;font-family:var(--font-m);
-  color:rgba(255,255,255,0.3);letter-spacing:.08em;text-transform:uppercase;
-  margin-bottom:3px;
-}
-.step-item.active .step-label{color:var(--g)}
-.step-name{
-  font-family:var(--font-h);font-size:14px;font-weight:600;
-  color:rgba(255,255,255,0.35);transition:color .2s;
-}
-.step-item.active .step-name{color:var(--white)}
-.step-item.done .step-name{color:rgba(255,255,255,0.5)}
-.step-desc{font-size:12px;color:rgba(255,255,255,0.25);margin-top:3px;line-height:1.5}
-.step-item.active .step-desc{color:rgba(255,255,255,0.45)}
-
-/* connector line */
-.step-connector{
-  width:1.5px;height:20px;
-  background:rgba(255,255,255,0.06);
-  margin-left:17px;
-}
-.step-connector.done{background:rgba(45,181,98,0.3)}
-
-/* benefits */
-.benefits{margin-top:auto;padding-top:32px;border-top:1px solid rgba(255,255,255,0.06)}
-.benefit-item{
-  display:flex;align-items:center;gap:10px;
-  font-size:12.5px;color:rgba(255,255,255,0.45);
-  margin-bottom:12px;
-}
-.benefit-item i{color:var(--g);font-size:16px}
-
-/* ===== RIGHT PANEL — FORM ===== */
-.right-panel{
-  padding:48px 56px;
-  display:flex;flex-direction:column;
-  max-width:700px;
-}
-
-/* step header */
-.form-step-header{margin-bottom:36px;animation:slideIn .4s ease}
-@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-.step-tag{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--g-t);color:var(--g-deep);
-  font-size:11px;font-family:var(--font-m);font-weight:500;
-  letter-spacing:.08em;text-transform:uppercase;
-  padding:4px 12px;border-radius:100px;margin-bottom:14px;
-}
-.form-step-title{
-  font-family:var(--font-h);font-size:26px;font-weight:700;
-  color:#111;letter-spacing:-.3px;line-height:1.2;
-  margin-bottom:8px;
-}
-.form-step-sub{font-size:14px;color:var(--txt2);line-height:1.65}
-
-/* progress bar */
-.progress-bar-wrap{
-  height:4px;background:var(--border-l);
-  border-radius:2px;margin-bottom:40px;overflow:hidden;
-}
-.progress-bar-fill{
-  height:100%;background:linear-gradient(90deg,var(--g),#5ddfa0);
-  border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);
-}
-
-/* form sections */
-.form-section{display:none;animation:slideIn .4s ease}
+/* FORM */
+.form-section{display:none;animation:slideIn .3s ease}
 .form-section.active{display:block}
+.form-title{font-family:var(--font-h);font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
+.form-sub{font-size:14px;color:var(--txt2);margin-bottom:28px;line-height:1.6;font-family:var(--font-m)}
+.f-group{margin-bottom:18px;position:relative}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.f-label{font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px}
+.f-req{color:var(--red);margin-left:2px}
+.f-input{width:100%;padding:12px 16px;border:1.5px solid var(--border-l);border-radius:10px;font-size:14px;font-family:var(--font-b);color:var(--txt);background:#fff;outline:none;transition:all .2s}
+.f-input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,181,98,0.08)}
+.f-input::placeholder{color:#bbb}
+.f-input.error{border-color:var(--red);box-shadow:0 0 0 3px rgba(224,32,32,0.08)}
+.f-input.valid{border-color:var(--g)}
+textarea.f-input{resize:none;min-height:80px;line-height:1.6}
+select.f-input{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+.f-hint{font-size:11.5px;color:var(--txt2);margin-top:5px;font-family:var(--font-m)}
+.f-err-msg{font-size:11.5px;color:var(--red);margin-top:5px;font-family:var(--font-m);display:none}
+.f-err-msg.show{display:block}
+.f-icon{position:absolute;right:14px;top:41px;font-size:16px;color:var(--txt2)}
+.eye-btn{position:absolute;right:14px;top:41px;background:none;border:none;cursor:pointer;color:var(--txt2);font-size:16px;display:flex}
+.eye-btn:hover{color:var(--txt)}
 
-/* field groups */
-.field-group{margin-bottom:24px}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.field-label{
-  display:flex;align-items:center;justify-content:space-between;
-  font-size:13px;font-weight:500;font-family:var(--font-m);
-  color:#333;margin-bottom:8px;
-}
-.field-hint{font-size:11px;color:var(--txt2);font-weight:400}
-.field-required{color:var(--red);margin-left:3px}
+/* PASSWORD STRENGTH */
+.pwd-strength{margin-top:8px}
+.pwd-bars{display:flex;gap:4px;margin-bottom:4px}
+.pwd-bar{flex:1;height:3px;border-radius:2px;background:var(--border-l);transition:background .3s}
+.pwd-bar.weak{background:var(--red)}
+.pwd-bar.fair{background:var(--gold)}
+.pwd-bar.strong{background:var(--g)}
+.pwd-label{font-size:11px;font-family:var(--font-m);color:var(--txt2)}
 
-/* inputs */
-.field-input{
-  width:100%;padding:13px 16px;
-  border:1.5px solid var(--border-l);
-  border-radius:10px;font-size:14px;font-family:var(--font-b);
-  color:var(--txt);background:var(--white);
-  transition:all .2s;outline:none;
-  appearance:none;
-}
-.field-input:focus{
-  border-color:var(--g);
-  box-shadow:0 0 0 3px rgba(45,181,98,0.12);
-}
-.field-input.error{border-color:var(--red);box-shadow:0 0 0 3px rgba(224,32,32,0.1)}
-.field-input::placeholder{color:#bbb}
-.field-input-wrap{position:relative}
-.field-input-icon{
-  position:absolute;left:14px;top:50%;transform:translateY(-50%);
-  color:#bbb;font-size:16px;pointer-events:none;transition:color .2s;
-}
-.field-input-wrap:focus-within .field-input-icon{color:var(--g)}
-.field-input-wrap .field-input{padding-left:42px}
-.field-error{font-size:11.5px;color:var(--red);margin-top:5px;display:none}
-.field-error.show{display:block}
+/* PHONE FIELD */
+.phone-wrap{display:flex;gap:8px}
+.phone-prefix{padding:12px 14px;border:1.5px solid var(--border-l);border-radius:10px;font-size:14px;font-family:var(--font-m);background:#fff;outline:none;appearance:none;cursor:pointer;min-width:120px;transition:border .2s;color:var(--txt)}
+.phone-prefix:focus{border-color:var(--g)}
 
-textarea.field-input{resize:vertical;min-height:100px;line-height:1.6}
-select.field-input{cursor:pointer}
+/* MULTI-SELECT CHIPS */
+.chip-select{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border:1.5px solid var(--border-l);border-radius:10px;background:#fff;min-height:48px;cursor:pointer;transition:border .2s}
+.chip-select:focus-within{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,181,98,0.08)}
+.chip-item{display:flex;align-items:center;gap:5px;background:var(--g-t);color:var(--g-deep);border:1px solid rgba(45,181,98,0.2);border-radius:6px;padding:4px 10px;font-size:12.5px;font-family:var(--font-m)}
+.chip-item.blue{background:var(--blue-t);color:var(--blue);border-color:rgba(37,99,235,0.2)}
+.chip-item.gold{background:var(--gold-t);color:#7a5000;border-color:rgba(232,160,32,0.2)}
+.chip-item button{background:none;border:none;cursor:pointer;color:inherit;font-size:14px;line-height:1;padding:0;display:flex}
+.chip-dropdown{background:#fff;border:1.5px solid var(--border-l);border-radius:10px;padding:8px;margin-top:4px;display:none;max-height:200px;overflow-y:auto}
+.chip-dropdown.open{display:block;animation:fadeUp .2s ease}
+.chip-opt{padding:9px 12px;border-radius:7px;font-size:13.5px;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:8px;font-family:var(--font-m)}
+.chip-opt:hover{background:var(--bg)}
+.chip-opt.selected{color:var(--g)}
+.chip-opt.selected-blue{color:var(--blue)}
+.chip-opt.selected-gold{color:#7a5000}
 
-/* char counter */
-.char-counter{font-size:11px;color:#bbb;text-align:right;margin-top:4px}
-.char-counter.warn{color:var(--gold)}
-.char-counter.over{color:var(--red)}
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border:1.5px solid var(--border-l);border-radius:10px;margin-bottom:14px}
+.toggle-label{font-size:13.5px;font-family:var(--font-m);color:var(--txt);display:flex;align-items:center;gap:8px}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border-l);border-radius:12px;transition:.3s;cursor:pointer}
+.toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle-switch input:checked + .toggle-slider{background:var(--g)}
+.toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px)}
 
-/* file upload */
-.upload-zone{
-  border:2px dashed var(--border-l);border-radius:12px;
-  padding:36px 24px;text-align:center;cursor:pointer;
-  transition:all .25s;background:var(--bg);
-  position:relative;
-}
-.upload-zone:hover,.upload-zone.dragover{
-  border-color:var(--g);background:var(--g-t);
-}
-.upload-zone input[type=file]{
-  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
-}
-.upload-icon{font-size:32px;color:var(--g);margin-bottom:10px}
-.upload-title{font-size:14px;font-weight:500;color:#333;margin-bottom:4px;font-family:var(--font-h)}
-.upload-sub{font-size:12px;color:var(--txt2)}
-.upload-preview{
-  display:none;align-items:center;gap:12px;
-  padding:12px 16px;border-radius:8px;
-  background:var(--g-t);border:1px solid rgba(45,181,98,0.2);
-  margin-top:12px;
-}
-.upload-preview.show{display:flex}
-.upload-preview-name{font-size:13px;color:var(--g-deep);font-family:var(--font-m);flex:1}
-.upload-remove{
-  background:none;border:none;cursor:pointer;
-  color:var(--red);font-size:18px;padding:0;
-}
+/* OTP */
+.otp-wrap{display:flex;gap:10px;justify-content:center;margin:20px 0}
+.otp-box{width:52px;height:60px;border:1.5px solid var(--border-l);border-radius:10px;font-size:22px;font-weight:700;font-family:var(--font-h);text-align:center;outline:none;transition:all .2s;color:#111;background:#fff}
+.otp-box:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,181,98,0.1)}
+.otp-box.filled{border-color:var(--g);color:var(--g)}
+.otp-meta{text-align:center;font-size:13px;color:var(--txt2);font-family:var(--font-m);margin-bottom:8px}
+.otp-resend{text-align:center;font-size:13px;font-family:var(--font-m)}
+.otp-resend button{background:none;border:none;color:var(--g);cursor:pointer;font-size:13px;font-family:var(--font-m);font-weight:500;text-decoration:underline}
+.otp-timer{color:var(--txt2)}
 
-/* tag selector */
-.tag-selector{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.tag-option{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:8px 14px;border-radius:8px;
-  border:1.5px solid var(--border-l);
-  font-size:13px;font-family:var(--font-m);
-  cursor:pointer;transition:all .2s;color:var(--txt2);
-  background:var(--white);
-}
-.tag-option:hover{border-color:var(--g);color:var(--g-deep)}
-.tag-option.selected{
-  background:var(--g-t);border-color:var(--g);
-  color:var(--g-deep);font-weight:500;
-}
-.tag-option i{font-size:16px}
+/* BUTTONS */
+.btn-primary{width:100%;padding:14px;border-radius:10px;background:var(--g);color:#fff;border:none;font-size:15px;font-family:var(--font-m);font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}
+.btn-primary:hover{background:var(--g-dark)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.btn-primary.blue{background:var(--blue)}.btn-primary.blue:hover{background:#1d4ed8}
+.btn-primary.gold{background:var(--gold)}.btn-primary.gold:hover{background:#c07000}
+.btn-back{background:none;border:none;cursor:pointer;font-size:13.5px;font-family:var(--font-m);color:var(--txt2);display:flex;align-items:center;gap:5px;padding:0;margin-bottom:20px;transition:color .2s}
+.btn-back:hover{color:var(--txt)}
+.btn-google{width:100%;padding:12px;border-radius:10px;background:#fff;border:1.5px solid var(--border-l);font-size:14px;font-family:var(--font-m);font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--txt);margin-bottom:16px}
+.btn-google:hover{border-color:#bbb;background:var(--bg)}
+.divider{display:flex;align-items:center;gap:14px;margin:6px 0 16px;font-size:13px;color:var(--txt2);font-family:var(--font-m)}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border-l)}
+.login-link{text-align:center;font-size:13.5px;font-family:var(--font-m);color:var(--txt2);margin-top:20px}
+.login-link a{color:var(--g);text-decoration:none;font-weight:500}
+.login-link a:hover{text-decoration:underline}
 
-/* stage selector */
-.stage-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
-.stage-card{
-  padding:16px;border-radius:10px;border:1.5px solid var(--border-l);
-  cursor:pointer;transition:all .25s;text-align:center;background:var(--white);
-}
-.stage-card:hover{border-color:var(--g);background:var(--g-t)}
-.stage-card.selected{
-  border-color:var(--g);background:var(--g-t);
-}
-.stage-icon{font-size:24px;margin-bottom:8px;color:var(--txt2)}
-.stage-card.selected .stage-icon{color:var(--g)}
-.stage-name{font-size:13px;font-family:var(--font-h);font-weight:600;color:#333;margin-bottom:3px}
-.stage-desc{font-size:11px;color:var(--txt2);line-height:1.4}
+/* PROGRESS BAR */
+.progress-bar{height:3px;background:var(--border-l);border-radius:2px;margin-bottom:24px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;transition:width .4s ease}
 
-/* funding slider */
-.funding-display{
-  font-family:var(--font-h);font-size:32px;font-weight:700;
-  color:var(--g);text-align:center;margin:16px 0 8px;
-}
-.range-input{
-  width:100%;accent-color:var(--g);
-  height:6px;border-radius:3px;cursor:pointer;
-  background:linear-gradient(90deg,var(--g) var(--val,30%),var(--border-l) var(--val,30%));
-}
+/* SUCCESS STATE */
+.success-screen{text-align:center;padding:20px 0}
+.success-icon{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 24px;animation:fadeUp .5s ease}
+.success-title{font-family:var(--font-h);font-size:24px;font-weight:700;color:#111;margin-bottom:10px}
+.success-sub{font-size:14px;color:var(--txt2);line-height:1.7;margin-bottom:28px;font-family:var(--font-m)}
+.role-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 16px;border-radius:100px;font-size:13px;font-family:var(--font-m);font-weight:500;margin-bottom:20px}
+.spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
 
-/* social fields */
-.social-field{
-  display:flex;align-items:center;gap:12px;margin-bottom:12px;
-}
-.social-prefix{
-  width:44px;height:44px;border-radius:8px;
-  background:var(--bg);border:1.5px solid var(--border-l);
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;color:var(--txt2);flex-shrink:0;
-}
+/* LOADING */
+.loading-overlay{position:absolute;inset:0;background:rgba(255,255,255,0.85);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:10;display:none}
+.loading-overlay.show{display:flex}
+.load-spinner{width:36px;height:36px;border:3px solid var(--g-t);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite}
+.load-text{font-size:14px;font-family:var(--font-m);color:var(--g-deep)}
 
-/* team member */
-.team-members{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
-.team-member-card{
-  display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:center;
-  padding:16px;border-radius:10px;background:var(--bg);
-  border:1px solid var(--border-l);
-}
-.btn-remove-member{
-  width:32px;height:32px;border:none;background:var(--red-t);
-  color:var(--red);border-radius:8px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:16px;
-  transition:all .2s;
-}
-.btn-remove-member:hover{background:var(--red);color:var(--white)}
-.btn-add-member{
-  display:inline-flex;align-items:center;gap:8px;
-  background:none;border:1.5px dashed var(--border-l);
-  color:var(--txt2);padding:10px 18px;border-radius:8px;
-  font-size:13px;font-family:var(--font-m);cursor:pointer;
-  transition:all .2s;
-}
-.btn-add-member:hover{border-color:var(--g);color:var(--g);background:var(--g-t)}
-
-/* checkbox */
-.checkbox-wrap{display:flex;align-items:flex-start;gap:12px;cursor:pointer}
-.checkbox-wrap input{display:none}
-.checkbox-box{
-  width:20px;height:20px;border-radius:5px;
-  border:2px solid var(--border-l);background:var(--white);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;margin-top:1px;transition:all .2s;font-size:12px;color:var(--white);
-}
-.checkbox-wrap input:checked + .checkbox-box{
-  background:var(--g);border-color:var(--g);
-}
-.checkbox-wrap input:checked + .checkbox-box::after{content:'✓'}
-.checkbox-label{font-size:13px;color:var(--txt2);line-height:1.6}
-.checkbox-label a{color:var(--g);text-decoration:none}
-.checkbox-label a:hover{text-decoration:underline}
-
-/* nav buttons */
-.form-nav{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-top:40px;padding-top:28px;
-  border-top:1px solid var(--border-l);
-}
-.btn-back-step{
-  display:flex;align-items:center;gap:8px;
-  background:none;border:1.5px solid var(--border-l);
-  color:var(--txt2);padding:13px 22px;border-radius:10px;
-  font-size:14px;font-family:var(--font-h);font-weight:500;
-  cursor:pointer;transition:all .25s;
-}
-.btn-back-step:hover{border-color:#999;color:var(--txt)}
-.btn-next-step{
-  display:flex;align-items:center;gap:8px;
-  background:var(--g);color:var(--white);border:none;
-  padding:13px 28px;border-radius:10px;
-  font-size:14px;font-family:var(--font-h);font-weight:600;
-  cursor:pointer;transition:all .25s;
-  box-shadow:0 4px 16px rgba(45,181,98,0.3);
-}
-.btn-next-step:hover{background:var(--g-dark);transform:translateY(-1px);box-shadow:0 8px 24px rgba(45,181,98,0.4)}
-.btn-next-step:disabled{background:#bbb;box-shadow:none;cursor:not-allowed;transform:none}
-.btn-submit{
-  display:flex;align-items:center;gap:8px;
-  background:linear-gradient(135deg,var(--g),var(--g-dark));
-  color:var(--white);border:none;
-  padding:15px 36px;border-radius:10px;
-  font-size:15px;font-family:var(--font-h);font-weight:600;
-  cursor:pointer;transition:all .25s;
-  box-shadow:0 4px 20px rgba(45,181,98,0.35);
-}
-.btn-submit:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(45,181,98,0.45)}
-
-/* success screen */
-.success-screen{
-  display:none;text-align:center;padding:48px 0;
-  animation:slideIn .5s ease;
-}
-.success-screen.show{display:block}
-.success-icon{
-  width:80px;height:80px;border-radius:50%;
-  background:linear-gradient(135deg,var(--g),#5ddfa0);
-  display:flex;align-items:center;justify-content:center;
-  font-size:36px;color:var(--white);
-  margin:0 auto 28px;
-  box-shadow:0 0 0 16px rgba(45,181,98,0.1);
-  animation:successPop .6s cubic-bezier(.34,1.56,.64,1) both;
-}
-@keyframes successPop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
-.success-title{
-  font-family:var(--font-h);font-size:32px;font-weight:700;
-  color:#111;letter-spacing:-.5px;margin-bottom:12px;
-}
-.success-title span{color:var(--g)}
-.success-sub{font-size:15px;color:var(--txt2);line-height:1.7;max-width:440px;margin:0 auto 36px}
-.success-id{
-  display:inline-block;
-  background:var(--blk);color:var(--g);
-  font-family:var(--font-m);font-size:13px;
-  padding:8px 20px;border-radius:8px;
-  letter-spacing:.05em;margin-bottom:40px;
-}
-.success-cards{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:16px;margin-bottom:36px;text-align:left;
-}
-.success-card{
-  background:var(--white);border:1px solid var(--border-l);
-  border-radius:12px;padding:20px;
-}
-.success-card-icon{font-size:24px;color:var(--g);margin-bottom:10px}
-.success-card h4{font-family:var(--font-h);font-size:14px;font-weight:600;color:#111;margin-bottom:4px}
-.success-card p{font-size:12px;color:var(--txt2);line-height:1.5}
-.btn-dashboard{
-  background:var(--g);color:var(--white);border:none;
-  padding:15px 36px;border-radius:10px;
-  font-size:15px;font-family:var(--font-h);font-weight:600;
-  cursor:pointer;transition:all .25s;
-  box-shadow:0 4px 20px rgba(45,181,98,0.3);
-  display:inline-flex;align-items:center;gap:8px;
-}
-.btn-dashboard:hover{background:var(--g-dark);transform:translateY(-2px)}
-
-/* info tooltip */
-.info-tip{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:16px;height:16px;border-radius:50%;
-  background:var(--border-l);color:var(--txt2);
-  font-size:10px;cursor:help;margin-left:4px;
-  transition:all .2s;
-}
-.info-tip:hover{background:var(--g);color:var(--white)}
-
-/* ai suggestion chip */
-.ai-chip{
-  display:inline-flex;align-items:center;gap:6px;
-  background:linear-gradient(135deg,rgba(45,181,98,0.08),rgba(232,160,32,0.08));
-  border:1px solid rgba(45,181,98,0.2);
-  color:var(--g-deep);padding:6px 12px;border-radius:8px;
-  font-size:12px;font-family:var(--font-m);margin-top:8px;
-  cursor:pointer;transition:all .2s;
-}
-.ai-chip:hover{background:var(--g-t);border-color:var(--g)}
-.ai-chip i{color:var(--g)}
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:900px){
-  .page-wrap{grid-template-columns:1fr}
-  .left-panel{position:relative;height:auto;top:0;padding:32px 24px}
-  .right-panel{padding:32px 24px}
-  .steps-list{flex-direction:row;overflow-x:auto;gap:0;padding-bottom:8px}
-  .step-item{flex-direction:column;align-items:center;text-align:center;min-width:80px;padding:12px 8px;border-bottom:none;border-right:1px solid rgba(255,255,255,0.05)}
-  .step-connector{display:none}
-  .field-row{grid-template-columns:1fr}
-  .stage-grid{grid-template-columns:repeat(2,1fr)}
-  .success-cards{grid-template-columns:1fr}
-}
-@media(max-width:600px){
-  nav{padding:0 1rem}
-  .right-panel{padding:24px 16px}
-  .stage-grid{grid-template-columns:1fr 1fr}
-}
+@media(max-width:900px){body{grid-template-columns:1fr}.left-panel{display:none}}
 </style>
-<script src="/hopefusion-connection-layer.js"></script>
-<script src="/hopefusion-i18n.js" type="module"></script>
-
-<link rel="manifest" href="/manifest.json"/>
-<meta name="theme-color" content="#2DB562"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="HopeFusion"/>
-<link rel="apple-touch-icon" href="/icons/icon-192x192.png"/>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a class="nav-logo" href="hopefusion-homepage.html">
+<!-- LEFT — BRAND PANEL -->
+<div class="left-panel">
+  <div class="dots-bg"></div>
+  <a class="left-logo" href="hopefusion-homepage.html">
     <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
       <path d="M8 28 Q5 18 11 10" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
       <path d="M13 30 Q9 19 16 11" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
@@ -535,983 +201,1160 @@ select.field-input{cursor:pointer}
       <circle cx="21" cy="8" r="2.5" fill="#E02020"/>
       <circle cx="26" cy="13" r="2.5" fill="#E02020"/>
     </svg>
-    <div>
-      <div class="nav-brand">
-        <span class="hope">Hope</span><span class="fusion">Fusion</span>
-        <span class="africa">A F R I C A</span>
-      </div>
-    </div>
+    <div class="left-brand"><span class="h">Hope</span><span class="f">Fusion</span><span class="a">A F R I C A</span></div>
   </a>
-  <div class="nav-step-indicator" id="nav-steps">
-    <span style="color:rgba(255,255,255,0.3);font-size:12px;margin-right:4px">Step</span>
-    <div class="nav-step-dot active" id="nd1"></div>
-    <div class="nav-step-dot" id="nd2"></div>
-    <div class="nav-step-dot" id="nd3"></div>
-    <div class="nav-step-dot" id="nd4"></div>
-    <div class="nav-step-dot" id="nd5"></div>
-    <span id="nav-step-label" style="margin-left:8px;font-size:12px;color:rgba(255,255,255,0.4)">1 of 5</span>
+  <div class="left-content">
+    <h1 class="left-headline">Africa's startup<br/>ecosystem, <em>unified.</em></h1>
+    <p class="left-sub">Join thousands of founders, investors and mentors building Africa's economic future — from Ghana to the world.</p>
+    <div class="trust-badges">
+      <div class="trust-badge"><i class="ti ti-brain"></i> AI-powered matching</div>
+      <div class="trust-badge"><i class="ti ti-award"></i> Grant discovery</div>
+      <div class="trust-badge"><i class="ti ti-shield-check"></i> Secure & verified</div>
+      <div class="trust-badge"><i class="ti ti-credit-card"></i> MTN MoMo & Paystack</div>
+    </div>
+    <div class="social-proof">
+      <div class="sp-avatars">
+        <div class="sp-av" style="background:linear-gradient(135deg,#2DB562,#1e8a48)">AK</div>
+        <div class="sp-av" style="background:linear-gradient(135deg,#E8A020,#c07000)">KM</div>
+        <div class="sp-av" style="background:linear-gradient(135deg,#E02020,#b01515)">DU</div>
+        <div class="sp-av" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)">FY</div>
+        <div class="sp-av" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">BA</div>
+      </div>
+      <div class="sp-text"><strong>5,247 members</strong> across 14 African countries</div>
+    </div>
   </div>
-  <div id="lang-switcher" style="margin-right:16px; margin-left:auto"></div>
-  <a class="nav-back" href="hopefusion-homepage.html">
-    <i class="ti ti-arrow-left"></i> Back to home
-  </a>
-</nav>
-
-<!-- PAGE WRAP -->
-<div class="page-wrap">
-
-  <!-- LEFT PANEL -->
-  <aside class="left-panel">
-    <div class="panel-tag"><span class="panel-dot"></span> Free registration · 10 min</div>
-    <h2 class="panel-title">Launch your<br/><span>startup journey</span></h2>
-    <p class="panel-sub">Join thousands of African entrepreneurs gaining access to funding, mentors and resources on one unified platform.</p>
-
-    <div class="steps-list">
-      <div class="step-item active" id="si1">
-        <div class="step-circle">1</div>
-        <div class="step-info">
-          <div class="step-label">Step 01</div>
-          <div class="step-name">Founder details</div>
-          <div class="step-desc">Your personal & contact info</div>
-        </div>
-      </div>
-      <div class="step-connector" id="sc1"></div>
-      <div class="step-item" id="si2">
-        <div class="step-circle">2</div>
-        <div class="step-info">
-          <div class="step-label">Step 02</div>
-          <div class="step-name">Startup profile</div>
-          <div class="step-desc">About your venture</div>
-        </div>
-      </div>
-      <div class="step-connector" id="sc2"></div>
-      <div class="step-item" id="si3">
-        <div class="step-circle">3</div>
-        <div class="step-info">
-          <div class="step-label">Step 03</div>
-          <div class="step-name">Stage & funding</div>
-          <div class="step-desc">Where you are & what you need</div>
-        </div>
-      </div>
-      <div class="step-connector" id="sc3"></div>
-      <div class="step-item" id="si4">
-        <div class="step-circle">4</div>
-        <div class="step-info">
-          <div class="step-label">Step 04</div>
-          <div class="step-name">Team & links</div>
-          <div class="step-desc">Your team & online presence</div>
-        </div>
-      </div>
-      <div class="step-connector" id="sc4"></div>
-      <div class="step-item" id="si5">
-        <div class="step-circle">5</div>
-        <div class="step-info">
-          <div class="step-label">Step 05</div>
-          <div class="step-name">Review & submit</div>
-          <div class="step-desc">Confirm and go live</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="benefits">
-      <div class="benefit-item"><i class="ti ti-check"></i> Free to register — no hidden fees</div>
-      <div class="benefit-item"><i class="ti ti-brain"></i> AI matches you with investors in 24h</div>
-      <div class="benefit-item"><i class="ti ti-shield-check"></i> Your data is encrypted and secure</div>
-      <div class="benefit-item"><i class="ti ti-world"></i> Access to 14 African countries</div>
-      <div class="benefit-item"><i class="ti ti-currency-dollar"></i> Funding from $10K to $5M+</div>
-    </div>
-  </aside>
-
-  <!-- RIGHT PANEL -->
-  <main class="right-panel">
-
-    <!-- PROGRESS BAR -->
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-fill" id="progress-bar" style="width:20%"></div>
-    </div>
-
-    <!-- ========== STEP 1: FOUNDER DETAILS ========== -->
-    <div class="form-section active" id="step1">
-      <div class="form-step-header">
-        <span class="step-tag"><i class="ti ti-user"></i> Step 1 of 5</span>
-        <h2 class="form-step-title">Tell us about yourself</h2>
-        <p class="form-step-sub">We'll use this to create your founder profile and verify your identity. All fields marked <span style="color:var(--red)">*</span> are required.</p>
-      </div>
-
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">First name <span class="field-required">*</span></label>
-          <div class="field-input-wrap">
-            <i class="ti ti-user field-input-icon"></i>
-            <input type="text" class="field-input" id="fname" placeholder="e.g. Ama" oninput="validateField(this)"/>
-          </div>
-          <div class="field-error" id="fname-err">Please enter your first name</div>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Last name <span class="field-required">*</span></label>
-          <div class="field-input-wrap">
-            <i class="ti ti-user field-input-icon"></i>
-            <input type="text" class="field-input" id="lname" placeholder="e.g. Korantema" oninput="validateField(this)"/>
-          </div>
-          <div class="field-error" id="lname-err">Please enter your last name</div>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Email address <span class="field-required">*</span></label>
-        <div class="field-input-wrap">
-          <i class="ti ti-mail field-input-icon"></i>
-          <input type="email" class="field-input" id="email" placeholder="you@startup.com" oninput="validateEmail(this)"/>
-        </div>
-        <div class="field-error" id="email-err">Please enter a valid email address</div>
-      </div>
-
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Phone number <span class="field-required">*</span></label>
-          <div class="field-input-wrap">
-            <i class="ti ti-phone field-input-icon"></i>
-            <input type="tel" class="field-input" id="phone" placeholder="+233 24 000 0000" oninput="validateField(this)"/>
-          </div>
-          <div class="field-error" id="phone-err">Please enter your phone number</div>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Country <span class="field-required">*</span></label>
-          <div class="field-input-wrap">
-            <i class="ti ti-map-pin field-input-icon"></i>
-            <select class="field-input" id="country" onchange="validateField(this)" style="padding-left:42px">
-              <option value="">Select country…</option>
-              <option>Ghana</option><option>Nigeria</option><option>Kenya</option>
-              <option>South Africa</option><option>Rwanda</option><option>Ethiopia</option>
-              <option>Senegal</option><option>Côte d'Ivoire</option><option>Tanzania</option>
-              <option>Uganda</option><option>Cameroon</option><option>Egypt</option>
-              <option>Morocco</option><option>Tunisia</option><option>Other</option>
-            </select>
-          </div>
-          <div class="field-error" id="country-err">Please select your country</div>
-        </div>
-      </div>
-
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Account type <span class="field-required">*</span></label>
-          <div class="field-input-wrap">
-            <i class="ti ti-users field-input-icon"></i>
-            <select class="field-input" id="system-role" onchange="handleRoleChange(this)" style="padding-left:42px">
-              <option value="startup">Startup Founder (Raising Capital)</option>
-              <option value="investor">Impact Investor (Deploying Capital)</option>
-            </select>
-          </div>
-        </div>
-        <div class="field-group">
-          <label class="field-label" id="role-label-text">Your role / title <span class="field-required">*</span></label>
-          <div class="field-input-wrap">
-            <i class="ti ti-briefcase field-input-icon"></i>
-            <input type="text" class="field-input" id="role" placeholder="e.g. CEO & Co-founder" oninput="validateField(this)"/>
-          </div>
-          <div class="field-error" id="role-err">Please enter your role</div>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">
-          Password <span class="field-required">*</span>
-          <span class="field-hint">Min. 8 characters</span>
-        </label>
-        <div class="field-input-wrap">
-          <i class="ti ti-lock field-input-icon"></i>
-          <input type="password" class="field-input" id="password" placeholder="Create a strong password" oninput="validatePassword(this)"/>
-        </div>
-        <div class="field-error" id="password-err">Password must be at least 8 characters</div>
-      </div>
-
-      <div class="form-nav">
-        <div></div>
-        <button class="btn-next-step" onclick="nextStep(1)">
-          Continue <i class="ti ti-arrow-right"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- ========== STEP 2: STARTUP PROFILE ========== -->
-    <div class="form-section" id="step2">
-      <div class="form-step-header">
-        <span class="step-tag"><i class="ti ti-building-store"></i> Step 2 of 5</span>
-        <h2 class="form-step-title" id="s2-title">Your startup profile</h2>
-        <p class="form-step-sub" id="s2-sub">Help investors and mentors understand your vision. Be specific — better profiles get better matches.</p>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label" id="s2-name-lbl">Startup name <span class="field-required">*</span></label>
-        <div class="field-input-wrap">
-          <i class="ti ti-building field-input-icon"></i>
-          <input type="text" class="field-input" id="startup-name" placeholder="Your startup's legal or trade name" oninput="validateField(this)"/>
-        </div>
-        <div class="field-error" id="startup-name-err">Please enter your startup name</div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label" id="s2-pitch-lbl">
-          One-line pitch <span class="field-required">*</span>
-          <span class="field-hint">Max 120 chars</span>
-        </label>
-        <input type="text" class="field-input" id="pitch-line" maxlength="120"
-          placeholder="We help [who] to [what] by [how]"
-          oninput="countChars(this,'pitch-count',120)"/>
-        <div class="char-counter" id="pitch-count">0 / 120</div>
-        <div class="ai-chip" id="s2-ai-chip" onclick="fillPitchExample()">
-          <i class="ti ti-sparkles"></i> See an example pitch line
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label" id="s2-desc-lbl">
-          Full description <span class="field-required">*</span>
-          <span class="field-hint">Max 500 chars</span>
-        </label>
-        <textarea class="field-input" id="description" maxlength="500"
-          placeholder="Describe your startup: what problem you solve, who your customers are, and what makes you different."
-          oninput="countChars(this,'desc-count',500)"></textarea>
-        <div class="char-counter" id="desc-count">0 / 500</div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label" id="s2-sector-lbl">Industry sector <span class="field-required">*</span></label>
-        <div class="tag-selector" id="sector-tags">
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-leaf"></i> Agritech</div>
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-heartbeat"></i> Healthtech</div>
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-school"></i> Edtech</div>
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-currency-dollar"></i> Fintech</div>
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-solar-panel"></i> Cleantech</div>
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-truck"></i> Logistics</div>
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-shopping-bag"></i> E-Commerce</div>
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-device-mobile"></i> SaaS / Tech</div>
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-home"></i> PropTech</div>
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-building-factory"></i> Manufacturing</div>
-          <div class="tag-option" onclick="toggleTag(this,'sector')"><i class="ti ti-dots"></i> Other</div>
-        </div>
-        <div class="field-error" id="sector-err" style="margin-top:8px">Please select at least one sector</div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Upload pitch deck / logo <span class="field-hint">(PDF or image, max 10MB)</span></label>
-        <div class="upload-zone" id="upload-zone">
-          <input type="file" id="pitch-file" accept=".pdf,.png,.jpg,.jpeg" onchange="handleFileUpload(this)"/>
-          <div class="upload-icon"><i class="ti ti-cloud-upload"></i></div>
-          <div class="upload-title">Drag & drop or click to upload</div>
-          <div class="upload-sub">PDF, PNG, JPG — max 10MB</div>
-        </div>
-        <div class="upload-preview" id="upload-preview">
-          <i class="ti ti-file-text" style="color:var(--g);font-size:20px"></i>
-          <span class="upload-preview-name" id="upload-name">file.pdf</span>
-          <button class="upload-remove" onclick="removeFile()"><i class="ti ti-x"></i></button>
-        </div>
-      </div>
-
-      <div class="form-nav">
-        <button class="btn-back-step" onclick="prevStep(2)"><i class="ti ti-arrow-left"></i> Back</button>
-        <button class="btn-next-step" onclick="nextStep(2)">Continue <i class="ti ti-arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- ========== STEP 3: STAGE & FUNDING ========== -->
-    <div class="form-section" id="step3">
-      <div class="form-step-header">
-        <span class="step-tag"><i class="ti ti-chart-bar"></i> Step 3 of 5</span>
-        <h2 class="form-step-title" id="s3-title">Stage & funding needs</h2>
-        <p class="form-step-sub" id="s3-sub">Understanding your stage and funding goals helps us connect you with the most relevant investors and opportunities.</p>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label" id="s3-stage-lbl">Current stage <span class="field-required">*</span></label>
-        <div class="stage-grid" id="stage-grid">
-          <div class="stage-card" data-val="idea" onclick="selectStage(this,'idea')">
-            <div class="stage-icon"><i class="ti ti-bulb"></i></div>
-            <div class="stage-name">Idea</div>
-            <div class="stage-desc">Concept not yet built</div>
-          </div>
-          <div class="stage-card" data-val="mvp" onclick="selectStage(this,'mvp')">
-            <div class="stage-icon"><i class="ti ti-tools"></i></div>
-            <div class="stage-name">MVP</div>
-            <div class="stage-desc">Built, validating market</div>
-          </div>
-          <div class="stage-card" data-val="early" onclick="selectStage(this,'early')">
-            <div class="stage-icon"><i class="ti ti-trending-up"></i></div>
-            <div class="stage-name">Early traction</div>
-            <div class="stage-desc">First customers / revenue</div>
-          </div>
-          <div class="stage-card" data-val="growth" onclick="selectStage(this,'growth')">
-            <div class="stage-icon"><i class="ti ti-rocket"></i></div>
-            <div class="stage-name">Growth</div>
-            <div class="stage-desc">Scaling operations</div>
-          </div>
-          <div class="stage-card" data-val="series" onclick="selectStage(this,'series')">
-            <div class="stage-icon"><i class="ti ti-chart-line"></i></div>
-            <div class="stage-name">Series A+</div>
-            <div class="stage-desc">Institutional funding</div>
-          </div>
-          <div class="stage-card" data-val="established" onclick="selectStage(this,'established')">
-            <div class="stage-icon"><i class="ti ti-building"></i></div>
-            <div class="stage-name">Established</div>
-            <div class="stage-desc">Profitable & expanding</div>
-          </div>
-        </div>
-        <div class="field-error" id="stage-err" style="margin-top:8px">Please select your current stage</div>
-      </div>
-
-      <div class="field-group" style="margin-top:28px">
-        <label class="field-label" id="s3-funding-lbl">Funding amount needed <span class="field-required">*</span></label>
-        <div class="funding-display" id="funding-display">$50,000</div>
-        <input type="range" class="range-input" id="funding-range"
-          min="10000" max="5000000" step="10000" value="50000"
-          oninput="updateFunding(this)"/>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt2);margin-top:6px;font-family:var(--font-m)">
-          <span>$10K</span><span>$500K</span><span>$1M</span><span>$5M+</span>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label" id="s3-type-lbl">Funding type preferred <span class="field-required">*</span></label>
-        <div class="tag-selector">
-          <div class="tag-option" onclick="toggleTag(this,'funding')"><i class="ti ti-award"></i> Grant</div>
-          <div class="tag-option" onclick="toggleTag(this,'funding')"><i class="ti ti-user-dollar"></i> Angel</div>
-          <div class="tag-option" onclick="toggleTag(this,'funding')"><i class="ti ti-chart-line"></i> VC / Equity</div>
-          <div class="tag-option" onclick="toggleTag(this,'funding')"><i class="ti ti-users"></i> Crowdfunding</div>
-          <div class="tag-option" onclick="toggleTag(this,'funding')"><i class="ti ti-currency-dollar"></i> Debt / Loan</div>
-          <div class="tag-option" onclick="toggleTag(this,'funding')"><i class="ti ti-building-bank"></i> Impact Investment</div>
-        </div>
-        <div class="field-error" id="funding-err" style="margin-top:8px">Please select at least one funding type</div>
-      </div>
-
-      <div class="field-group" id="revenue-group">
-        <label class="field-label">Annual revenue (if any)</label>
-        <div class="field-input-wrap">
-          <i class="ti ti-coins field-input-icon"></i>
-          <select class="field-input" style="padding-left:42px" id="revenue">
-            <option value="">Select revenue range…</option>
-            <option>Pre-revenue</option>
-            <option>$1 – $10,000</option>
-            <option>$10,001 – $50,000</option>
-            <option>$50,001 – $200,000</option>
-            <option>$200,001 – $1,000,000</option>
-            <option>$1M+</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-nav">
-        <button class="btn-back-step" onclick="prevStep(3)"><i class="ti ti-arrow-left"></i> Back</button>
-        <button class="btn-next-step" onclick="nextStep(3)">Continue <i class="ti ti-arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- ========== STEP 4: TEAM & LINKS ========== -->
-    <div class="form-section" id="step4">
-      <div class="form-step-header">
-        <span class="step-tag"><i class="ti ti-users"></i> Step 4 of 5</span>
-        <h2 class="form-step-title" id="s4-title">Your team & online presence</h2>
-        <p class="form-step-sub" id="s4-sub">Investors fund teams, not just ideas. Add your co-founders and connect your online presence for credibility.</p>
-      </div>
-
-      <div class="field-group" id="team-group">
-        <label class="field-label" id="s4-team-lbl">Team members <span class="field-hint">(besides yourself)</span></label>
-        <div class="team-members" id="team-list"></div>
-        <button class="btn-add-member" onclick="addMember()">
-          <i class="ti ti-plus"></i> Add team member
-        </button>
-      </div>
-
-      <div class="field-group" id="portfolio-group" style="display:none">
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label">Active Portfolio Count <span class="field-required">*</span></label>
-            <input type="number" class="field-input" id="portfolio-count" placeholder="e.g. 14" value="0"/>
-          </div>
-          <div class="field-group">
-            <label class="field-label">Total Deployed Capital (USD) <span class="field-required">*</span></label>
-            <input type="number" class="field-input" id="total-deployed" placeholder="e.g. 2400000" value="0"/>
-          </div>
-        </div>
-      </div>
-
-      <div class="field-group" style="margin-top:28px">
-        <label class="field-label">Online presence</label>
-        <div class="social-field">
-          <div class="social-prefix"><i class="ti ti-world"></i></div>
-          <input type="url" class="field-input" id="website" placeholder="https://yourwebsite.com"/>
-        </div>
-        <div class="social-field">
-          <div class="social-prefix"><i class="ti ti-brand-linkedin"></i></div>
-          <input type="url" class="field-input" id="linkedin" placeholder="https://linkedin.com/company/..."/>
-        </div>
-        <div class="social-field">
-          <div class="social-prefix"><i class="ti ti-brand-twitter"></i></div>
-          <input type="url" class="field-input" id="twitter" placeholder="https://twitter.com/..."/>
-        </div>
-        <div class="social-field">
-          <div class="social-prefix"><i class="ti ti-brand-instagram"></i></div>
-          <input type="url" class="field-input" id="instagram" placeholder="https://instagram.com/..."/>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label" id="s4-sdg-lbl">SDGs your startup addresses</label>
-        <div class="tag-selector">
-          <div class="tag-option" data-tag="sdg" onclick="toggleTag(this,'sdg')">SDG 1 · No Poverty</div>
-          <div class="tag-option" data-tag="sdg" onclick="toggleTag(this,'sdg')">SDG 3 · Good Health</div>
-          <div class="tag-option" data-tag="sdg" onclick="toggleTag(this,'sdg')">SDG 4 · Education</div>
-          <div class="tag-option" data-tag="sdg" onclick="toggleTag(this,'sdg')">SDG 6 · Clean Water</div>
-          <div class="tag-option" data-tag="sdg" onclick="toggleTag(this,'sdg')">SDG 8 · Decent Work</div>
-          <div class="tag-option" data-tag="sdg" onclick="toggleTag(this,'sdg')">SDG 9 · Innovation</div>
-          <div class="tag-option" data-tag="sdg" onclick="toggleTag(this,'sdg')">SDG 10 · Equality</div>
-          <div class="tag-option" data-tag="sdg" onclick="toggleTag(this,'sdg')">SDG 13 · Climate</div>
-          <div class="tag-option" data-tag="sdg" onclick="toggleTag(this,'sdg')">SDG 17 · Partnerships</div>
-        </div>
-      </div>
-
-      <div class="form-nav">
-        <button class="btn-back-step" onclick="prevStep(4)"><i class="ti ti-arrow-left"></i> Back</button>
-        <button class="btn-next-step" onclick="nextStep(4)">Review & Submit <i class="ti ti-arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- ========== STEP 5: REVIEW ========== -->
-    <div class="form-section" id="step5">
-      <div class="form-step-header">
-        <span class="step-tag"><i class="ti ti-clipboard-check"></i> Step 5 of 5</span>
-        <h2 class="form-step-title">Review & submit</h2>
-        <p class="form-step-sub">Almost there! Review your details below, accept our terms, and launch your HopeFusion Africa journey.</p>
-      </div>
-
-      <!-- review summary -->
-      <div id="review-summary" style="background:var(--bg);border-radius:14px;padding:24px;margin-bottom:28px;border:1px solid var(--border-l)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-          <span style="font-family:var(--font-h);font-size:15px;font-weight:600;color:#111">Profile summary</span>
-          <button onclick="goToStep(1)" style="background:none;border:none;color:var(--g);font-size:13px;cursor:pointer;font-family:var(--font-m)"><i class="ti ti-edit"></i> Edit</button>
-        </div>
-        <div id="summary-content" style="display:grid;gap:12px"></div>
-      </div>
-
-      <!-- agree -->
-      <div class="field-group">
-        <label class="checkbox-wrap">
-          <input type="checkbox" id="agree-terms"/>
-          <div class="checkbox-box"></div>
-          <span class="checkbox-label">I agree to HopeFusion Africa's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. I confirm all information provided is accurate.</span>
-        </label>
-      </div>
-      <div class="field-group">
-        <label class="checkbox-wrap">
-          <input type="checkbox" id="agree-comms"/>
-          <div class="checkbox-box"></div>
-          <span class="checkbox-label">I'd like to receive updates about funding opportunities, events and platform news from HopeFusion Africa.</span>
-        </label>
-      </div>
-
-      <div class="form-nav">
-        <button class="btn-back-step" onclick="prevStep(5)"><i class="ti ti-arrow-left"></i> Back</button>
-        <button class="btn-submit" id="btn-submit-text" onclick="submitForm()">
-          <i class="ti ti-rocket"></i> Launch my startup
-        </button>
-      </div>
-    </div>
-
-    <!-- ========== SUCCESS ========== -->
-    <div class="success-screen" id="success-screen">
-      <div class="success-icon"><i class="ti ti-check"></i></div>
-      <h2 class="success-title" id="success-title-text">You're on <span>HopeFusion</span>!</h2>
-      <p class="success-sub" id="success-sub-text">Your startup profile is live. Our AI is already scanning for investor and mentor matches. You'll receive your first matches within 24 hours.</p>
-      <div class="success-id" id="startup-id">ID: HFA-2026-XXXX</div>
-      <div class="success-cards">
-        <div class="success-card">
-          <div class="success-card-icon"><i class="ti ti-brain"></i></div>
-          <h4>AI matching active</h4>
-          <p>Our engine is scanning investors and mentors aligned with your sector and stage.</p>
-        </div>
-        <div class="success-card">
-          <div class="success-card-icon" style="color:var(--gold)"><i class="ti ti-mail"></i></div>
-          <h4>Check your email</h4>
-          <p>We've sent a verification link and your first onboarding guide.</p>
-        </div>
-        <div class="success-card">
-          <div class="success-card-icon" style="color:var(--red)"><i class="ti ti-chart-bar"></i></div>
-          <h4>Dashboard ready</h4>
-          <p>Your founder dashboard is set up and ready to explore funding opportunities.</p>
-        </div>
-      </div>
-      <button class="btn-dashboard">
-        <i class="ti ti-layout-dashboard"></i> Go to my dashboard
-      </button>
-    </div>
-
-  </main>
 </div>
 
-<!-- ===== JS ===== -->
-<script>
-let currentStep = 1;
-const totalSteps = 5;
-let selectedStage = '';
-const memberCount = { val: 0 };
+<!-- RIGHT — FORM PANEL -->
+<div class="right-panel">
+<div class="right-inner">
 
-/* ---- STEP NAVIGATION ---- */
-function goToStep(n) {
-  document.getElementById('step' + currentStep).classList.remove('active');
-  document.getElementById('si' + currentStep).classList.remove('active');
-  if (currentStep < n) document.getElementById('si' + currentStep).classList.add('done');
-  currentStep = n;
-  document.getElementById('step' + currentStep).classList.add('active');
-  updateSidebar();
-  updateProgress();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+  <!-- PROGRESS BAR -->
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="background:var(--g);width:0%"></div></div>
 
-function nextStep(from) {
-  if (!validateStep(from)) return;
-  if (from === 4) buildReview();
-  goToStep(from + 1);
-}
+  <!-- STEP 0: ROLE SELECTION -->
+  <div class="form-section active" id="section-role">
+    <div class="form-title">Join HopeFusion Africa</div>
+    <div class="form-sub">Who are you? Your role determines your dashboard, AI matches and the platform features available to you.</div>
 
-function prevStep(from) {
-  goToStep(from - 1);
-}
+    <button class="btn-google" onclick="handleGoogleOAuth()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z" fill="#4285F4"/><path d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 01-7.18-2.54H1.83v2.07A8 8 0 008.98 17z" fill="#34A853"/><path d="M4.5 10.52a4.8 4.8 0 010-3.04V5.41H1.83a8 8 0 000 7.18l2.67-2.07z" fill="#FBBC05"/><path d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 001.83 5.4L4.5 7.49a4.77 4.77 0 014.48-3.3z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+    <div class="divider">or sign up with email</div>
 
-function updateSidebar() {
-  for (let i = 1; i <= 5; i++) {
-    const item = document.getElementById('si' + i);
-    item.classList.remove('active', 'done');
-    if (i < currentStep) item.classList.add('done');
-    if (i === currentStep) item.classList.add('active');
-    const circle = item.querySelector('.step-circle');
-    if (i < currentStep) circle.innerHTML = '<i class="ti ti-check" style="font-size:14px"></i>';
-    else circle.textContent = i;
-    if (i < 5) {
-      const conn = document.getElementById('sc' + i);
-      if (conn) conn.classList.toggle('done', i < currentStep);
-    }
-  }
-  // nav dots
-  for (let i = 1; i <= 5; i++) {
-    const dot = document.getElementById('nd' + i);
-    dot.classList.remove('active', 'done');
-    if (i < currentStep) dot.classList.add('done');
-    if (i === currentStep) dot.classList.add('active');
-  }
-  document.getElementById('nav-step-label').textContent = currentStep + ' of ' + totalSteps;
-}
-
-function updateProgress() {
-  const pct = (currentStep / totalSteps) * 100;
-  document.getElementById('progress-bar').style.width = pct + '%';
-}
-
-/* ---- VALIDATION ---- */
-function validateField(el) {
-  const ok = el.value.trim().length > 0;
-  el.classList.toggle('error', !ok);
-  const errEl = document.getElementById(el.id + '-err');
-  if (errEl) errEl.classList.toggle('show', !ok);
-  return ok;
-}
-
-function validateEmail(el) {
-  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim());
-  el.classList.toggle('error', !ok && el.value.length > 0);
-  const errEl = document.getElementById(el.id + '-err');
-  if (errEl) errEl.classList.toggle('show', !ok && el.value.length > 0);
-  return ok;
-}
-
-function validatePassword(el) {
-  const ok = el.value.length >= 8;
-  el.classList.toggle('error', !ok && el.value.length > 0);
-  const errEl = document.getElementById(el.id + '-err');
-  if (errEl) errEl.classList.toggle('show', !ok && el.value.length > 0);
-  return ok;
-}
-
-function validateStep(n) {
-  if (n === 1) {
-    const f = ['fname','lname','email','phone','country','role','password'];
-    let ok = true;
-    f.forEach(id => {
-      const el = document.getElementById(id);
-      if (id === 'email') { if (!validateEmail(el)) ok = false; }
-      else if (id === 'password') { if (!validatePassword(el)) ok = false; }
-      else { if (!validateField(el)) ok = false; }
-    });
-    return ok;
-  }
-  if (n === 2) {
-    let ok = validateField(document.getElementById('startup-name'));
-    const hasSector = document.querySelectorAll('#sector-tags .selected').length > 0;
-    document.getElementById('sector-err').classList.toggle('show', !hasSector);
-    return ok && hasSector;
-  }
-  if (n === 3) {
-    let ok = true;
-    if (!selectedStage) {
-      document.getElementById('stage-err').classList.add('show'); ok = false;
-    } else {
-      document.getElementById('stage-err').classList.remove('show');
-    }
-    const hasFunding = document.querySelectorAll('[data-tag="funding"].selected').length > 0;
-    document.getElementById('funding-err').classList.toggle('show', !hasFunding);
-    return ok && hasFunding;
-  }
-  return true;
-}
-
-/* ---- CHAR COUNT ---- */
-function countChars(el, counterId, max) {
-  const len = el.value.length;
-  const counter = document.getElementById(counterId);
-  counter.textContent = len + ' / ' + max;
-  counter.className = 'char-counter' + (len > max * 0.9 ? (len >= max ? ' over' : ' warn') : '');
-}
-
-/* ---- TAG TOGGLE ---- */
-function toggleTag(el, group) {
-  if (group === 'sector') {
-    const prev = document.querySelector('#sector-tags .selected');
-    if (prev && prev !== el) prev.classList.remove('selected');
-  }
-  el.classList.toggle('selected');
-  if (group) el.dataset.tag = group;
-}
-
-/* ---- STAGE SELECT ---- */
-function selectStage(el, val) {
-  document.querySelectorAll('.stage-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedStage = val;
-  document.getElementById('stage-err').classList.remove('show');
-}
-
-/* ---- FUNDING SLIDER ---- */
-function updateFunding(el) {
-  const v = parseInt(el.value);
-  const display = v >= 1000000
-    ? '$' + (v / 1000000).toFixed(1) + 'M'
-    : '$' + v.toLocaleString();
-  document.getElementById('funding-display').textContent = v >= 5000000 ? '$5M+' : display;
-  const pct = ((v - 10000) / (5000000 - 10000)) * 100;
-  el.style.setProperty('--val', pct + '%');
-}
-
-/* ---- FILE UPLOAD ---- */
-function handleFileUpload(input) {
-  if (!input.files.length) return;
-  const file = input.files[0];
-  document.getElementById('upload-name').textContent = file.name;
-  document.getElementById('upload-preview').classList.add('show');
-  document.getElementById('upload-zone').style.borderColor = 'var(--g)';
-}
-function removeFile() {
-  document.getElementById('pitch-file').value = '';
-  document.getElementById('upload-preview').classList.remove('show');
-  document.getElementById('upload-zone').style.borderColor = '';
-}
-
-/* drag & drop */
-const zone = document.getElementById('upload-zone');
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-zone.addEventListener('drop', e => {
-  e.preventDefault(); zone.classList.remove('dragover');
-  if (e.dataTransfer.files.length) {
-    document.getElementById('upload-name').textContent = e.dataTransfer.files[0].name;
-    document.getElementById('upload-preview').classList.add('show');
-  }
-});
-
-/* ---- AI EXAMPLE ---- */
-function fillPitchExample() {
-  const examples = [
-    'We help smallholder farmers in Ghana to access affordable crop insurance by using satellite data.',
-    'We help African students to access quality STEM education by delivering offline-first mobile courses.',
-    'We help women entrepreneurs in Nigeria to secure microloans by using AI-powered credit scoring.',
-  ];
-  const el = document.getElementById('pitch-line');
-  el.value = examples[Math.floor(Math.random() * examples.length)];
-  countChars(el, 'pitch-count', 120);
-}
-
-/* ---- TEAM MEMBERS ---- */
-function addMember() {
-  memberCount.val++;
-  const id = memberCount.val;
-  const div = document.createElement('div');
-  div.className = 'team-member-card';
-  div.id = 'member-' + id;
-  div.innerHTML = `
-    <input type="text" class="field-input" placeholder="Full name" style="margin:0"/>
-    <input type="text" class="field-input" placeholder="Role / title" style="margin:0"/>
-    <button class="btn-remove-member" onclick="removeMember(${id})"><i class="ti ti-trash"></i></button>
-  `;
-  document.getElementById('team-list').appendChild(div);
-}
-function removeMember(id) {
-  const el = document.getElementById('member-' + id);
-  if (el) el.remove();
-}
-
-/* ---- ROLE SWITCHER DYNAMIC DOM UPDATER ---- */
-function handleRoleChange(select) {
-  const role = select.value;
-  const isInvestor = role === 'investor';
-  
-  // Left Panel Steps
-  document.getElementById('side-s2-name').textContent = isInvestor ? 'Firm & Thesis' : 'Startup profile';
-  document.getElementById('side-s2-desc').textContent = isInvestor ? 'Your investment firm details' : 'Tell us about your venture';
-  
-  document.getElementById('side-s3-name').textContent = isInvestor ? 'Ticket & Instruments' : 'Funding & stage';
-  document.getElementById('side-s3-desc').textContent = isInvestor ? 'Investment tickets & structures' : 'Where you stand & need';
-  
-  document.getElementById('side-s4-name').textContent = isInvestor ? 'Portfolio & SDGs' : 'Team & presence';
-  document.getElementById('side-s4-desc').textContent = isInvestor ? 'Track record & impact focus' : 'Your team & online presence';
-  
-  // Step 1 Labels
-  document.getElementById('role-label-text').innerHTML = isInvestor ? 'Your investor title <span class="field-required">*</span>' : 'Your role / title <span class="field-required">*</span>';
-  document.getElementById('role').placeholder = isInvestor ? 'e.g. Managing Partner, Associate' : 'e.g. CEO & Co-founder';
-  
-  // Step 2 Labels
-  document.getElementById('s2-title').textContent = isInvestor ? 'Your firm & thesis' : 'Your startup profile';
-  document.getElementById('s2-sub').textContent = isInvestor ? 'Help founders understand your investment criteria and objectives.' : 'Help investors and mentors understand your vision. Be specific — better profiles get better matches.';
-  document.getElementById('s2-name-lbl').innerHTML = isInvestor ? 'Firm name <span class="field-required">*</span>' : 'Startup name <span class="field-required">*</span>';
-  document.getElementById('startup-name').placeholder = isInvestor ? 'e.g. Oasis Impact Ventures or Angel Investor' : 'Your startup\'s legal or trade name';
-  
-  document.getElementById('s2-pitch-lbl').innerHTML = isInvestor ? 'Investor firm type <span class="field-required">*</span>' : 'One-line pitch <span class="field-required">*</span> <span class="field-hint">Max 120 chars</span>';
-  document.getElementById('pitch-line').placeholder = isInvestor ? 'e.g. Venture Capital, Impact Fund, Angel Network' : 'We help [who] to [what] by [how]';
-  document.getElementById('s2-ai-chip').style.display = isInvestor ? 'none' : 'block';
-  
-  document.getElementById('s2-desc-lbl').innerHTML = isInvestor ? 'Investment thesis <span class="field-required">*</span> <span class="field-hint">Max 500 chars</span>' : 'Full description <span class="field-required">*</span> <span class="field-hint">Max 500 chars</span>';
-  document.getElementById('description').placeholder = isInvestor ? 'Describe your firm thesis: sectors you prefer, geographies of interest, and key support value you bring.' : 'Describe your startup: what problem you solve, who your customers are, and what makes you different.';
-  document.getElementById('s2-sector-lbl').innerHTML = isInvestor ? 'Target sectors <span class="field-required">*</span>' : 'Industry sector <span class="field-required">*</span>';
-
-  // Step 3 Labels
-  document.getElementById('s3-title').textContent = isInvestor ? 'Ticket & instruments' : 'Stage & funding needs';
-  document.getElementById('s3-sub').textContent = isInvestor ? 'Specify your investment limits, preferences, and instruments.' : 'Understanding your stage and funding goals helps us connect you with the most relevant investors and opportunities.';
-  document.getElementById('s3-stage-lbl').innerHTML = isInvestor ? 'Stages you invest in <span class="field-required">*</span>' : 'Current stage <span class="field-required">*</span>';
-  document.getElementById('s3-funding-lbl').innerHTML = isInvestor ? 'Maximum ticket size per deal <span class="field-required">*</span>' : 'Funding amount needed <span class="field-required">*</span>';
-  document.getElementById('s3-type-lbl').innerHTML = isInvestor ? 'Investment instruments preferred <span class="field-required">*</span>' : 'Funding type preferred <span class="field-required">*</span>';
-  document.getElementById('revenue-group').style.display = isInvestor ? 'none' : 'block';
-
-  // Step 4 Labels
-  document.getElementById('s4-title').textContent = isInvestor ? 'Portfolio & SDGs' : 'Your team & online presence';
-  document.getElementById('s4-sub').textContent = isInvestor ? 'Describe your existing track record and impact goals.' : 'Investors fund teams, not just ideas. Add your co-founders and connect your online presence for credibility.';
-  
-  document.getElementById('team-group').style.display = isInvestor ? 'none' : 'block';
-  document.getElementById('portfolio-group').style.display = isInvestor ? 'block' : 'none';
-  document.getElementById('s4-sdg-lbl').innerHTML = isInvestor ? 'Target UN SDGs you align with' : 'SDGs your startup addresses';
-  
-  // Step 5 Submit Text
-  document.getElementById('btn-submit-text').innerHTML = isInvestor ? '<i class="ti ti-rocket"></i> Activate Investor Portal' : '<i class="ti ti-rocket"></i> Launch my startup';
-}
-
-/* ---- REVIEW SUMMARY ---- */
-function buildReview() {
-  const systemRole = document.getElementById('system-role').value;
-  const isInvestor = systemRole === 'investor';
-  
-  let rows = [];
-  if (!isInvestor) {
-    rows = [
-      { label: 'Founder', value: (v('fname') + ' ' + v('lname')).trim() || '—' },
-      { label: 'Email', value: v('email') || '—' },
-      { label: 'Country', value: v('country') || '—' },
-      { label: 'Role', value: v('role') || '—' },
-      { label: 'Startup name', value: v('startup-name') || '—' },
-      { label: 'Sector', value: (() => { const s = document.querySelector('#sector-tags .selected'); return s ? s.textContent.trim() : '—'; })() },
-      { label: 'Stage', value: selectedStage || '—' },
-      { label: 'Funding needed', value: document.getElementById('funding-display').textContent },
-      { label: 'Revenue', value: v('revenue') || 'Pre-revenue' },
-      { label: 'Website', value: v('website') || '—' },
-    ];
-  } else {
-    rows = [
-      { label: 'Investor Name', value: (v('fname') + ' ' + v('lname')).trim() || '—' },
-      { label: 'Email', value: v('email') || '—' },
-      { label: 'Country', value: v('country') || '—' },
-      { label: 'Firm / firm name', value: v('startup-name') || '—' },
-      { label: 'Firm type', value: v('pitch-line') || '—' },
-      { label: 'Thesis', value: v('description') || '—' },
-      { label: 'Target Sectors', value: Array.from(document.querySelectorAll('#sector-tags .selected')).map(el => el.textContent.trim()).join(', ') || '—' },
-      { label: 'Max ticket limit', value: document.getElementById('funding-display').textContent },
-      { label: 'Active portfolio', value: v('portfolio-count') || '0' },
-      { label: 'Deployed capital', value: '$' + parseInt(v('total-deployed')).toLocaleString() },
-      { label: 'Website', value: v('website') || '—' },
-    ];
-  }
-  
-  const cont = document.getElementById('summary-content');
-  cont.innerHTML = rows.map(r => `
-    <div style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px;padding:10px 0;border-bottom:1px solid var(--border-l)">
-      <span style="color:var(--txt2);font-family:var(--font-m)">${r.label}</span>
-      <span style="font-weight:500;color:#111;font-family:var(--font-h)">${r.value}</span>
+    <div id="role-error" style="display:none;background:var(--red-t);border:1px solid rgba(224,32,32,0.2);border-radius:9px;padding:11px 14px;font-size:13px;color:#8b1515;font-family:var(--font-m);margin-bottom:16px">
+      <i class="ti ti-alert-circle" style="margin-right:6px"></i>Please select your role to continue.
     </div>
-  `).join('');
-}
-function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
 
-/* ---- SUBMIT ---- */
-async function submitForm() {
-  if (!document.getElementById('agree-terms').checked) {
-    alert('Please agree to the Terms of Service to continue.');
+    <div class="role-grid">
+      <div class="role-btn" id="role-startup" onclick="selectRole('startup')">
+        <div class="role-check"><i class="ti ti-check" style="font-size:11px"></i></div>
+        <span class="role-icon">🚀</span>
+        <div class="role-name">Startup founder</div>
+        <div class="role-desc">Building a product or business</div>
+      </div>
+      <div class="role-btn" id="role-investor" onclick="selectRole('investor')">
+        <div class="role-check"><i class="ti ti-check" style="font-size:11px"></i></div>
+        <span class="role-icon">📈</span>
+        <div class="role-name">Investor</div>
+        <div class="role-desc">Angel, VC or impact fund</div>
+      </div>
+      <div class="role-btn" id="role-mentor" onclick="selectRole('mentor')">
+        <div class="role-check"><i class="ti ti-check" style="font-size:11px"></i></div>
+        <span class="role-icon">🤝</span>
+        <div class="role-name">Mentor</div>
+        <div class="role-desc">Advisor, consultant, expert</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="role-continue-btn" onclick="goToStep(1)" style="margin-top:20px" disabled>
+      Continue <i class="ti ti-arrow-right"></i>
+    </button>
+    <div class="login-link">Already have an account? <a href="hopefusion-homepage.html">Sign in</a></div>
+  </div>
+
+  <!-- STEP 1: IDENTITY (SHARED ALL ROLES) -->
+  <div class="form-section" id="section-identity">
+    <button class="btn-back" onclick="goToStep(0)"><i class="ti ti-arrow-left"></i> Back</button>
+    <div id="step1-header"></div>
+
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">First name <span class="f-req">*</span></label>
+        <input class="f-input" id="first_name" type="text" placeholder="e.g. Ama" autocomplete="given-name" oninput="validateField(this)"/>
+        <div class="f-err-msg" id="err-first_name">Enter your first name</div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Last name <span class="f-req">*</span></label>
+        <input class="f-input" id="last_name" type="text" placeholder="e.g. Korantema" autocomplete="family-name" oninput="validateField(this)"/>
+        <div class="f-err-msg" id="err-last_name">Enter your last name</div>
+      </div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Email address <span class="f-req">*</span></label>
+      <input class="f-input" id="email" type="email" placeholder="you@example.com" autocomplete="email" oninput="validateEmail(this)"/>
+      <div class="f-err-msg" id="err-email">Enter a valid email address</div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Password <span class="f-req">*</span></label>
+      <input class="f-input" id="password" type="password" placeholder="At least 8 characters" autocomplete="new-password" oninput="checkPassword(this)"/>
+      <button class="eye-btn" type="button" onclick="togglePwd('password','eye-pwd')" aria-label="Show password"><i class="ti ti-eye" id="eye-pwd"></i></button>
+      <div class="pwd-strength">
+        <div class="pwd-bars"><div class="pwd-bar" id="pb1"></div><div class="pwd-bar" id="pb2"></div><div class="pwd-bar" id="pb3"></div><div class="pwd-bar" id="pb4"></div></div>
+        <div class="pwd-label" id="pwd-label">Enter a password</div>
+      </div>
+      <div class="f-err-msg" id="err-password">Password must be at least 8 characters</div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Country <span class="f-req">*</span></label>
+      <select class="f-input" id="country" onchange="updatePhonePrefix(); validateField(this)">
+        <option value="">Select your country</option>
+        <option value="GH" data-prefix="+233" data-flag="🇬🇭" selected>🇬🇭 Ghana</option>
+        <option value="NG" data-prefix="+234" data-flag="🇳🇬">🇳🇬 Nigeria</option>
+        <option value="KE" data-prefix="+254" data-flag="🇰🇪">🇰🇪 Kenya</option>
+        <option value="RW" data-prefix="+250" data-flag="🇷🇼">🇷🇼 Rwanda</option>
+        <option value="ZA" data-prefix="+27"  data-flag="🇿🇦">🇿🇦 South Africa</option>
+        <option value="SN" data-prefix="+221" data-flag="🇸🇳">🇸🇳 Senegal</option>
+        <option value="ET" data-prefix="+251" data-flag="🇪🇹">🇪🇹 Ethiopia</option>
+        <option value="TZ" data-prefix="+255" data-flag="🇹🇿">🇹🇿 Tanzania</option>
+        <option value="UG" data-prefix="+256" data-flag="🇺🇬">🇺🇬 Uganda</option>
+        <option value="CM" data-prefix="+237" data-flag="🇨🇲">🇨🇲 Cameroon</option>
+        <option value="CI" data-prefix="+225" data-flag="🇨🇮">🇨🇮 Côte d'Ivoire</option>
+        <option value="EG" data-prefix="+20"  data-flag="🇪🇬">🇪🇬 Egypt</option>
+        <option value="MA" data-prefix="+212" data-flag="🇲🇦">🇲🇦 Morocco</option>
+        <option value="TN" data-prefix="+216" data-flag="🇹🇳">🇹🇳 Tunisia</option>
+        <option value="OTHER" data-prefix="+1" data-flag="🌍">🌍 Other</option>
+      </select>
+      <div class="f-err-msg" id="err-country">Select your country</div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Phone number <span style="color:var(--txt2);font-weight:400">(optional — for MTN MoMo payments)</span></label>
+      <div class="phone-wrap">
+        <select class="phone-prefix" id="phone-prefix">
+          <option value="+233">🇬🇭 +233</option>
+          <option value="+234">🇳🇬 +234</option>
+          <option value="+254">🇰🇪 +254</option>
+          <option value="+250">🇷🇼 +250</option>
+          <option value="+27">🇿🇦 +27</option>
+          <option value="+221">🇸🇳 +221</option>
+          <option value="+251">🇪🇹 +251</option>
+          <option value="+44">🇬🇧 +44</option>
+          <option value="+1">🌍 +1</option>
+        </select>
+        <input class="f-input" id="phone" type="tel" placeholder="0XX XXX XXXX" style="flex:1"/>
+      </div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">LinkedIn profile <span style="color:var(--txt2);font-weight:400">(optional — boosts trust score)</span></label>
+      <input class="f-input" id="linkedin_url" type="url" placeholder="https://linkedin.com/in/yourname"/>
+    </div>
+
+    <button class="btn-primary" id="step1-btn" onclick="submitStep1()">
+      Continue <i class="ti ti-arrow-right"></i>
+    </button>
+  </div>
+
+  <!-- STEP 2A: STARTUP PROFILE -->
+  <div class="form-section" id="section-startup-profile">
+    <button class="btn-back" onclick="goToStep(1)"><i class="ti ti-arrow-left"></i> Back</button>
+    <div class="form-title">Your startup</div>
+    <div class="form-sub">Tell us about your business — not you. This builds your AI-matched profile.</div>
+
+    <div class="f-group">
+      <label class="f-label">Startup name <span class="f-req">*</span></label>
+      <input class="f-input" id="startup_name" type="text" placeholder="e.g. GreenHarvest Ghana" oninput="validateField(this)"/>
+      <div class="f-err-msg" id="err-startup_name">Enter your startup name</div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">One-line pitch <span style="color:var(--txt2);font-weight:400">(optional)</span></label>
+      <input class="f-input" id="startup_tagline" type="text" placeholder="e.g. AI-powered crop insurance for smallholder farmers" maxlength="120"/>
+      <div class="f-hint">Max 120 characters — used on your profile card</div>
+    </div>
+
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">Industry sector <span class="f-req">*</span></label>
+        <select class="f-input" id="sector" onchange="validateField(this)">
+          <option value="">Select sector</option>
+          <option>Agritech</option><option>Fintech</option><option>Healthtech</option>
+          <option>Edtech</option><option>Cleantech</option><option>Logistics</option>
+          <option>E-commerce</option><option>Manufacturing</option><option>Media</option>
+          <option>Legal tech</option><option>HR tech</option><option>Other</option>
+        </select>
+        <div class="f-err-msg" id="err-sector">Select your sector</div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Current stage <span class="f-req">*</span></label>
+        <select class="f-input" id="stage" onchange="validateField(this)">
+          <option value="">Select stage</option>
+          <option value="idea">Idea / concept</option>
+          <option value="mvp">MVP / prototype</option>
+          <option value="early_traction">Early traction</option>
+          <option value="growth">Growth (scaling)</option>
+          <option value="series_a">Series A+</option>
+          <option value="established">Established</option>
+        </select>
+        <div class="f-err-msg" id="err-stage">Select your stage</div>
+      </div>
+    </div>
+
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">Country of operation <span class="f-req">*</span></label>
+        <select class="f-input" id="startup_country" onchange="validateField(this)">
+          <option value="">Select country</option>
+          <option value="GH" selected>🇬🇭 Ghana</option>
+          <option value="NG">🇳🇬 Nigeria</option>
+          <option value="KE">🇰🇪 Kenya</option>
+          <option value="RW">🇷🇼 Rwanda</option>
+          <option value="ZA">🇿🇦 South Africa</option>
+          <option value="SN">🇸🇳 Senegal</option>
+          <option value="ET">🇪🇹 Ethiopia</option>
+          <option value="OTHER">🌍 Other</option>
+        </select>
+        <div class="f-err-msg" id="err-startup_country">Select country of operation</div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Team size</label>
+        <select class="f-input" id="team_size">
+          <option value="1">Just me (solo)</option>
+          <option value="2">2–5 people</option>
+          <option value="6">6–10 people</option>
+          <option value="11">11–25 people</option>
+          <option value="26">25+ people</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">Funding needed (USD) <span class="f-req">*</span></label>
+        <select class="f-input" id="funding_goal" onchange="validateField(this)">
+          <option value="">Select amount</option>
+          <option value="10000">Under $10,000</option>
+          <option value="50000">$10K – $50K</option>
+          <option value="150000">$50K – $150K</option>
+          <option value="500000">$150K – $500K</option>
+          <option value="1000000">$500K – $1M</option>
+          <option value="5000000">$1M – $5M</option>
+          <option value="10000000">$5M+</option>
+        </select>
+        <div class="f-err-msg" id="err-funding_goal">Select funding amount</div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Funding type preferred</label>
+        <select class="f-input" id="funding_type">
+          <option value="grant">Grant (non-dilutive)</option>
+          <option value="equity">Equity investment</option>
+          <option value="debt">Debt / loan</option>
+          <option value="mixed">Mixed</option>
+          <option value="any">Open to any</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">SDGs your startup addresses <span class="f-req">*</span></label>
+      <div class="chip-select" id="sdg-select" onclick="toggleDropdown('sdg-dropdown')">
+        <span id="sdg-placeholder" style="font-size:14px;color:#bbb;font-family:var(--font-b)">Select relevant SDGs…</span>
+      </div>
+      <div class="chip-dropdown" id="sdg-dropdown">
+        <div class="chip-opt" onclick="toggleChip('sdg','1','SDG 1 — No poverty','startup')">SDG 1 — No poverty</div>
+        <div class="chip-opt" onclick="toggleChip('sdg','2','SDG 2 — Zero hunger','startup')">SDG 2 — Zero hunger</div>
+        <div class="chip-opt" onclick="toggleChip('sdg','3','SDG 3 — Good health','startup')">SDG 3 — Good health</div>
+        <div class="chip-opt" onclick="toggleChip('sdg','4','SDG 4 — Quality education','startup')">SDG 4 — Quality education</div>
+        <div class="chip-opt" onclick="toggleChip('sdg','5','SDG 5 — Gender equality','startup')">SDG 5 — Gender equality</div>
+        <div class="chip-opt" onclick="toggleChip('sdg','7','SDG 7 — Clean energy','startup')">SDG 7 — Clean energy</div>
+        <div class="chip-opt" onclick="toggleChip('sdg','8','SDG 8 — Decent work','startup')">SDG 8 — Decent work</div>
+        <div class="chip-opt" onclick="toggleChip('sdg','9','SDG 9 — Innovation','startup')">SDG 9 — Innovation</div>
+        <div class="chip-opt" onclick="toggleChip('sdg','10','SDG 10 — Reduced inequalities','startup')">SDG 10 — Reduced inequalities</div>
+        <div class="chip-opt" onclick="toggleChip('sdg','13','SDG 13 — Climate action','startup')">SDG 13 — Climate action</div>
+        <div class="chip-opt" onclick="toggleChip('sdg','17','SDG 17 — Partnerships','startup')">SDG 17 — Partnerships</div>
+      </div>
+      <div class="f-err-msg" id="err-sdg">Select at least one SDG</div>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-label"><i class="ti ti-heart" style="font-size:16px;color:var(--red)"></i> Women-led startup?</div>
+      <label class="toggle-switch"><input type="checkbox" id="is_women_led"/><span class="toggle-slider"></span></label>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Website URL <span style="color:var(--txt2);font-weight:400">(optional)</span></label>
+      <input class="f-input" id="startup_website" type="url" placeholder="https://yourstartup.com"/>
+    </div>
+
+    <button class="btn-primary" onclick="submitStartupProfile()">
+      Continue <i class="ti ti-arrow-right"></i>
+    </button>
+  </div>
+
+  <!-- STEP 2B: INVESTOR PROFILE -->
+  <div class="form-section" id="section-investor-profile">
+    <button class="btn-back" onclick="goToStep(1)"><i class="ti ti-arrow-left"></i> Back</button>
+    <div class="form-title">Your investment profile</div>
+    <div class="form-sub">This powers your AI deal flow — the more specific, the better your startup matches.</div>
+
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">Investor type <span class="f-req">*</span></label>
+        <select class="f-input" id="investor_type" onchange="validateField(this)">
+          <option value="">Select type</option>
+          <option value="angel">Angel investor</option>
+          <option value="vc">Venture capital</option>
+          <option value="impact">Impact fund</option>
+          <option value="family_office">Family office</option>
+          <option value="corporate">Corporate VC</option>
+          <option value="government">Development finance</option>
+        </select>
+        <div class="f-err-msg" id="err-investor_type">Select investor type</div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Firm name</label>
+        <input class="f-input" id="firm_name" type="text" placeholder="e.g. Partech Africa"/>
+      </div>
+    </div>
+
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">Ticket size min (USD) <span class="f-req">*</span></label>
+        <select class="f-input" id="ticket_min" onchange="validateField(this)">
+          <option value="">Min ticket</option>
+          <option value="5000">$5,000</option>
+          <option value="10000">$10,000</option>
+          <option value="25000">$25,000</option>
+          <option value="50000">$50,000</option>
+          <option value="100000">$100,000</option>
+          <option value="250000">$250,000</option>
+          <option value="500000">$500,000</option>
+          <option value="1000000">$1M+</option>
+        </select>
+        <div class="f-err-msg" id="err-ticket_min">Select min ticket</div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Ticket size max (USD) <span class="f-req">*</span></label>
+        <select class="f-input" id="ticket_max" onchange="validateField(this)">
+          <option value="">Max ticket</option>
+          <option value="25000">$25,000</option>
+          <option value="100000">$100,000</option>
+          <option value="250000">$250,000</option>
+          <option value="500000">$500,000</option>
+          <option value="1000000">$1,000,000</option>
+          <option value="5000000">$5,000,000</option>
+          <option value="10000000">$10M+</option>
+        </select>
+        <div class="f-err-msg" id="err-ticket_max">Select max ticket</div>
+      </div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Sectors of interest <span class="f-req">*</span></label>
+      <div class="chip-select" id="inv-sectors-select" onclick="toggleDropdown('inv-sectors-dropdown')">
+        <span id="inv-sectors-placeholder" style="font-size:14px;color:#bbb;font-family:var(--font-b)">Select sectors…</span>
+      </div>
+      <div class="chip-dropdown" id="inv-sectors-dropdown">
+        <div class="chip-opt" onclick="toggleChip('inv-sectors','agritech','Agritech','investor')">Agritech</div>
+        <div class="chip-opt" onclick="toggleChip('inv-sectors','fintech','Fintech','investor')">Fintech</div>
+        <div class="chip-opt" onclick="toggleChip('inv-sectors','healthtech','Healthtech','investor')">Healthtech</div>
+        <div class="chip-opt" onclick="toggleChip('inv-sectors','edtech','Edtech','investor')">Edtech</div>
+        <div class="chip-opt" onclick="toggleChip('inv-sectors','cleantech','Cleantech','investor')">Cleantech</div>
+        <div class="chip-opt" onclick="toggleChip('inv-sectors','logistics','Logistics','investor')">Logistics</div>
+        <div class="chip-opt" onclick="toggleChip('inv-sectors','ecommerce','E-commerce','investor')">E-commerce</div>
+        <div class="chip-opt" onclick="toggleChip('inv-sectors','all','All sectors','investor')">All sectors</div>
+      </div>
+      <div class="f-err-msg" id="err-inv-sectors">Select at least one sector</div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Preferred stages <span class="f-req">*</span></label>
+      <div class="chip-select" id="inv-stages-select" onclick="toggleDropdown('inv-stages-dropdown')">
+        <span id="inv-stages-placeholder" style="font-size:14px;color:#bbb;font-family:var(--font-b)">Select stages…</span>
+      </div>
+      <div class="chip-dropdown" id="inv-stages-dropdown">
+        <div class="chip-opt" onclick="toggleChip('inv-stages','idea','Idea / concept','investor')">Idea / concept</div>
+        <div class="chip-opt" onclick="toggleChip('inv-stages','mvp','MVP','investor')">MVP</div>
+        <div class="chip-opt" onclick="toggleChip('inv-stages','early_traction','Early traction','investor')">Early traction</div>
+        <div class="chip-opt" onclick="toggleChip('inv-stages','growth','Growth','investor')">Growth</div>
+        <div class="chip-opt" onclick="toggleChip('inv-stages','series_a','Series A+','investor')">Series A+</div>
+      </div>
+      <div class="f-err-msg" id="err-inv-stages">Select at least one stage</div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Target countries / regions <span class="f-req">*</span></label>
+      <div class="chip-select" id="inv-countries-select" onclick="toggleDropdown('inv-countries-dropdown')">
+        <span id="inv-countries-placeholder" style="font-size:14px;color:#bbb;font-family:var(--font-b)">Select countries…</span>
+      </div>
+      <div class="chip-dropdown" id="inv-countries-dropdown">
+        <div class="chip-opt" onclick="toggleChip('inv-countries','GH','🇬🇭 Ghana','investor')">🇬🇭 Ghana</div>
+        <div class="chip-opt" onclick="toggleChip('inv-countries','NG','🇳🇬 Nigeria','investor')">🇳🇬 Nigeria</div>
+        <div class="chip-opt" onclick="toggleChip('inv-countries','KE','🇰🇪 Kenya','investor')">🇰🇪 Kenya</div>
+        <div class="chip-opt" onclick="toggleChip('inv-countries','RW','🇷🇼 Rwanda','investor')">🇷🇼 Rwanda</div>
+        <div class="chip-opt" onclick="toggleChip('inv-countries','ZA','🇿🇦 South Africa','investor')">🇿🇦 South Africa</div>
+        <div class="chip-opt" onclick="toggleChip('inv-countries','PAN','🌍 Pan-African','investor')">🌍 Pan-African</div>
+      </div>
+      <div class="f-err-msg" id="err-inv-countries">Select target countries</div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Investment instruments</label>
+      <div class="chip-select" id="inv-instruments-select" onclick="toggleDropdown('inv-instruments-dropdown')">
+        <span id="inv-instruments-placeholder" style="font-size:14px;color:#bbb;font-family:var(--font-b)">Select instruments…</span>
+      </div>
+      <div class="chip-dropdown" id="inv-instruments-dropdown">
+        <div class="chip-opt" onclick="toggleChip('inv-instruments','equity','Equity','investor')">Equity</div>
+        <div class="chip-opt" onclick="toggleChip('inv-instruments','grant','Grant','investor')">Grant</div>
+        <div class="chip-opt" onclick="toggleChip('inv-instruments','convertible','Convertible note','investor')">Convertible note</div>
+        <div class="chip-opt" onclick="toggleChip('inv-instruments','debt','Debt','investor')">Debt</div>
+        <div class="chip-opt" onclick="toggleChip('inv-instruments','safe','SAFE','investor')">SAFE</div>
+      </div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Firm website <span style="color:var(--txt2);font-weight:400">(optional)</span></label>
+      <input class="f-input" id="firm_website" type="url" placeholder="https://yourfirm.com"/>
+    </div>
+
+    <button class="btn-primary blue" onclick="submitInvestorProfile()">
+      Continue <i class="ti ti-arrow-right"></i>
+    </button>
+  </div>
+
+  <!-- STEP 2C: MENTOR PROFILE -->
+  <div class="form-section" id="section-mentor-profile">
+    <button class="btn-back" onclick="goToStep(1)"><i class="ti ti-arrow-left"></i> Back</button>
+    <div class="form-title">Your mentor profile</div>
+    <div class="form-sub">What you know and how you work — this matches you with the right startups to guide.</div>
+
+    <div class="f-group">
+      <label class="f-label">Areas of expertise <span class="f-req">*</span></label>
+      <div class="chip-select" id="expertise-select" onclick="toggleDropdown('expertise-dropdown')">
+        <span id="expertise-placeholder" style="font-size:14px;color:#bbb;font-family:var(--font-b)">Select expertise areas…</span>
+      </div>
+      <div class="chip-dropdown" id="expertise-dropdown">
+        <div class="chip-opt" onclick="toggleChip('expertise','fundraising','Fundraising','mentor')">Fundraising</div>
+        <div class="chip-opt" onclick="toggleChip('expertise','strategy','Business strategy','mentor')">Business strategy</div>
+        <div class="chip-opt" onclick="toggleChip('expertise','finance','Finance & accounting','mentor')">Finance & accounting</div>
+        <div class="chip-opt" onclick="toggleChip('expertise','marketing','Marketing & growth','mentor')">Marketing & growth</div>
+        <div class="chip-opt" onclick="toggleChip('expertise','tech','Product & technology','mentor')">Product & technology</div>
+        <div class="chip-opt" onclick="toggleChip('expertise','legal','Legal & compliance','mentor')">Legal & compliance</div>
+        <div class="chip-opt" onclick="toggleChip('expertise','hr','HR & team building','mentor')">HR & team building</div>
+        <div class="chip-opt" onclick="toggleChip('expertise','sales','Sales & partnerships','mentor')">Sales & partnerships</div>
+        <div class="chip-opt" onclick="toggleChip('expertise','impact','Impact measurement','mentor')">Impact measurement</div>
+        <div class="chip-opt" onclick="toggleChip('expertise','agri','Agribusiness','mentor')">Agribusiness</div>
+      </div>
+      <div class="f-err-msg" id="err-expertise">Select at least one area of expertise</div>
+    </div>
+
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">Years of experience <span class="f-req">*</span></label>
+        <select class="f-input" id="experience_years" onchange="validateField(this)">
+          <option value="">Select</option>
+          <option value="2">2–5 years</option>
+          <option value="6">6–10 years</option>
+          <option value="11">11–20 years</option>
+          <option value="21">20+ years</option>
+        </select>
+        <div class="f-err-msg" id="err-experience_years">Select years of experience</div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Max mentees at once <span class="f-req">*</span></label>
+        <select class="f-input" id="max_mentees" onchange="validateField(this)">
+          <option value="">Select</option>
+          <option value="1">1 mentee</option>
+          <option value="3">Up to 3</option>
+          <option value="5">Up to 5</option>
+          <option value="10">Up to 10</option>
+          <option value="0">Unlimited</option>
+        </select>
+        <div class="f-err-msg" id="err-max_mentees">Select max mentees</div>
+      </div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Session types <span class="f-req">*</span></label>
+      <div class="chip-select" id="session-types-select" onclick="toggleDropdown('session-types-dropdown')">
+        <span id="session-types-placeholder" style="font-size:14px;color:#bbb;font-family:var(--font-b)">Select session types…</span>
+      </div>
+      <div class="chip-dropdown" id="session-types-dropdown">
+        <div class="chip-opt" onclick="toggleChip('session-types','one_on_one','1-on-1 video','mentor')">1-on-1 video call</div>
+        <div class="chip-opt" onclick="toggleChip('session-types','group','Group sessions','mentor')">Group sessions</div>
+        <div class="chip-opt" onclick="toggleChip('session-types','live_stream','Live streams','mentor')">Live streams</div>
+        <div class="chip-opt" onclick="toggleChip('session-types','phone','Phone calls','mentor')">Phone calls</div>
+        <div class="chip-opt" onclick="toggleChip('session-types','async','Async (email/chat)','mentor')">Async (email/chat)</div>
+      </div>
+      <div class="f-err-msg" id="err-session-types">Select at least one session type</div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Languages you mentor in <span class="f-req">*</span></label>
+      <div class="chip-select" id="languages-select" onclick="toggleDropdown('languages-dropdown')">
+        <span id="languages-placeholder" style="font-size:14px;color:#bbb;font-family:var(--font-b)">Select languages…</span>
+      </div>
+      <div class="chip-dropdown" id="languages-dropdown">
+        <div class="chip-opt" onclick="toggleChip('languages','en','English','mentor')">English</div>
+        <div class="chip-opt" onclick="toggleChip('languages','fr','French','mentor')">French</div>
+        <div class="chip-opt" onclick="toggleChip('languages','sw','Swahili','mentor')">Swahili</div>
+        <div class="chip-opt" onclick="toggleChip('languages','ha','Hausa','mentor')">Hausa</div>
+        <div class="chip-opt" onclick="toggleChip('languages','tw','Twi','mentor')">Twi (Ghana)</div>
+        <div class="chip-opt" onclick="toggleChip('languages','yo','Yoruba','mentor')">Yoruba</div>
+        <div class="chip-opt" onclick="toggleChip('languages','ar','Arabic','mentor')">Arabic</div>
+        <div class="chip-opt" onclick="toggleChip('languages','pt','Portuguese','mentor')">Portuguese</div>
+      </div>
+      <div class="f-err-msg" id="err-languages">Select at least one language</div>
+    </div>
+
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">Hourly rate (USD)</label>
+        <input class="f-input" id="hourly_rate" type="number" placeholder="0 = pro bono" min="0"/>
+        <div class="f-hint">Set to 0 for free / pro bono mentoring</div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Current role <span style="color:var(--txt2);font-weight:400">(optional)</span></label>
+        <input class="f-input" id="current_role" type="text" placeholder="e.g. CEO at Impact Fund"/>
+      </div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Short bio <span style="color:var(--txt2);font-weight:400">(optional)</span></label>
+      <textarea class="f-input" id="mentor_bio" placeholder="What makes you a great mentor? What have you built or invested in?" maxlength="300"></textarea>
+      <div class="f-hint">Max 300 characters — shown on your mentor card</div>
+    </div>
+
+    <button class="btn-primary gold" onclick="submitMentorProfile()">
+      Continue <i class="ti ti-arrow-right"></i>
+    </button>
+  </div>
+
+  <!-- STEP 3: EMAIL VERIFICATION -->
+  <div class="form-section" id="section-verify">
+    <div id="verify-header"></div>
+    <div class="otp-meta" id="otp-meta">We sent a 6-digit code to <strong id="otp-email"></strong></div>
+    <div class="otp-wrap">
+      <input class="otp-box" type="text" maxlength="1" id="otp0" oninput="otpInput(0,this)" onkeydown="otpKey(0,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp1" oninput="otpInput(1,this)" onkeydown="otpKey(1,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp2" oninput="otpInput(2,this)" onkeydown="otpKey(2,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp3" oninput="otpInput(3,this)" onkeydown="otpKey(3,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp4" oninput="otpInput(4,this)" onkeydown="otpKey(4,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp5" oninput="otpInput(5,this)" onkeydown="otpKey(5,event)"/>
+    </div>
+    <div id="otp-error" style="display:none;text-align:center;font-size:13px;color:var(--red);font-family:var(--font-m);margin-bottom:12px">
+      <i class="ti ti-alert-circle" style="margin-right:4px"></i><span id="otp-error-text">Incorrect code. Please try again.</span>
+    </div>
+    <div class="otp-resend">
+      <span class="otp-timer" id="otp-timer">Resend in <span id="otp-countdown">60</span>s</span>
+      <button id="otp-resend-btn" onclick="resendOTP()" style="display:none">Resend code</button>
+    </div>
+    <button class="btn-primary" id="verify-btn" onclick="verifyOTP()" style="margin-top:20px" disabled>
+      Verify email <i class="ti ti-check"></i>
+    </button>
+    <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--txt2);font-family:var(--font-m)">
+      Wrong email? <button onclick="goToStep(1)" style="background:none;border:none;color:var(--g);cursor:pointer;font-size:13px;font-family:var(--font-m);font-weight:500;text-decoration:underline">Change it</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="form-section" id="section-success">
+    <div class="success-screen">
+      <div class="success-icon" id="success-icon" style="background:var(--g-t)">🎉</div>
+      <div id="success-role-pill"></div>
+      <div class="success-title" id="success-title">Welcome to HopeFusion Africa!</div>
+      <div class="success-sub" id="success-sub">Your account is live. AI is already scanning for your first matches.</div>
+      <button class="btn-primary" id="go-dashboard-btn" onclick="redirectToDashboard()">
+        <div class="spinner" id="dash-spinner"></div>
+        Go to my dashboard <i class="ti ti-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="load-spinner"></div>
+    <div class="load-text" id="loading-text">Creating your account…</div>
+  </div>
+
+</div>
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+let currentRole   = null;
+let currentStep   = 0;
+let otpTimer      = null;
+let otpCountdown  = 60;
+let chipData      = {};
+const API_URL     = (window.HFA_CONFIG?.API_URL) || 'https://hopefusion-api.onrender.com/api';
+const formData    = {};
+
+/* ============================================================
+   ROLE SELECTION
+   ============================================================ */
+function selectRole(role){
+  currentRole = role;
+  ['startup','investor','mentor'].forEach(r => {
+    const el = document.getElementById('role-'+r);
+    el.className = 'role-btn' + (r === role ? ' selected-'+r : '');
+  });
+  document.getElementById('role-error').style.display = 'none';
+  const colors = { startup: 'var(--g)', investor: 'var(--blue)', mentor: 'var(--gold)' };
+  document.getElementById('progress-fill').style.background = colors[role];
+  const continueBtn = document.getElementById('role-continue-btn');
+  if (continueBtn) continueBtn.disabled = false;
+}
+
+/* ============================================================
+   STEP NAVIGATION
+   ============================================================ */
+function goToStep(step){
+  if(step === 0){
+    showSection('section-role');
+    updateProgress(0, null);
     return;
   }
-  
-  const submitBtn = document.querySelector('.btn-submit');
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="ti ti-loader" style="animation:hfaSpin .8s linear infinite"></i> Processing...';
-
-  try {
-    const systemRole = document.getElementById('system-role').value;
-    
-    // 1. Register User
-    const regPayload = {
-      email: v('email'),
-      password: v('password'),
-      role: systemRole,
-      first_name: v('fname'),
-      last_name: v('lname'),
-      phone: v('phone'),
-      country: v('country')
-    };
-    
-    const regResult = await HFA.Auth.register(regPayload);
-    if (!regResult || !regResult.success) {
-      throw new Error(regResult?.error || 'Registration failed');
-    }
-
-    if (systemRole === 'startup') {
-      // 2. Update Startup Profile
-      const selectedSectorEl = document.querySelector('#sector-tags .selected');
-      const sector = selectedSectorEl ? selectedSectorEl.textContent.trim() : 'General';
-
-      const startupPayload = {
-        name: v('startup-name'),
-        tagline: v('pitch-line'),
-        description: v('description'),
-        sector: sector,
-        country: v('country'),
-        stage: selectedStage || 'mvp',
-        funding_goal: parseInt(document.getElementById('funding-range').value) || 50000,
-        website_url: v('website') || '',
-        annual_revenue: v('revenue') ? parseInt(v('revenue').replace(/[^0-9]/g, '')) || 0 : 0
-      };
-
-      console.log('Updating startup profile...', startupPayload);
-      await HFA.Data.updateStartup(startupPayload);
-      
-      // Update success messaging
-      document.getElementById('success-title-text').innerHTML = "You're on <span>HopeFusion</span>!";
-      document.getElementById('success-sub-text').textContent = "Your startup profile is live. Our AI is already scanning for investor and mentor matches. You'll receive your first matches within 24 hours.";
-      
-      const dashBtn = document.querySelector('.btn-dashboard');
-      dashBtn.onclick = () => {
-        window.location.replace('/hopefusion-startup-dashboard.html');
-      };
-    } else {
-      // 2. Update Investor Profile
-      const selectedSectors = Array.from(document.querySelectorAll('#sector-tags .selected')).map(el => el.textContent.trim());
-      const selectedStages = Array.from(document.querySelectorAll('#stage-grid .selected')).map(el => el.dataset.val || 'mvp');
-      const selectedInstruments = Array.from(document.querySelectorAll('[data-tag="funding"].selected')).map(el => el.textContent.trim());
-      const selectedSDGs = Array.from(document.querySelectorAll('[data-tag="sdg"].selected')).map((el, index) => index + 1);
-
-      const investorPayload = {
-        firm_name: v('startup-name'),
-        investor_type: v('pitch-line'),
-        thesis: v('description'),
-        sectors: selectedSectors,
-        stages: selectedStages,
-        countries: [v('country')],
-        sdgs: selectedSDGs,
-        ticket_min: 10000,
-        ticket_max: parseInt(document.getElementById('funding-range').value) || 1000000,
-        instruments: selectedInstruments,
-        portfolio_count: parseInt(v('portfolio-count')) || 0,
-        total_deployed: parseInt(v('total-deployed')) || 0
-      };
-
-      console.log('Updating investor profile...', investorPayload);
-      await HFA.Data.updateInvestor(investorPayload);
-      
-      // Update success messaging
-      document.getElementById('success-title-text').innerHTML = "Welcome to <span>HopeFusion Investors</span>!";
-      document.getElementById('success-sub-text').textContent = "Your investor profile is active. You can now view matches, search startups by compatibility, and deploy milestone-based escrows.";
-      
-      const dashBtn = document.querySelector('.btn-dashboard');
-      dashBtn.onclick = () => {
-        window.location.replace('/hopefusion-investor-dashboard.html');
-      };
-    }
-
-    // 3. Render Success
-    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-    document.getElementById('progress-bar').style.width = '100%';
-
-    const id = regResult.user?.id ? 'HFA-' + regResult.user.id.slice(0, 8).toUpperCase() : 'HFA-2026-' + Math.floor(1000 + Math.random() * 9000);
-    document.getElementById('startup-id').textContent = 'ID: ' + id;
-
-    // Show success screen
-    const successScreen = document.getElementById('success-screen');
-    successScreen.classList.add('show');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // Update sidebar steps as done
-    for (let i = 1; i <= 5; i++) {
-      const item = document.getElementById('si' + i);
-      item.classList.remove('active');
-      item.classList.add('done');
-      item.querySelector('.step-circle').innerHTML = '<i class="ti ti-check" style="font-size:14px"></i>';
-      if (i < 5) document.getElementById('sc' + i).classList.add('done');
-      document.getElementById('nd' + i).classList.add('done');
-    }
-    document.getElementById('nav-step-label').textContent = 'Complete!';
-
-  } catch (err) {
-    console.error('Registration/Setup Error:', err);
-    // Show styled error banner instead of browser alert
-    let errBanner = document.getElementById('reg-error-banner');
-    if (!errBanner) {
-      errBanner = document.createElement('div');
-      errBanner.id = 'reg-error-banner';
-      errBanner.style.cssText = 'background:rgba(224,32,32,0.1);border:1px solid rgba(224,32,32,0.3);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:13.5px;color:#111;font-family:var(--font-m);animation:slideIn .3s ease';
-      errBanner.innerHTML = `<i class="ti ti-alert-circle" style="color:var(--red);font-size:20px;flex-shrink:0"></i><div><strong style="color:var(--red)">Registration failed.</strong> <span id="reg-error-text"></span></div><button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--txt2);font-size:18px"><i class="ti ti-x"></i></button>`;
-      const formSection = document.querySelector('.form-section.active') || document.getElementById('step5');
-      if (formSection) formSection.insertBefore(errBanner, formSection.firstChild);
-    }
-    document.getElementById('reg-error-text').textContent = err.message || 'Please try again or contact support.';
-    errBanner.style.display = 'flex';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  } finally {
-    submitBtn.disabled = false;
-    const isInvestor = document.getElementById('system-role').value === 'investor';
-    submitBtn.innerHTML = isInvestor ? '<i class="ti ti-rocket"></i> Activate Investor Portal' : '<i class="ti ti-rocket"></i> Launch my startup';
+  if(step === 1){
+    if(!currentRole){ document.getElementById('role-error').style.display='block'; return; }
+    showSection('section-identity');
+    updateProgress(25, currentRole);
+    buildStepHeader('step1-header', 1, currentRole);
+    return;
   }
 }
 
-/* init */
-updateFunding(document.getElementById('funding-range'));
-
-const urlParams = new URLSearchParams(window.location.search);
-const initialRole = urlParams.get('role');
-if (initialRole && (initialRole === 'startup' || initialRole === 'investor')) {
-  const selectRoleEl = document.getElementById('system-role');
-  if (selectRoleEl) {
-    selectRoleEl.value = initialRole;
-    handleRoleChange(selectRoleEl);
-  }
+function showSection(id){
+  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
-</script>
 
-<script>
-  window.addEventListener('load', () => {
-    if (window.hfai18n) {
-      window.hfai18n.createSwitcher('lang-switcher');
+function updateProgress(pct, role){
+  const colors = { startup:'var(--g)', investor:'var(--blue)', mentor:'var(--gold)' };
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = pct + '%';
+  if(role) fill.style.background = colors[role];
+}
+
+function buildStepHeader(containerId, step, role){
+  const titles = {
+    startup:  ['Your identity','Your startup','Verify email'],
+    investor: ['Your identity','Your investment profile','Verify email'],
+    mentor:   ['Your identity','Your mentor profile','Verify email'],
+  };
+  const subs = {
+    startup:  ['Personal details for your account','Business info that powers AI matching','Confirm your email to go live'],
+    investor: ['Personal details for your account','Your investment thesis and criteria','Confirm your email to see deals'],
+    mentor:   ['Personal details for your account','Your expertise and availability','Confirm your email to start mentoring'],
+  };
+  const idx = step - 1;
+  const colors = { startup:'var(--g)', investor:'var(--blue)', mentor:'var(--gold)' };
+  document.getElementById(containerId).innerHTML = `
+    <div style="margin-bottom:20px">
+      <div style="font-size:11.5px;font-family:var(--font-m);color:${colors[role]};font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Step ${step} of 3</div>
+      <div class="form-title">${titles[role][idx]}</div>
+      <div class="form-sub">${subs[role][idx]}</div>
+    </div>`;
+}
+
+/* ============================================================
+   FORM VALIDATION
+   ============================================================ */
+function validateField(el){
+  const err = document.getElementById('err-'+el.id);
+  if(!el.value.trim()){ el.classList.add('error'); el.classList.remove('valid'); if(err) err.classList.add('show'); return false; }
+  el.classList.remove('error'); el.classList.add('valid'); if(err) err.classList.remove('show'); return true;
+}
+
+function validateEmail(el){
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim());
+  const err   = document.getElementById('err-email');
+  if(!valid){ el.classList.add('error'); el.classList.remove('valid'); err.classList.add('show'); return false; }
+  el.classList.remove('error'); el.classList.add('valid'); err.classList.remove('show'); return true;
+}
+
+function checkPassword(el){
+  const val = el.value;
+  const strength = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^a-zA-Z0-9]/].filter(r=>r.test(val)).length + (val.length>=8?1:0);
+  const bars  = ['pb1','pb2','pb3','pb4'];
+  const labels= ['','Weak','Fair','Good','Strong','Very strong'];
+  const cls   = ['','weak','fair','fair','strong','strong'];
+  bars.forEach((id,i) => { const b=document.getElementById(id); b.className='pwd-bar'+(i<strength?' '+cls[strength]:''); });
+  document.getElementById('pwd-label').textContent = val.length===0 ? 'Enter a password' : labels[Math.min(strength,5)];
+  if(val.length < 8){ el.classList.add('error'); document.getElementById('err-password').classList.add('show'); return false; }
+  el.classList.remove('error'); el.classList.add('valid'); document.getElementById('err-password').classList.remove('show'); return true;
+}
+
+function togglePwd(inputId, iconId){
+  const inp = document.getElementById(inputId);
+  const ico = document.getElementById(iconId);
+  if(inp.type==='password'){ inp.type='text'; ico.className='ti ti-eye-off'; }
+  else{ inp.type='password'; ico.className='ti ti-eye'; }
+}
+
+function updatePhonePrefix(){
+  const sel   = document.getElementById('country');
+  const opt   = sel.options[sel.selectedIndex];
+  const prefix= opt.dataset.prefix || '+233';
+  const psel  = document.getElementById('phone-prefix');
+  for(let o of psel.options){ if(o.value===prefix){ psel.value=prefix; break; } }
+}
+
+/* ============================================================
+   CHIP / MULTI-SELECT
+   ============================================================ */
+function toggleDropdown(id){
+  const dd = document.getElementById(id);
+  document.querySelectorAll('.chip-dropdown').forEach(d=>{ if(d.id!==id) d.classList.remove('open'); });
+  dd.classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.chip-select') && !e.target.closest('.chip-dropdown'))
+    document.querySelectorAll('.chip-dropdown').forEach(d=>d.classList.remove('open'));
+});
+
+function toggleChip(group, value, label, role){
+  if(!chipData[group]) chipData[group] = [];
+  const idx = chipData[group].findIndex(c=>c.value===value);
+  if(idx > -1){ chipData[group].splice(idx,1); }
+  else { chipData[group].push({ value, label }); }
+  renderChips(group, role);
+}
+
+function renderChips(group, role){
+  const select  = document.getElementById(group+'-select');
+  const ph      = document.getElementById(group+'-placeholder');
+  const chips   = chipData[group] || [];
+  const classes = { startup:'', investor:' blue', mentor:' gold' };
+  const cls     = classes[role] || '';
+  if(ph) ph.style.display = chips.length ? 'none' : 'block';
+  let existing  = Array.from(select.querySelectorAll('.chip-item'));
+  existing.forEach(e=>e.remove());
+  chips.forEach(c=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip-item' + cls;
+    chip.innerHTML = `${c.label} <button onclick="event.stopPropagation();toggleChip('${group}','${c.value}','${c.label}','${role}')"><i class="ti ti-x" style="font-size:12px"></i></button>`;
+    select.appendChild(chip);
+  });
+  const opts = document.querySelectorAll(`#${group}-dropdown .chip-opt`);
+  opts.forEach(o=>{
+    const matches = [...o.getAttribute('onclick').matchAll(/'([^']+)'/g)];
+    const oVal = matches[1]?.[1];
+    if(oVal){
+      const isSel = chips.some(c=>c.value===oVal);
+      o.classList.toggle('selected', isSel);
+      o.classList.toggle('selected-blue', role==='investor' && isSel);
+      o.classList.toggle('selected-gold', role==='mentor' && isSel);
     }
   });
+}
+
+/* ============================================================
+   STEP 1 — IDENTITY SUBMIT
+   ============================================================ */
+function submitStep1(){
+  const ok = [
+    validateField(document.getElementById('first_name')),
+    validateField(document.getElementById('last_name')),
+    validateEmail(document.getElementById('email')),
+    checkPassword(document.getElementById('password')),
+    validateField(document.getElementById('country')),
+  ].every(Boolean);
+  if(!ok) return;
+  formData.first_name   = document.getElementById('first_name').value.trim();
+  formData.last_name    = document.getElementById('last_name').value.trim();
+  formData.email        = document.getElementById('email').value.trim().toLowerCase();
+  formData.password     = document.getElementById('password').value;
+  formData.country      = document.getElementById('country').value;
+  formData.phone        = (document.getElementById('phone-prefix').value + document.getElementById('phone').value).replace(/\s/g,'');
+  formData.linkedin_url = document.getElementById('linkedin_url').value.trim();
+  formData.role         = currentRole;
+  if(currentRole==='startup'){ showSection('section-startup-profile'); buildStepHeader('','',''); updateProgress(50, currentRole); }
+  else if(currentRole==='investor'){ showSection('section-investor-profile'); updateProgress(50, currentRole); }
+  else if(currentRole==='mentor'){ showSection('section-mentor-profile'); updateProgress(50, currentRole); }
+}
+
+/* ============================================================
+   STEP 2A — STARTUP SUBMIT
+   ============================================================ */
+function submitStartupProfile(){
+  const sdgs = (chipData['sdg'] || []).map(c => c.value);
+  let ok = [
+    validateField(document.getElementById('startup_name')),
+    validateField(document.getElementById('sector')),
+    validateField(document.getElementById('stage')),
+    validateField(document.getElementById('startup_country')),
+    validateField(document.getElementById('funding_goal')),
+  ].every(Boolean);
+  if(!sdgs.length){ document.getElementById('err-sdg').classList.add('show'); ok = false; }
+  else document.getElementById('err-sdg').classList.remove('show');
+  if(!ok) return;
+  Object.assign(formData, {
+    startup_name:    document.getElementById('startup_name').value.trim(),
+    startup_tagline: document.getElementById('startup_tagline').value.trim(),
+    sector:          document.getElementById('sector').value,
+    stage:           document.getElementById('stage').value,
+    startup_country: document.getElementById('startup_country').value,
+    team_size:       parseInt(document.getElementById('team_size').value),
+    funding_goal:    parseInt(document.getElementById('funding_goal').value),
+    funding_type:    document.getElementById('funding_type').value,
+    sdgs,
+    is_women_led:    document.getElementById('is_women_led').checked,
+    startup_website: document.getElementById('startup_website').value.trim(),
+  });
+  goToVerify();
+}
+
+/* ============================================================
+   STEP 2B — INVESTOR SUBMIT
+   ============================================================ */
+function submitInvestorProfile(){
+  const sectors     = (chipData['inv-sectors'] || []).map(c=>c.value);
+  const stages      = (chipData['inv-stages'] || []).map(c=>c.value);
+  const countries   = (chipData['inv-countries'] || []).map(c=>c.value);
+  const instruments = (chipData['inv-instruments'] || []).map(c=>c.value);
+  let ok = [
+    validateField(document.getElementById('investor_type')),
+    validateField(document.getElementById('ticket_min')),
+    validateField(document.getElementById('ticket_max')),
+  ].every(Boolean);
+  if(!sectors.length){ document.getElementById('err-inv-sectors').classList.add('show'); ok=false; }
+  else document.getElementById('err-inv-sectors').classList.remove('show');
+  if(!stages.length){ document.getElementById('err-inv-stages').classList.add('show'); ok=false; }
+  else document.getElementById('err-inv-stages').classList.remove('show');
+  if(!countries.length){ document.getElementById('err-inv-countries').classList.add('show'); ok=false; }
+  else document.getElementById('err-inv-countries').classList.remove('show');
+  if(!ok) return;
+  Object.assign(formData, {
+    investor_type: document.getElementById('investor_type').value,
+    firm_name:     document.getElementById('firm_name').value.trim(),
+    ticket_min:    parseInt(document.getElementById('ticket_min').value),
+    ticket_max:    parseInt(document.getElementById('ticket_max').value),
+    sectors, stages, countries, instruments,
+    firm_website:  document.getElementById('firm_website').value.trim(),
+  });
+  goToVerify();
+}
+
+/* ============================================================
+   STEP 2C — MENTOR SUBMIT
+   ============================================================ */
+function submitMentorProfile(){
+  const expertise     = (chipData['expertise'] || []).map(c=>c.value);
+  const sessionTypes  = (chipData['session-types'] || []).map(c=>c.value);
+  const languages     = (chipData['languages'] || []).map(c=>c.value);
+  let ok = [
+    validateField(document.getElementById('experience_years')),
+    validateField(document.getElementById('max_mentees')),
+  ].every(Boolean);
+  if(!expertise.length){ document.getElementById('err-expertise').classList.add('show'); ok=false; }
+  else document.getElementById('err-expertise').classList.remove('show');
+  if(!sessionTypes.length){ document.getElementById('err-session-types').classList.add('show'); ok=false; }
+  else document.getElementById('err-session-types').classList.remove('show');
+  if(!languages.length){ document.getElementById('err-languages').classList.add('show'); ok=false; }
+  else document.getElementById('err-languages').classList.remove('show');
+  if(!ok) return;
+  Object.assign(formData, {
+    expertise, session_types: sessionTypes, languages,
+    experience_years: document.getElementById('experience_years').value,
+    max_mentees:      parseInt(document.getElementById('max_mentees').value),
+    hourly_rate:      parseInt(document.getElementById('hourly_rate').value)||0,
+    current_role:     document.getElementById('current_role').value.trim(),
+    mentor_bio:       document.getElementById('mentor_bio').value.trim(),
+  });
+  goToVerify();
+}
+
+/* ============================================================
+   VERIFY
+   ============================================================ */
+function goToVerify(){
+  updateProgress(75, currentRole);
+  showSection('section-verify');
+  const colors     = { startup:'var(--g)', investor:'var(--blue)', mentor:'var(--gold)' };
+  const iconColors = { startup:'var(--g-t)', investor:'var(--blue-t)', mentor:'var(--gold-t)' };
+  document.getElementById('verify-header').innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-size:11.5px;font-family:var(--font-m);color:${colors[currentRole]};font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Step 3 of 3</div>
+      <div class="form-title">Verify your email</div>
+      <div class="form-sub">One last step — confirm your email to activate your account.</div>
+    </div>`;
+  document.getElementById('otp-email').textContent = formData.email;
+  
+  // Clear and reset OTP inputs
+  for (let i = 0; i < 6; i++) {
+    const input = document.getElementById('otp' + i);
+    if (input) {
+      input.value = '';
+      input.classList.remove('filled');
+    }
+  }
+  const verifyBtn = document.getElementById('verify-btn');
+  if (verifyBtn) verifyBtn.disabled = true;
+
+  startOTPTimer();
+  document.getElementById('otp0').focus();
+  submitToAPI();
+}
+
+/* ============================================================
+   API CALLS & VERIFICATION
+   ============================================================ */
+let isSubmitting = false;
+async function submitToAPI() {
+  if (isSubmitting) return;
+  isSubmitting = true;
+  
+  // Clear any existing error banner
+  const existing = document.getElementById('reg-error-banner');
+  if (existing) existing.remove();
+
+  try {
+    const res = await HFA.Auth.register(formData);
+    if (!res || !res.success) {
+      throw new Error(res?.error || 'Registration failed');
+    }
+  } catch (err) {
+    console.error('API submission failed:', err);
+    showFormError(err.message || 'Registration failed. Please try again.');
+    
+    // Bounce user back to correct step to fix input error
+    if (err.message.toLowerCase().includes('email') || err.message.toLowerCase().includes('registered')) {
+      showSection('section-identity');
+      updateProgress(25, currentRole);
+    } else {
+      if (currentRole === 'startup') showSection('section-startup-profile');
+      else if (currentRole === 'investor') showSection('section-investor-profile');
+      else if (currentRole === 'mentor') showSection('section-mentor-profile');
+      updateProgress(50, currentRole);
+    }
+  } finally {
+    isSubmitting = false;
+  }
+}
+
+async function verifyOTP() {
+  const existing = document.getElementById('reg-error-banner');
+  if (existing) existing.remove();
+
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += document.getElementById('otp' + i).value;
+  }
+
+  if (code.length < 6) {
+    showFormError('Please enter the complete 6-digit code.');
+    return;
+  }
+
+  const verifyBtn = document.getElementById('verify-btn');
+  const originalHtml = verifyBtn.innerHTML;
+  verifyBtn.disabled = true;
+  verifyBtn.innerHTML = '<i class="ti ti-loader" style="animation:hfaSpin .8s linear infinite"></i> Verifying...';
+
+  try {
+    const res = await HFA.Auth.verifyEmail(code);
+    if (!res || !res.success) {
+      throw new Error(res?.error || 'Verification failed');
+    }
+    
+    // Update success screen styles based on role
+    const colors     = { startup:'var(--g)', investor:'var(--blue)', mentor:'var(--gold)' };
+    const iconColors = { startup:'var(--g-t)', investor:'var(--blue-t)', mentor:'var(--gold-t)' };
+    const roleNames  = { startup: 'Startup Founder', investor: 'Investor', mentor: 'Mentor' };
+    
+    document.getElementById('success-icon').style.background = iconColors[currentRole];
+    document.getElementById('go-dashboard-btn').className = 'btn-primary ' + (currentRole === 'investor' ? 'blue' : (currentRole === 'mentor' ? 'gold' : ''));
+    
+    const pills = document.getElementById('success-role-pill');
+    if (pills) {
+      pills.className = 'role-pill';
+      pills.style.background = iconColors[currentRole];
+      pills.style.color = colors[currentRole];
+      pills.innerHTML = `<i class="ti ti-user"></i> ${roleNames[currentRole]}`;
+    }
+    
+    const titleEl = document.getElementById('success-title');
+    const subEl = document.getElementById('success-sub');
+    if (currentRole === 'startup') {
+      titleEl.textContent = 'Welcome, Founder!';
+      subEl.textContent = 'Your startup profile is live. AI is scanning for active investors matching your sector.';
+    } else if (currentRole === 'investor') {
+      titleEl.textContent = 'Welcome, Investor!';
+      subEl.textContent = 'Your investment profile is live. AI is preparing your deal flow pipeline.';
+    } else if (currentRole === 'mentor') {
+      titleEl.textContent = 'Welcome, Mentor!';
+      subEl.textContent = 'Your advisory profile is live. Startups will be matching with you soon.';
+    }
+    
+    showSection('section-success');
+    updateProgress(100, currentRole);
+  } catch (err) {
+    console.error('OTP verification failed:', err);
+    showFormError(err.message || 'Invalid or expired verification code.');
+  } finally {
+    verifyBtn.disabled = false;
+    verifyBtn.innerHTML = originalHtml;
+  }
+}
+
+let otpTimeLeft = 60;
+
+function startOTPTimer() {
+  if (otpTimer) clearInterval(otpTimer);
+  otpTimeLeft = 60;
+  
+  const timerLabel = document.getElementById('otp-timer');
+  const countdownEl = document.getElementById('otp-countdown');
+  const resendBtn = document.getElementById('otp-resend-btn');
+  
+  if (timerLabel) timerLabel.style.display = 'inline';
+  if (resendBtn) resendBtn.style.display = 'none';
+
+  otpTimer = setInterval(() => {
+    otpTimeLeft--;
+    
+    if (countdownEl) {
+      countdownEl.textContent = otpTimeLeft;
+    }
+
+    if (otpTimeLeft <= 0) {
+      clearInterval(otpTimer);
+      if (timerLabel) timerLabel.style.display = 'none';
+      if (resendBtn) resendBtn.style.display = 'inline';
+    }
+  }, 1000);
+}
+
+async function resendOTP() {
+  const resendBtn = document.getElementById('otp-resend-btn');
+  if (resendBtn) resendBtn.disabled = true;
+
+  try {
+    const res = await HFA.API.post('/auth/resend', {});
+    if (!res || !res.success) {
+      throw new Error(res?.error || 'Failed to resend code');
+    }
+    startOTPTimer();
+    HFA.UI.toast('Verification code resent successfully!');
+  } catch (err) {
+    console.error('Resend OTP error:', err);
+    showFormError(err.message || 'Failed to resend code. Please try again.');
+    if (resendBtn) resendBtn.disabled = false;
+  }
+}
+
+function checkOTPComplete() {
+  let allFilled = true;
+  for (let i = 0; i < 6; i++) {
+    const el = document.getElementById('otp' + i);
+    if (!el.value) {
+      allFilled = false;
+      el.classList.remove('filled');
+    } else {
+      el.classList.add('filled');
+    }
+  }
+  document.getElementById('verify-btn').disabled = !allFilled;
+}
+
+function otpInput(index, el) {
+  el.value = el.value.replace(/[^0-9]/g, '');
+  if (el.value) {
+    el.classList.add('filled');
+    if (index < 5) {
+      document.getElementById('otp' + (index + 1)).focus();
+    }
+  } else {
+    el.classList.remove('filled');
+  }
+  checkOTPComplete();
+}
+
+function otpKey(index, event) {
+  if (event.key === 'Backspace') {
+    const el = document.getElementById('otp' + index);
+    if (!el.value && index > 0) {
+      const prev = document.getElementById('otp' + (index - 1));
+      prev.focus();
+    }
+  }
+  setTimeout(checkOTPComplete, 0);
+}
+
+function redirectToDashboard() {
+  const user = HFA.Auth.getUser();
+  const role = user?.role || formData.role || currentRole;
+  if (role === 'startup') {
+    window.location.replace('/hopefusion-startup-dashboard.html');
+  } else if (role === 'investor') {
+    window.location.replace('/hopefusion-investor-dashboard.html');
+  } else if (role === 'mentor') {
+    window.location.replace('/hopefusion-mentor-dashboard.html');
+  } else if (role === 'admin') {
+    window.location.replace('/hopefusion-admin-dashboard.html');
+  } else {
+    window.location.replace('/hopefusion-homepage.html');
+  }
+}
+
+function handleGoogleOAuth() {
+  window.location.href = `${HFA.API_URL}/auth/google?role=${currentRole}`;
+}
+
+function showFormError(msg) {
+  let errBanner = document.getElementById('reg-error-banner');
+  if (errBanner) errBanner.remove();
+
+  errBanner = document.createElement('div');
+  errBanner.id = 'reg-error-banner';
+  errBanner.style.cssText = 'background:rgba(224,32,32,0.1);border:1px solid rgba(224,32,32,0.3);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:13.5px;color:#111;font-family:var(--font-m);animation:slideIn .3s ease';
+  errBanner.innerHTML = `<i class="ti ti-alert-circle" style="color:var(--red);font-size:20px;flex-shrink:0"></i><div><strong style="color:var(--red)">Error: </strong><span id="reg-error-text"></span></div><button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--txt2);font-size:18px"><i class="ti ti-x"></i></button>`;
+  
+  const activeSection = document.querySelector('.form-section.active');
+  if (activeSection) {
+    activeSection.insertBefore(errBanner, activeSection.firstChild);
+  }
+  document.getElementById('reg-error-text').textContent = msg;
+}
+
+window.addEventListener('load', () => {
+  if (window.hfai18n) {
+    window.hfai18n.createSwitcher('lang-switcher');
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const oauth = urlParams.get('oauth');
+  const token = urlParams.get('token');
+  const role = urlParams.get('role');
+
+  if (oauth === 'success' && token && role) {
+    HFA.Auth.setSession(token, { role });
+    HFA.Auth.getProfile().then(res => {
+      if (res && res.data) {
+        HFA.Auth.setSession(token, res.data);
+      }
+      redirectToDashboard();
+    }).catch(err => {
+      console.error('Failed to retrieve user profile:', err);
+      redirectToDashboard();
+    });
+  } else if (oauth === 'failure') {
+    showFormError('Google authentication failed. Please try again.');
+  }
+
+  const initialRole = urlParams.get('role');
+  if (initialRole && (initialRole === 'startup' || initialRole === 'investor' || initialRole === 'mentor')) {
+    selectRole(initialRole);
+  }
+});
 </script>
 </body>
 </html>

@@ -14,10 +14,10 @@
 const IS_DEV = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 window.HFA = {
-  API_URL:  IS_DEV ? 'http://localhost:3000/api'  : 'https://hopefusion-africa.onrender.com/api',
-  AI_URL:   IS_DEV ? 'http://localhost:3001/api'  : 'https://hopefusion-ai.onrender.com/api',
-  WS_URL:   IS_DEV ? 'http://localhost:3000'      : 'wss://hopefusion-africa.onrender.com',
-  PUB_API:  IS_DEV ? 'http://localhost:3000/v1'   : 'https://api.hopefusionafrica.com/v1',
+  API_URL:  IS_DEV ? 'http://localhost:3000/api/v1'  : 'https://hopefusion-africa.onrender.com/api/v1',
+  AI_URL:   IS_DEV ? 'http://localhost:3001/api'     : 'https://hopefusion-ai.onrender.com/api',
+  WS_URL:   IS_DEV ? 'http://localhost:3000'         : 'wss://hopefusion-africa.onrender.com',
+  PUB_API:  IS_DEV ? 'http://localhost:3000/v1'      : 'https://api.hopefusionafrica.com/v1',
   ENV:      IS_DEV ? 'development' : 'production',
   VERSION:  '1.0.0',
 };
@@ -519,6 +519,11 @@ const HFAData = {
   /* Investor profile */
   async updateInvestor(updates) {
     return API.post('/investors', updates);
+  },
+
+  /* Mentor profile */
+  async updateMentor(updates) {
+    return API.post('/mentors', updates);
   },
 
   /* Platform stats (public) */

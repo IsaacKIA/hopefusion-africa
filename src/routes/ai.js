@@ -1,80 +1,44 @@
 /**
- * HopeFusion Africa — AI Engine (Claude API Integration)
- * Backend service: AI matching, pitch analysis, grant eligibility,
- * compliance advisor, recommendation engine, and streaming chat with memory.
- *
- * Stack: Node.js + Express + Anthropic SDK + Redis (ioredis)
- * Install: npm install @anthropic-ai/sdk express cors dotenv multer pdf-parse ioredis
+ * HopeFusion Africa — Unified AI Engine Router
+ * Consolidates all stateless and stateful AI capabilities under /api/v1/ai.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
 import express from 'express';
-import cors from 'cors';
+import Anthropic from '@anthropic-ai/sdk';
 import multer from 'multer';
 import pdfParse from 'pdf-parse';
-import dotenv from 'dotenv';
-import { createClient } from 'redis';
+import { db, redis } from '../config/db.js';
+import { authenticate } from '../middleware/auth.js';
 
-dotenv.config();
+const aiRouter = express.Router();
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 /* ============================================================
-   REDIS CLIENT — with in-memory fallback for dev/no-Redis envs
+   REDIS & THREAD PERSISTENCE ENGINE
    ============================================================ */
 const THREAD_TTL_SECONDS = 60 * 60 * 24; // 24-hour conversation memory
 const MAX_HISTORY_TURNS = 20;             // keep last 20 message pairs per thread
-
-/** Simple in-memory store used when Redis is unavailable */
 const memoryStore = new Map();
-
-let redisClient = null;
-let redisReady = false;
-
-(async () => {
-  try {
-    redisClient = createClient({ url: process.env.REDIS_URL || 'redis://127.0.0.1:6379' });
-    redisClient.on('error', (err) => {
-      if (redisReady) console.warn('[AI-Engine] Redis error — falling back to memory store:', err.message);
-      redisReady = false;
-    });
-    redisClient.on('ready', () => {
-      redisReady = true;
-      console.log('[AI-Engine] Redis connected — chat memory enabled');
-    });
-    await redisClient.connect();
-  } catch (err) {
-    console.warn('[AI-Engine] Redis unavailable — using in-memory chat store:', err.message);
-    redisReady = false;
-  }
-})();
-
-/* ============================================================
-   THREAD MEMORY HELPERS
-   ============================================================ */
 
 /**
  * Retrieve conversation history for a thread.
- * @param {string} threadId
- * @returns {Promise<Array<{role,content}>>}
  */
 async function getThreadHistory(threadId) {
   const key = `hfa:thread:${threadId}`;
   try {
-    if (redisReady) {
-      const raw = await redisClient.get(key);
+    if (redis && redis.isOpen) {
+      const raw = await redis.get(key);
       return raw ? JSON.parse(raw) : [];
     }
   } catch (err) {
-    console.warn('[AI-Engine] Redis get failed:', err.message);
+    console.warn('[AI Router] Redis thread fetch fallback:', err.message);
   }
   return memoryStore.get(key) || [];
 }
 
 /**
  * Append user + assistant turns to a thread and persist.
- * Trims history to MAX_HISTORY_TURNS pairs to control token usage.
- * @param {string} threadId
- * @param {string} userMessage
- * @param {string} assistantMessage
  */
 async function appendThreadHistory(threadId, userMessage, assistantMessage) {
   const key = `hfa:thread:${threadId}`;
@@ -89,41 +53,34 @@ async function appendThreadHistory(threadId, userMessage, assistantMessage) {
   }
 
   try {
-    if (redisReady) {
-      await redisClient.set(key, JSON.stringify(history), { EX: THREAD_TTL_SECONDS });
+    if (redis && redis.isOpen) {
+      await redis.set(key, JSON.stringify(history), { EX: THREAD_TTL_SECONDS });
       return;
     }
   } catch (err) {
-    console.warn('[AI-Engine] Redis set failed:', err.message);
+    console.warn('[AI Router] Redis thread set fallback:', err.message);
   }
   memoryStore.set(key, history);
 }
 
 /**
  * Delete (reset) a conversation thread.
- * @param {string} threadId
  */
 async function clearThreadHistory(threadId) {
   const key = `hfa:thread:${threadId}`;
   try {
-    if (redisReady) await redisClient.del(key);
+    if (redis && redis.isOpen) {
+      await redis.del(key);
+    }
   } catch (err) {
-    console.warn('[AI-Engine] Redis del failed:', err.message);
+    console.warn('[AI Router] Redis thread del fallback:', err.message);
   }
   memoryStore.delete(key);
 }
 
-const app = express();
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
-
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-
 /* ============================================================
    SYSTEM PROMPTS
    ============================================================ */
-
 const MATCHING_SYSTEM = `You are HopeFusion Africa's AI matching engine.
 Your job is to evaluate compatibility between startups and investors/mentors.
 You understand the African startup ecosystem deeply — its funding landscape,
@@ -174,11 +131,9 @@ function parseAIResponse(content) {
 
 /* ============================================================
    1. STARTUP–INVESTOR AI MATCHING
-   POST /api/ai/match
-   Body: { startup: {...}, investor: {...} }
-   Returns: { score, reasons, strengths, concerns, recommendation }
+   POST /api/v1/ai/match
    ============================================================ */
-app.post('/api/ai/match', async (req, res) => {
+aiRouter.post('/match', authenticate, async (req, res) => {
   try {
     const { startup, investor } = req.body;
     if (!startup || !investor) {
@@ -210,7 +165,7 @@ Return a JSON object with exactly this structure:
 }`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1000,
       system: MATCHING_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
@@ -226,12 +181,10 @@ Return a JSON object with exactly this structure:
 });
 
 /* ============================================================
-   2. BATCH MATCHING — score startup against multiple investors
-   POST /api/ai/match/batch
-   Body: { startup: {...}, investors: [...] }
-   Returns: { matches: [{investor_id, score, grade, recommendation}] }
+   2. BATCH MATCHING
+   POST /api/v1/ai/match/batch
    ============================================================ */
-app.post('/api/ai/match/batch', async (req, res) => {
+aiRouter.post('/match/batch', authenticate, async (req, res) => {
   try {
     const { startup, investors } = req.body;
     if (!startup || !investors?.length) {
@@ -261,7 +214,7 @@ Return JSON array sorted by score descending:
 ]`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1000,
       system: MATCHING_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
@@ -278,11 +231,9 @@ Return JSON array sorted by score descending:
 
 /* ============================================================
    3. PITCH DECK ANALYSIS
-   POST /api/ai/pitch/analyze
-   Body: multipart/form-data — file (PDF) + startupData (JSON string)
-   Returns: detailed pitch feedback
+   POST /api/v1/ai/pitch/analyze
    ============================================================ */
-app.post('/api/ai/pitch/analyze', upload.single('file'), async (req, res) => {
+aiRouter.post('/pitch/analyze', authenticate, upload.single('file'), async (req, res) => {
   try {
     let pitchContent = '';
 
@@ -329,7 +280,7 @@ Return JSON with this exact structure:
 }`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1000,
       system: PITCH_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
@@ -346,11 +297,9 @@ Return JSON with this exact structure:
 
 /* ============================================================
    4. PITCH LINE GENERATOR
-   POST /api/ai/pitch/oneliner
-   Body: { startup_name, sector, problem, solution, target_market }
-   Returns: { options: [5 one-liner options] }
+   POST /api/v1/ai/pitch/oneliner
    ============================================================ */
-app.post('/api/ai/pitch/oneliner', async (req, res) => {
+aiRouter.post('/pitch/oneliner', authenticate, async (req, res) => {
   try {
     const { startup_name, sector, problem, solution, target_market } = req.body;
 
@@ -373,7 +322,7 @@ Return JSON:
 }`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 500,
       system: PITCH_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
@@ -389,11 +338,9 @@ Return JSON:
 
 /* ============================================================
    5. GRANT ELIGIBILITY CHECKER
-   POST /api/ai/grants/check
-   Body: { startup: {...}, grant: {...} }
-   Returns: eligibility analysis + application tips
+   POST /api/v1/ai/grants/check
    ============================================================ */
-app.post('/api/ai/grants/check', async (req, res) => {
+aiRouter.post('/grants/check', authenticate, async (req, res) => {
   try {
     const { startup, grant } = req.body;
 
@@ -422,7 +369,7 @@ Return JSON:
 }`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1000,
       system: GRANT_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
@@ -437,12 +384,10 @@ Return JSON:
 });
 
 /* ============================================================
-   6. GRANT DISCOVERY — find best grants for a startup
-   POST /api/ai/grants/discover
-   Body: { startup: {...} }
-   Returns: ranked list of recommended grant programmes
+   6. GRANT DISCOVERY
+   POST /api/v1/ai/grants/discover
    ============================================================ */
-app.post('/api/ai/grants/discover', async (req, res) => {
+aiRouter.post('/grants/discover', authenticate, async (req, res) => {
   try {
     const { startup } = req.body;
 
@@ -475,7 +420,7 @@ Return JSON:
 }`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1000,
       system: GRANT_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
@@ -491,11 +436,9 @@ Return JSON:
 
 /* ============================================================
    7. COMPLIANCE ADVISOR
-   POST /api/ai/compliance/check
-   Body: { startup: {...}, country: string, question?: string }
-   Returns: compliance status + action items
+   POST /api/v1/ai/compliance/check
    ============================================================ */
-app.post('/api/ai/compliance/check', async (req, res) => {
+aiRouter.post('/compliance/check', authenticate, async (req, res) => {
   try {
     const { startup, country, question } = req.body;
 
@@ -526,7 +469,7 @@ Return JSON:
 }`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1000,
       system: COMPLIANCE_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
@@ -542,11 +485,9 @@ Return JSON:
 
 /* ============================================================
    8. AI RECOMMENDATIONS ENGINE
-   POST /api/ai/recommend
-   Body: { user: {...}, type: "courses"|"mentors"|"grants"|"investors"|"all" }
-   Returns: personalised ranked recommendations
+   POST /api/v1/ai/recommend
    ============================================================ */
-app.post('/api/ai/recommend', async (req, res) => {
+aiRouter.post('/recommend', authenticate, async (req, res) => {
   try {
     const { user, type = 'all' } = req.body;
 
@@ -574,7 +515,7 @@ Return JSON with recommendations for: ${type === 'all' ? 'courses, mentors, gran
 }`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1000,
       system: RECOMMENDATION_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
@@ -589,17 +530,10 @@ Return JSON with recommendations for: ${type === 'all' ? 'courses, mentors, gran
 });
 
 /* ============================================================
-   9. STREAMING CHAT WITH PERSISTENT MEMORY — (SSE)
-   POST /api/ai/chat/stream
-   Body: {
-     messages  : [{role, content}],   // current-turn messages from the client
-     context   : "mentor"|"investor"|"compliance"|"general",
-     thread_id : string (optional),   // omit to start a fresh thread
-     user      : object (optional)    // user profile for personalisation
-   }
-   Streams: Server-sent events with text chunks + thread_id on completion
+   9. STREAMING CHAT WITH PERSISTENT MEMORY (SSE)
+   POST /api/v1/ai/chat/stream
    ============================================================ */
-app.post('/api/ai/chat/stream', async (req, res) => {
+aiRouter.post('/chat/stream', async (req, res) => {
   try {
     const { messages, context = 'general', thread_id, user } = req.body;
 
@@ -607,7 +541,6 @@ app.post('/api/ai/chat/stream', async (req, res) => {
       return res.status(400).json({ error: '`messages` array is required' });
     }
 
-    // ── Context-aware system prompts ────────────────────────────────────────
     const systemPrompts = {
       mentor: `You are a world-class business mentor on HopeFusion Africa.
                You've helped 500+ African startups raise funding and scale.
@@ -629,33 +562,24 @@ app.post('/api/ai/chat/stream', async (req, res) => {
                 You have memory of prior turns in this conversation — use it for continuity.`
     };
 
-    // ── Resolve or create a thread ID ───────────────────────────────────────
     const activeThreadId = thread_id || `hfa-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-    // ── Load existing conversation history from Redis / memory ───────────────
     const history = await getThreadHistory(activeThreadId);
-
-    // The current user turn is the last message in the request
     const currentUserMessage = messages[messages.length - 1]?.content || '';
 
-    // Build the full message array: persistent history + current turn
     const fullMessages = [
       ...history,
       ...messages.map(m => ({ role: m.role, content: m.content }))
     ];
 
-    // ── Set SSE headers ─────────────────────────────────────────────────────
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
 
-    // Emit the thread_id immediately so the client can persist it
     res.write(`data: ${JSON.stringify({ thread_id: activeThreadId })}\n\n`);
 
-    // ── Stream from Claude ───────────────────────────────────────────────────
     const stream = await client.messages.stream({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 600,
       system: systemPrompts[context] || systemPrompts.general,
       messages: fullMessages,
@@ -672,7 +596,6 @@ app.post('/api/ai/chat/stream', async (req, res) => {
 
     const finalMsg = await stream.finalMessage();
 
-    // ── Persist this turn to Redis / memory ─────────────────────────────────
     if (assistantReply) {
       await appendThreadHistory(activeThreadId, currentUserMessage, assistantReply);
     }
@@ -680,7 +603,7 @@ app.post('/api/ai/chat/stream', async (req, res) => {
     res.write(`data: ${JSON.stringify({
       done      : true,
       thread_id : activeThreadId,
-      memory    : redisReady ? 'redis' : 'memory',
+      memory    : (redis && redis.isOpen) ? 'redis' : 'memory',
       usage     : finalMsg.usage
     })}\n\n`);
     res.end();
@@ -692,11 +615,10 @@ app.post('/api/ai/chat/stream', async (req, res) => {
 });
 
 /* ============================================================
-   9b. CLEAR CHAT THREAD
-   DELETE /api/ai/chat/thread/:threadId
-   Removes a conversation thread from Redis / memory store
+   10. CHAT THREAD OPERATIONS
    ============================================================ */
-app.delete('/api/ai/chat/thread/:threadId', async (req, res) => {
+
+aiRouter.delete('/chat/thread/:threadId', authenticate, async (req, res) => {
   try {
     const { threadId } = req.params;
     await clearThreadHistory(threadId);
@@ -706,12 +628,7 @@ app.delete('/api/ai/chat/thread/:threadId', async (req, res) => {
   }
 });
 
-/* ============================================================
-   9c. GET CHAT THREAD HISTORY
-   GET /api/ai/chat/thread/:threadId
-   Returns the stored conversation history for a thread
-   ============================================================ */
-app.get('/api/ai/chat/thread/:threadId', async (req, res) => {
+aiRouter.get('/chat/thread/:threadId', authenticate, async (req, res) => {
   try {
     const { threadId } = req.params;
     const history = await getThreadHistory(threadId);
@@ -720,7 +637,7 @@ app.get('/api/ai/chat/thread/:threadId', async (req, res) => {
       thread_id : threadId,
       turns     : history.length / 2,
       history,
-      store     : redisReady ? 'redis' : 'memory'
+      store     : (redis && redis.isOpen) ? 'redis' : 'memory'
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -728,12 +645,10 @@ app.get('/api/ai/chat/thread/:threadId', async (req, res) => {
 });
 
 /* ============================================================
-   10. FINANCIAL MODEL BUILDER
-   POST /api/ai/financials/model
-   Body: { startup: {...}, months: 18 }
-   Returns: 18-month financial projection with assumptions
+   11. FINANCIAL MODEL BUILDER
+   POST /api/v1/ai/financials/model
    ============================================================ */
-app.post('/api/ai/financials/model', async (req, res) => {
+aiRouter.post('/financials/model', authenticate, async (req, res) => {
   try {
     const { startup, months = 18 } = req.body;
 
@@ -774,7 +689,7 @@ Return JSON:
 }`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1000,
       system: PITCH_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
@@ -788,41 +703,4 @@ Return JSON:
   }
 });
 
-/* ============================================================
-   HEALTH CHECK
-   ============================================================ */
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'HopeFusion Africa AI Engine',
-    model: 'claude-sonnet-4-20250514',
-    chat_memory: {
-      enabled   : true,
-      store     : redisReady ? 'redis' : 'memory',
-      ttl_hours : THREAD_TTL_SECONDS / 3600,
-      max_turns : MAX_HISTORY_TURNS
-    },
-    endpoints: [
-      'POST   /api/ai/match',
-      'POST   /api/ai/match/batch',
-      'POST   /api/ai/pitch/analyze',
-      'POST   /api/ai/pitch/oneliner',
-      'POST   /api/ai/grants/check',
-      'POST   /api/ai/grants/discover',
-      'POST   /api/ai/compliance/check',
-      'POST   /api/ai/recommend',
-      'POST   /api/ai/chat/stream',
-      'GET    /api/ai/chat/thread/:threadId',
-      'DELETE /api/ai/chat/thread/:threadId',
-      'POST   /api/ai/financials/model',
-    ],
-    timestamp: new Date().toISOString(),
-  });
-});
-
-const PORT = process.env.AI_ENGINE_PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`HopeFusion AI Engine running on port ${PORT}`);
-});
-
-export default app;
+export default aiRouter;

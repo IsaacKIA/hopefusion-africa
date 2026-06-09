@@ -558,7 +558,7 @@ tr:hover td{background:rgba(45,181,98,0.03)}
       </div>
       <div class="topbar-notif" onclick="toggleNotif()">
         <i class="ti ti-bell"></i>
-        <div class="notif-dot"></div>
+        <div class="notif-dot" data-notif-badge style="display:none"></div>
       </div>
       <button id="web3-connect-btn" class="topbar-btn outline" onclick="connectWalletUI()" style="margin-right:8px; border-color:#2DB562; color:#2DB562; display:inline-flex; align-items:center; gap:6px;">
         <i class="ti ti-wallet"></i> Connect Wallet
@@ -578,28 +578,28 @@ tr:hover td{background:rgba(45,181,98,0.03)}
       <!-- greeting -->
       <div style="margin-bottom:24px">
         <div style="font-family:var(--font-h);font-size:22px;font-weight:700;color:#111;margin-bottom:4px">
-          Good morning, Rene 👋
+          Good morning, <span id="user-greeting-name">Rene</span> 👋
         </div>
-        <div style="font-size:14px;color:var(--txt2)">You have <strong style="color:var(--g)">12 new AI-matched startups</strong> and <strong style="color:var(--gold)">3 unread messages</strong> waiting.</div>
+        <div style="font-size:14px;color:var(--txt2)">You have <strong style="color:var(--g)"><span id="greeting-match-count">12</span> new AI-matched startups</strong> and <strong style="color:var(--gold)">3 unread messages</strong> waiting.</div>
       </div>
 
       <!-- STAT CARDS -->
       <div class="stats-row">
         <div class="stat-card green">
           <div class="stat-icon" style="background:var(--g-t);color:var(--g)"><i class="ti ti-briefcase"></i></div>
-          <div class="stat-value">$2.4M</div>
+          <div class="stat-value" id="stat-deployed-capital">$2.4M</div>
           <div class="stat-label">Total deployed capital</div>
           <span class="stat-change up"><i class="ti ti-trending-up"></i> +18% this quarter</span>
         </div>
         <div class="stat-card gold">
           <div class="stat-icon" style="background:var(--gold-t);color:var(--gold)"><i class="ti ti-building-store"></i></div>
-          <div class="stat-value">14</div>
+          <div class="stat-value" id="stat-portfolio-startups">14</div>
           <div class="stat-label">Portfolio startups</div>
           <span class="stat-change up"><i class="ti ti-trending-up"></i> +3 this month</span>
         </div>
         <div class="stat-card red">
           <div class="stat-icon" style="background:var(--red-t);color:var(--red)"><i class="ti ti-brain"></i></div>
-          <div class="stat-value">12</div>
+          <div class="stat-value" id="stat-ai-matches">12</div>
           <div class="stat-label">New AI matches</div>
           <span class="stat-change up"><i class="ti ti-sparkles"></i> Updated today</span>
         </div>
@@ -1379,9 +1379,161 @@ document.addEventListener('keydown', e => {
   }
 });
 
+let activeMatches = [];
+
+async function initDashboard() {
+  try {
+    const dash = await HFA.Data.loadDashboard();
+    
+    if (dash.profile) {
+      document.querySelectorAll('[data-hfa-user-name]').forEach(el => {
+        el.textContent = `${dash.profile.first_name} ${dash.profile.last_name}`;
+      });
+      document.querySelectorAll('[data-hfa-user-initials]').forEach(el => {
+        el.textContent = `${dash.profile.first_name?.[0] || ''}${dash.profile.last_name?.[0] || ''}`;
+      });
+      document.querySelectorAll('[data-hfa-user-role]').forEach(el => {
+        const invProf = dash.profile.investor_profile;
+        const typeStr = invProf?.investor_type ? invProf.investor_type.toUpperCase().replace('_', ' ') : 'Investor';
+        el.textContent = `${typeStr} · Pro`;
+      });
+      
+      const greetingNameEl = document.getElementById('user-greeting-name');
+      if (greetingNameEl) {
+        greetingNameEl.textContent = dash.profile.first_name;
+      }
+      
+      const invProfile = dash.profile.investor_profile;
+      if (invProfile) {
+        const deployedVal = document.getElementById('stat-deployed-capital');
+        if (deployedVal) {
+          deployedVal.textContent = HFA.UI.formatCurrency(invProfile.total_deployed || 0);
+        }
+        const portfolioVal = document.getElementById('stat-portfolio-startups');
+        if (portfolioVal) {
+          portfolioVal.textContent = invProfile.portfolio_count || 0;
+        }
+      }
+    }
+
+    const matchesRes = await HFA.Data.loadMatches({ minScore: 60 });
+    activeMatches = matchesRes.data || [];
+    
+    const matchStatVal = document.getElementById('stat-ai-matches');
+    if (matchStatVal) {
+      matchStatVal.textContent = activeMatches.length;
+    }
+    
+    const matchBadgeEl = document.querySelector('.nav-badge');
+    if (matchBadgeEl) {
+      matchBadgeEl.textContent = activeMatches.length;
+    }
+    
+    const greetingMatchCountEl = document.getElementById('greeting-match-count');
+    if (greetingMatchCountEl) {
+      greetingMatchCountEl.textContent = activeMatches.length;
+    }
+    
+    if (dash.unreadCount !== undefined) {
+      const notifBadgeEl = document.querySelector('.topbar-notif .notif-dot');
+      if (notifBadgeEl) {
+        notifBadgeEl.style.display = dash.unreadCount > 0 ? 'block' : 'none';
+      }
+      const msgBadgeEl = document.querySelector('.nav-badge.gold');
+      if (msgBadgeEl) {
+        msgBadgeEl.textContent = dash.unreadCount;
+      }
+    }
+
+    renderMatchesGrid();
+    
+  } catch (err) {
+    console.error('Failed to initialize dashboard:', err);
+  }
+}
+
+function renderMatchesGrid() {
+  const grid = document.getElementById('matches-grid');
+  if (!grid) return;
+
+  if (activeMatches.length === 0) {
+    HFA.UI.showEmpty('matches-grid', {
+      icon: '🤖',
+      title: 'No AI matches found',
+      subtitle: 'Refine your investment thesis to trigger matches.'
+    });
+    return;
+  }
+
+  grid.innerHTML = activeMatches.map(m => {
+    const s = m.startup_detail;
+    if (!s) return '';
+    const initials = (s.name?.[0] || 'S') + (s.name?.[1] || '');
+    return `
+      <div class="match-card" onclick="openStartupDetailsModal('${m.id}')">
+        <div class="match-card-top">
+          <div class="match-ai-badge"><i class="ti ti-sparkles"></i> ${m.ai_score}% match</div>
+          <div class="match-logo" style="background:linear-gradient(135deg,#2DB562,#1e8a48)">${initials.toUpperCase()}</div>
+          <div class="match-name">${s.name}</div>
+          <div class="match-desc">${s.tagline || 'No tagline provided.'}</div>
+          <div class="match-tags">
+            <span class="match-tag" style="background:var(--g-t);color:var(--g-deep)">${s.sector || 'General'}</span>
+            <span class="match-tag" style="background:var(--gold-t);color:#7a5000">${s.stage ? s.stage.toUpperCase().replace('_', ' ') : 'MVP'}</span>
+            <span class="match-tag" style="background:#eef3fe;color:#3535cc">${s.country || 'Ghana'}</span>
+          </div>
+        </div>
+        <div class="match-metrics">
+          <div class="match-metric"><div class="match-metric-val">${HFA.UI.formatCurrency(s.funding_goal || 0)}</div><div class="match-metric-label">Seeking</div></div>
+          <div class="match-metric"><div class="match-metric-val">${HFA.UI.formatCurrency(s.mrr || 0)}</div><div class="match-metric-label">MRR</div></div>
+          <div class="match-metric"><div class="match-metric-val">${s.team_size || 1}</div><div class="match-metric-label">Team size</div></div>
+        </div>
+        <div class="match-card-footer">
+          <div class="match-score-big">${m.ai_score}% <span>AI match</span></div>
+          <button class="btn-invest" onclick="event.stopPropagation(); openModal('invest')">Invest →</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openStartupDetailsModal(matchId) {
+  const match = activeMatches.find(m => m.id === matchId);
+  if (!match) return;
+
+  const startup = match.startup_detail;
+  if (!startup) return;
+
+  const initials = (startup.name?.[0] || 'S') + (startup.name?.[1] || '');
+  const sdgsList = (startup.sdgs || []).map(s => `SDG ${s}`).join(', ') || 'None';
+
+  document.getElementById('modal-title').textContent = startup.name;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+      <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#2DB562,#1e8a48);display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:20px;font-weight:700;color:#fff">${initials.toUpperCase()}</div>
+      <div>
+        <div style="font-family:var(--font-h);font-size:18px;font-weight:700;color:#111">${startup.name}</div>
+        <div style="font-size:13px;color:var(--txt2)">${startup.sector || 'General'} · ${startup.stage ? startup.stage.toUpperCase().replace('_', ' ') : 'MVP'} Stage · ${startup.country || 'Ghana'}</div>
+      </div>
+      <div style="margin-left:auto;background:linear-gradient(135deg,rgba(45,181,98,0.1),rgba(232,160,32,0.1));border:1px solid rgba(45,181,98,0.25);color:#0f5233;padding:6px 14px;border-radius:100px;font-size:13px;font-family:var(--font-m);font-weight:500">🤖 ${match.ai_score}% AI match</div>
+    </div>
+    <p style="font-size:14px;color:var(--txt2);line-height:1.7;margin-bottom:20px">${startup.tagline || 'No tagline provided.'}</p>
+    <div class="detail-row"><span class="detail-label">Founder</span><span class="detail-val">${startup.first_name} ${startup.last_name}</span></div>
+    <div class="detail-row"><span class="detail-label">Seeking</span><span class="detail-val" style="color:var(--g)">${HFA.UI.formatCurrency(startup.funding_goal || 0)}</span></div>
+    <div class="detail-row"><span class="detail-label">Funding type</span><span class="detail-val">${(startup.funding_type || []).join(', ') || 'N/A'}</span></div>
+    <div class="detail-row"><span class="detail-label">MRR</span><span class="detail-val">${HFA.UI.formatCurrency(startup.mrr || 0)}</span></div>
+    <div class="detail-row"><span class="detail-label">Team size</span><span class="detail-val">${startup.team_size || 1} people</span></div>
+    <div class="detail-row"><span class="detail-label">SDGs</span><span class="detail-val">${sdgsList}</span></div>
+    <div class="detail-row"><span class="detail-label">Stage</span><span class="detail-val">${startup.stage ? startup.stage.toUpperCase().replace('_', ' ') : 'N/A'}</span></div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `<button class="btn-modal-outline" onclick="closeModal()">Close</button><button class="btn-modal-primary" onclick="openModal('invest')">💰 Invest now</button>`;
+  document.getElementById('modal-overlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-  HFA.Auth.guard(['investor', 'admin']);
+  HFA.Auth.guard(['investor', 'startup', 'admin']);
   HFA.UI.renderUserProfile();
+  initDashboard();
 
   if (window.ethereum && window.ethereum.selectedAddress) {
     connectWalletUI();
@@ -1586,8 +1738,9 @@ async function approveMilestoneUI(escrowId, index) {
     }
     const role = window.HFA.Auth.getRole();
     if (role && role !== 'investor' && role !== 'admin') {
-      // Wrong dashboard for this role
-      window.location.replace('/hopefusion-startup-dashboard.html');
+      if (role === 'startup') window.location.replace('/hopefusion-startup-dashboard.html');
+      else if (role === 'mentor') window.location.replace('/hopefusion-mentor-dashboard.html');
+      else window.location.replace('/hopefusion-homepage.html?access=denied');
     }
   })();
 

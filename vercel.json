@@ -1,27 +1,39 @@
 {
   "version": 2,
-  "buildCommand": "",
-  "installCommand": "",
-  "outputDirectory": "public",
-  "cleanUrls": true,
-  "trailingSlash": false,
+  "buildCommand": "cd frontend && npm ci && npm run build",
+  "outputDirectory": "frontend/.next",
+  "installCommand": "cd frontend && npm ci",
+  "framework": "nextjs",
   "rewrites": [
-    { "source": "/", "destination": "/hopefusion-homepage.html" }
+    { "source": "/(.*)", "destination": "/" }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-XSS-Protection", "value": "1; mode=block" }
+        { "key": "X-Content-Type-Options",    "value": "nosniff" },
+        { "key": "X-Frame-Options",            "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection",           "value": "1; mode=block" },
+        { "key": "Referrer-Policy",            "value": "strict-origin-when-cross-origin" },
+        { "key": "Strict-Transport-Security",  "value": "max-age=63072000; includeSubDomains; preload" }
       ]
     },
     {
-      "source": "/hopefusion-connection-layer.js",
+      "source": "/sw.js",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
-  ]
+  ],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "@hopefusion-api-url",
+    "NEXT_PUBLIC_VAPID_PUBLIC_KEY": "@hopefusion-vapid-public-key"
+  }
 }

@@ -892,39 +892,231 @@ function applyFilter(){
 
 /* ===== SAVE TOGGLE ===== */
 const savedItems={};
-const savedData={
-  gh:{name:'GreenHarvest Ghana',sector:'Agritech · Ghana',score:'98%',color:'linear-gradient(135deg,#2DB562,#1e8a48)',init:'GH'},
-  al:{name:'AfriHealth Labs',sector:'Healthtech · Kenya',score:'94%',color:'linear-gradient(135deg,#E8A020,#c07000)',init:'AL'},
-  sn:{name:'SolarNow Kenya',sector:'Cleantech · Kenya',score:'91%',color:'linear-gradient(135deg,#E02020,#b01515)',init:'SN'},
-  eb:{name:'EduBridge Nigeria',sector:'Edtech · Nigeria',score:'88%',color:'linear-gradient(135deg,#4f8ef7,#2563eb)',init:'EB'},
-};
+
 function toggleSave(id){
   const btn=document.getElementById('save-'+id);
   savedItems[id]=!savedItems[id];
-  if(savedItems[id]){
-    btn.classList.add('saved');
-    btn.innerHTML='<i class="ti ti-bookmark-filled"></i> Saved';
-  } else {
-    btn.classList.remove('saved');
-    btn.innerHTML='<i class="ti ti-bookmark"></i> Save';
+  if(btn) {
+    if(savedItems[id]){
+      btn.classList.add('saved');
+      btn.innerHTML='<i class="ti ti-bookmark-filled"></i> Saved';
+    } else {
+      btn.classList.remove('saved');
+      btn.innerHTML='<i class="ti ti-bookmark"></i> Save';
+    }
   }
   renderSaved();
 }
+
 function renderSaved(){
   const keys=Object.keys(savedItems).filter(k=>savedItems[k]);
-  document.getElementById('saved-count').textContent=keys.length+' saved';
+  const countEl = document.getElementById('saved-count');
+  if (countEl) {
+    countEl.textContent=keys.length+' saved';
+  }
   const list=document.getElementById('saved-list');
+  if(!list) return;
   if(!keys.length){
     list.innerHTML='<div style="text-align:center;padding:20px;color:var(--txt2);font-size:13px;font-family:var(--font-m)"><i class="ti ti-bookmark" style="font-size:28px;color:#ddd;display:block;margin-bottom:8px"></i>Save startups to review later</div>';
     return;
   }
-  list.innerHTML=keys.map(k=>{const d=savedData[k];return`
-    <div class="saved-item">
-      <div class="saved-logo" style="background:${d.color}">${d.init}</div>
-      <div><div class="saved-name">${d.name}</div><div class="saved-sector">${d.sector}</div></div>
-      <div class="saved-score">${d.score}</div>
+  list.innerHTML=keys.map(k=>{
+    const m = activeMatches.find(match => match.id === k);
+    if (!m) return '';
+    const s = m.startup_detail;
+    if (!s) return '';
+    const initials = (s.name?.[0] || 'S') + (s.name?.[1] || '');
+    const color = m.ai_score >= 90 ? 'linear-gradient(135deg,#2DB562,#1e8a48)' : 'linear-gradient(135deg,#E8A020,#c07000)';
+    return `
+      <div class="saved-item" onclick="openStartupDetailsModal('${m.id}')" style="cursor:pointer">
+        <div class="saved-logo" style="background:${color}">${initials.toUpperCase()}</div>
+        <div><div class="saved-name">${s.name}</div><div class="saved-sector">${s.sector || 'General'} · ${s.country || 'Ghana'}</div></div>
+        <div class="saved-score">${m.ai_score}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
+let activeMatches = [];
+
+async function initMatchesPage() {
+  try {
+    const res = await HFA.Data.loadMatches({ minScore: 60 });
+    activeMatches = res.data || [];
+    
+    const countEl = document.querySelector('.results-count');
+    if (countEl) {
+      countEl.innerHTML = `Showing <strong>${activeMatches.length} matches</strong> from HopeFusion network scanned`;
+    }
+    
+    renderMatchesList();
+  } catch (err) {
+    console.error('Failed to load AI matches:', err);
+    HFA.UI.showError('matches-list', 'Failed to retrieve AI matches.');
+  }
+}
+
+function renderMatchesList() {
+  const list = document.getElementById('matches-list');
+  if (!list) return;
+
+  if (activeMatches.length === 0) {
+    HFA.UI.showEmpty('matches-list', {
+      icon: '🤖',
+      title: 'No AI matches found',
+      subtitle: 'Refine your investment thesis to trigger matches.'
+    });
+    return;
+  }
+
+  list.innerHTML = activeMatches.map((m, idx) => {
+    const s = m.startup_detail;
+    if (!s) return '';
+    const initials = (s.name?.[0] || 'S') + (s.name?.[1] || '');
+    const stripColor = m.ai_score >= 90 ? 'var(--g)' : (m.ai_score >= 75 ? 'var(--gold)' : 'var(--blue)');
+    const scoreOffset = 222 * (1 - m.ai_score / 100);
+    const whyMatchedText = m.ai_reasons?.join(' ') || 'Matches your thesis criteria and stage preferences.';
+    const isSaved = !!savedItems[m.id];
+
+    return `
+      <div class="match-card ${idx === 0 ? 'featured' : ''}" onclick="openStartupDetailsModal('${m.id}')">
+        <div class="match-strip" style="background:${stripColor}"></div>
+        <div class="match-body">
+          <div class="match-top">
+            <div class="match-logo" style="background:linear-gradient(135deg,#2DB562,#1e8a48)">${initials.toUpperCase()}</div>
+            <div class="match-info">
+              <div class="match-name">${s.name}</div>
+              <div class="match-meta">
+                <span>${s.sector || 'General'}</span><span class="match-meta-dot"></span>
+                <span>${s.stage ? s.stage.toUpperCase().replace('_', ' ') : 'MVP'} Stage</span><span class="match-meta-dot"></span>
+                <span>${s.country || 'Ghana'}</span>
+                <div class="match-ai-pill"><i class="ti ti-sparkles"></i> ${m.ai_score}% AI match</div>
+              </div>
+            </div>
+          </div>
+          <div class="match-desc">${s.tagline || 'No tagline provided.'}</div>
+          <div class="match-pills">
+            <span class="mpill" style="background:var(--g-t);color:var(--g-deep)">${s.sector || 'General'}</span>
+            <span class="mpill" style="background:var(--gold-t);color:#7a5000">${s.stage ? s.stage.toUpperCase().replace('_', ' ') : 'MVP'}</span>
+            <span class="mpill" style="background:#eef3fe;color:#3535cc">${s.country || 'Ghana'}</span>
+            <span class="mpill" style="background:var(--red-t);color:#8b1515">SDGs: ${(s.sdgs || []).join(', ') || 'N/A'}</span>
+          </div>
+          <div class="why-matched">
+            <i class="ti ti-sparkles"></i>
+            <span><strong>Why matched:</strong> ${whyMatchedText}</span>
+          </div>
+          <div class="match-metrics">
+            <div class="m-metric"><div class="m-metric-val">${HFA.UI.formatCurrency(s.funding_goal || 0)}</div><div class="m-metric-lbl">Seeking</div></div>
+            <div class="m-metric"><div class="m-metric-val">${HFA.UI.formatCurrency(s.mrr || 0)}</div><div class="m-metric-lbl">MRR</div></div>
+            <div class="m-metric"><div class="m-metric-val">${s.customers || 0}</div><div class="m-metric-lbl">Customers</div></div>
+            <div class="m-metric"><div class="m-metric-val">${s.team_size || 1}</div><div class="m-metric-lbl">Team size</div></div>
+          </div>
+        </div>
+        <div class="match-actions">
+          <div class="score-ring">
+            <svg width="88" height="88" viewBox="0 0 88 88">
+              <circle cx="44" cy="44" r="36" fill="none" stroke="#f0f0f0" stroke-width="8"/>
+              <circle cx="44" cy="44" r="36" fill="none" stroke="${stripColor}" stroke-width="8"
+                stroke-dasharray="222" stroke-dashoffset="${scoreOffset}" stroke-linecap="round"/>
+            </svg>
+            <div class="score-ring-text"><div class="score-pct">${m.ai_score}%</div><div class="score-lbl">MATCH</div></div>
+          </div>
+          <button class="action-btn-g" onclick="event.stopPropagation();openModal('invest')"><i class="ti ti-currency-dollar"></i> Invest</button>
+          <button class="action-btn-o" onclick="event.stopPropagation();openModal('meet')"><i class="ti ti-calendar"></i> Schedule</button>
+          <button class="action-btn-save ${isSaved ? 'saved' : ''}" id="save-${m.id}" onclick="event.stopPropagation();toggleSave('${m.id}')">
+            <i class="ti ${isSaved ? 'ti-bookmark-filled' : 'ti-bookmark'}"></i> ${isSaved ? 'Saved' : 'Save'}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openStartupDetailsModal(matchId) {
+  const match = activeMatches.find(m => m.id === matchId);
+  if (!match) return;
+
+  const startup = match.startup_detail;
+  if (!startup) return;
+
+  const initials = (startup.name?.[0] || 'S') + (startup.name?.[1] || '');
+  const sdgsList = (startup.sdgs || []).map(s => `SDG ${s}`).join(', ') || 'None';
+
+  document.getElementById('modal-title').textContent = startup.name + ' — Full profile';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#2DB562,#1e8a48);display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:20px;font-weight:700;color:#fff">${initials.toUpperCase()}</div>
+      <div>
+        <div style="font-family:var(--font-h);font-size:18px;font-weight:700;color:#111">${startup.name}</div>
+        <div style="font-size:13px;color:var(--txt2)">${startup.sector || 'General'} · ${startup.stage ? startup.stage.toUpperCase().replace('_', ' ') : 'MVP'} · ${startup.country || 'Ghana'}</div>
+      </div>
+      <div style="margin-left:auto;background:var(--g-t);border:1px solid rgba(45,181,98,0.25);color:var(--g-deep);padding:6px 14px;border-radius:100px;font-size:13px;font-family:var(--font-m);font-weight:600">🤖 ${match.ai_score}% match</div>
     </div>
-  `;}).join('');
+    <p style="font-size:14px;color:var(--txt2);line-height:1.7;margin-bottom:20px">${startup.tagline || 'No tagline provided.'}</p>
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:600;color:#111;font-family:var(--font-h);margin-bottom:12px">Match breakdown</div>
+      <div class="reason-bar-wrap"><div class="reason-label"><span>Sector fit</span><span>${match.ai_breakdown?.sector_fit || match.ai_score}%</span></div><div class="reason-track"><div class="reason-fill" style="width:${match.ai_breakdown?.sector_fit || match.ai_score}%;background:var(--g)"></div></div></div>
+      <div class="reason-bar-wrap"><div class="reason-label"><span>SDG alignment</span><span>${match.ai_breakdown?.sdg_alignment || match.ai_score}%</span></div><div class="reason-track"><div class="reason-fill" style="width:${match.ai_breakdown?.sdg_alignment || match.ai_score}%;background:var(--g)"></div></div></div>
+      <div class="reason-bar-wrap"><div class="reason-label"><span>Geography</span><span>${match.ai_breakdown?.geography_fit || match.ai_score}%</span></div><div class="reason-track"><div class="reason-fill" style="width:${match.ai_breakdown?.geography_fit || match.ai_score}%;background:var(--gold)"></div></div></div>
+      <div class="reason-bar-wrap"><div class="reason-label"><span>Ticket size</span><span>${match.ai_breakdown?.ticket_fit || match.ai_score}%</span></div><div class="reason-track"><div class="reason-fill" style="width:${match.ai_breakdown?.ticket_fit || match.ai_score}%;background:var(--g)"></div></div></div>
+    </div>
+    <div class="detail-row"><span class="detail-label">Founder</span><span class="detail-val">${startup.first_name} ${startup.last_name}</span></div>
+    <div class="detail-row"><span class="detail-label">Seeking</span><span class="detail-val" style="color:var(--g)">${HFA.UI.formatCurrency(startup.funding_goal || 0)}</span></div>
+    <div class="detail-row"><span class="detail-label">Instrument</span><span class="detail-val">${(startup.funding_type || []).join(', ') || 'N/A'}</span></div>
+    <div class="detail-row"><span class="detail-label">MRR</span><span class="detail-val">${HFA.UI.formatCurrency(startup.mrr || 0)}</span></div>
+    <div class="detail-row"><span class="detail-label">Customers</span><span class="detail-val">${startup.customers || 0}</span></div>
+    <div class="detail-row"><span class="detail-label">SDGs</span><span class="detail-val">${sdgsList}</span></div>
+    <div class="detail-row"><span class="detail-label">Team</span><span class="detail-val">${startup.team_size || 1} people</span></div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `<button class="btn-modal-outline" onclick="closeModal()">Close</button><button class="btn-modal-primary" onclick="closeModal();openModal('meet')"><i class="ti ti-calendar"></i> Schedule call</button><button class="btn-modal-primary" style="margin-left:8px" onclick="closeModal();openModal('invest')"><i class="ti ti-currency-dollar"></i> Invest now</button>`;
+  document.getElementById('modal-overlay').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+
+/* ===== STATIC MODAL FALLBACKS ===== */
+const modals={
+  invest:{
+    title:'Make an investment',
+    body:`
+      <div style="margin-bottom:18px"><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Startup</label>
+      <select style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none;background:var(--bg)"><option>GreenHarvest Ghana — $200K ask</option><option>AfriHealth Labs — $500K ask</option><option>SolarNow Kenya — $1.2M ask</option><option>EduBridge Nigeria — $300K ask</option></select></div>
+      <div style="margin-bottom:18px"><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Amount (USD)</label>
+      <input type="number" placeholder="e.g. 100000" style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none" onfocus="this.style.borderColor='var(--g)'" onblur="this.style.borderColor='var(--border-l)'"/></div>
+      <div style="margin-bottom:18px"><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Instrument</label>
+      <select style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none;background:var(--bg)"><option>SAFE note</option><option>Convertible note</option><option>Equity</option><option>Grant</option></select></div>
+      <div style="background:var(--g-t);border:1px solid rgba(45,181,98,0.2);border-radius:10px;padding:13px 16px;font-size:13px;color:var(--g-deep);font-family:var(--font-m)"><i class="ti ti-shield-check" style="margin-right:6px"></i> Processed securely via HopeFusion escrow. Funds released on milestone verification.</div>
+    `,
+    footer:`<button class="btn-modal-outline" onclick="closeModal()">Cancel</button><button class="btn-modal-primary" onclick="showInvestSuccess()"><i class="ti ti-rocket"></i> Confirm investment</button>`
+  },
+  meet:{
+    title:'Schedule a meeting',
+    body:`
+      <p style="font-size:14px;color:var(--txt2);margin-bottom:20px;line-height:1.7">Book a pitch call directly with the founder. HopeFusion will send calendar invites to both parties.</p>
+      <div style="margin-bottom:18px"><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Startup</label>
+      <select style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none;background:var(--bg)"><option>GreenHarvest Ghana</option><option>AfriHealth Labs</option><option>SolarNow Kenya</option><option>EduBridge Nigeria</option></select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+        <div><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Date</label>
+        <input type="date" style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none" onfocus="this.style.borderColor='var(--g)'" onblur="this.style.borderColor='var(--border-l)'"/></div>
+        <div><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Time (GMT)</label>
+        <select style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none;background:var(--bg)"><option>09:00 AM</option><option>10:00 AM</option><option>11:00 AM</option><option>02:00 PM</option><option>03:00 PM</option></select></div>
+      </div>
+      <div style="margin-bottom:18px"><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Meeting type</label>
+      <select style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none;background:var(--bg)"><option>Video call (Google Meet)</option><option>Video call (Zoom)</option><option>Phone call</option><option>In-person (Accra)</option></select></div>
+      <div><label style="font-size:13px;font-weight:500;font-family:var(--font-m);color:#333;display:block;margin-bottom:7px">Agenda / notes</label>
+      <textarea placeholder="What would you like to discuss?" style="width:100%;padding:11px 14px;border:1.5px solid var(--border-l);border-radius:9px;font-size:14px;font-family:var(--font-b);outline:none;resize:vertical;min-height:72px;line-height:1.6"></textarea></div>
+    `,
+    footer:`<button class="btn-modal-outline" onclick="closeModal()">Cancel</button><button class="btn-modal-primary" onclick="showMeetSuccess()"><i class="ti ti-calendar-check"></i> Confirm meeting</button>`
+  }
+};
+
+function openModal(key){
+  const d=modals[key];
+  if(!d) return;
+  document.getElementById('modal-title').textContent=d.title;
+  document.getElementById('modal-body').innerHTML=d.body;
+  document.getElementById('modal-footer').innerHTML=d.footer;
+  document.getElementById('modal-overlay').classList.add('show');
+  document.body.style.overflow='hidden';
 }
 
 /* ===== AI SCAN ===== */
@@ -1058,6 +1250,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 document.addEventListener('DOMContentLoaded', function() {
   HFA.Auth.guard(['investor', 'startup', 'mentor', 'admin']);
   HFA.UI.renderUserProfile();
+  initMatchesPage();
+
   // Update scan time dynamically
   const sub = document.querySelector('.page-sub');
   if (sub) {
