@@ -1136,6 +1136,27 @@ async function proceedToOTP() {
   setTimeout(() => document.getElementById('otp0')?.focus(), 100);
 
   await registerWithAPI();
+
+  // If email couldn't be delivered (domain not verified), show the OTP visibly
+  if (STATE.debugOTP) {
+    const digits = STATE.debugOTP.toString().split('');
+    digits.forEach((d, i) => {
+      const box = document.getElementById('otp' + i);
+      if (box) { box.value = d; box.classList.add('filled'); }
+    });
+    const verifyBtn = document.getElementById('verify-btn');
+    if (verifyBtn) verifyBtn.disabled = false;
+
+    // Show prominent banner
+    const otpSection = document.getElementById('section-verify');
+    const existingBanner = document.getElementById('otp-debug-banner');
+    if (existingBanner) existingBanner.remove();
+    const banner = document.createElement('div');
+    banner.id = 'otp-debug-banner';
+    banner.style.cssText = 'background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#92400e;line-height:1.5;';
+    banner.innerHTML = `<strong>⚠️ Email not delivered</strong> — Resend domain not yet verified.<br>Your code is pre-filled below: <strong style="font-family:monospace;font-size:16px;letter-spacing:4px;">${STATE.debugOTP}</strong><br><span style="font-size:11px;opacity:.8;">To send real emails: verify <code>hopefusionafrica.com</code> at <a href="https://resend.com/domains" target="_blank" style="color:#92400e;">resend.com/domains</a></span>`;
+    if (otpSection) otpSection.insertAdjacentElement('afterbegin', banner);
+  }
 }
 
 function clearOTPBoxes() {
@@ -1309,8 +1330,9 @@ async function registerWithAPI() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Registration failed');
 
-    STATE.token = data.token;
-    STATE.user  = data.user;
+    STATE.token    = data.token;
+    STATE.user     = data.user;
+    STATE.debugOTP = data.debug_otp || null; // present only when email delivery failed
     localStorage.setItem('hfa_token', data.token);
     localStorage.setItem('hfa_user',  JSON.stringify(data.user));
 
@@ -1325,8 +1347,9 @@ async function registerWithAPI() {
       last_name:  STATE.formData.last_name,
       is_verified: false,
     };
-    STATE.token = demoToken;
-    STATE.user  = demoUser;
+    STATE.token    = demoToken;
+    STATE.user     = demoUser;
+    STATE.debugOTP = null;
     localStorage.setItem('hfa_token', demoToken);
     localStorage.setItem('hfa_user',  JSON.stringify(demoUser));
   } finally {

@@ -139,19 +139,33 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
     // Store verify code in Redis (10 min)
     await cacheSet(`verify:${user.id}`, code, 600);
 
-    // Send verification email (non-blocking — account is created regardless)
-    sendEmail(
-      email,
-      'Your HopeFusion Africa verification code',
-      buildOTPEmail(first_name, code, 'verify')
-    ).catch(err => console.error('[Auth] Verification email error:', err.message));
+    // Send verification email — capture result to detect delivery failures
+    let emailResult = { provider: 'unknown' };
+    try {
+      emailResult = await sendEmail(
+        email,
+        'Your HopeFusion Africa verification code',
+        buildOTPEmail(first_name, code, 'verify')
+      );
+    } catch (emailErr) {
+      console.error('[Auth] Verification email error:', emailErr.message);
+    }
+
+    // If email couldn't be delivered (domain not verified / no config),
+    // include the OTP in the response so dev/staging can still test
+    const emailDelivered = emailResult.provider === 'resend' || emailResult.provider === 'smtp';
+    const isDev = process.env.NODE_ENV !== 'production';
 
     const token = generateToken(user.id, user.role);
     return res.status(201).json({
       success: true,
-      message: 'Account created. Check your email for verification code.',
+      message: emailDelivered
+        ? 'Account created. Check your email for verification code.'
+        : 'Account created. Email delivery not configured — use the code below to verify.',
       token,
       user: { id: user.id, email: user.email, role: user.role, first_name: user.first_name, last_name: user.last_name },
+      // Only expose OTP in response when email is not delivered AND not in production
+      ...((!emailDelivered && isDev) && { debug_otp: code, debug_note: 'Verify your domain at resend.com/domains to enable real email delivery' }),
     });
 
   } catch (err) {
