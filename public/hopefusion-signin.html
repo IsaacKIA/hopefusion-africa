@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sign in — HopeFusion Africa</title>
+<meta name="description" content="Sign in to your HopeFusion Africa account. Access your startup, investor, or mentor dashboard."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#2DB562"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g:#2DB562;--g-dark:#1e8a48;--g-deep:#0f5233;--g-t:#E9F9EF;
+  --gold:#E8A020;--gold-t:#FEF7E8;--red:#E02020;--red-t:#fde8e8;
+  --blue:#2563eb;--blue-t:#eef3fe;
+  --blk:#1A1A1A;--bg:#F4F5F7;--white:#fff;
+  --txt:#3D3D3D;--txt2:#6b6b6b;--border-l:#e4e4e4;
+  --font-h:'Sora',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'Space Grotesk',sans-serif;
+}
+body{font-family:var(--font-b);background:var(--bg);color:var(--txt);min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* LEFT PANEL */
+.left-panel{background:var(--blk);display:flex;flex-direction:column;padding:48px;position:relative;overflow:hidden}
+.left-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 30% 80%,rgba(45,181,98,0.12),transparent),radial-gradient(ellipse 60% 40% at 80% 20%,rgba(232,160,32,0.08),transparent)}
+.dots-bg{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.06) 1px,transparent 1px);background-size:32px 32px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black,transparent)}
+.left-logo{display:flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:auto;position:relative;z-index:1}
+.left-brand{font-family:var(--font-h);font-size:16px;font-weight:600}
+.left-brand .h{color:var(--g)}.left-brand .f{color:#fff}
+.left-brand .a{color:var(--gold);font-size:9px;display:block;letter-spacing:.18em;font-family:var(--font-m);font-weight:400}
+.left-content{position:relative;z-index:1;margin-top:auto}
+.left-headline{font-family:var(--font-h);font-size:clamp(28px,3vw,42px);font-weight:700;color:#fff;line-height:1.15;letter-spacing:-.5px;margin-bottom:16px}
+.left-headline em{color:var(--g);font-style:normal}
+.left-sub{font-size:15px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:32px;max-width:380px}
+.trust-badges{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:32px}
+.trust-badge{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 14px;font-size:12.5px;font-family:var(--font-m);color:rgba(255,255,255,0.7)}
+.trust-badge i{font-size:15px;color:var(--g)}
+.social-proof{border-top:1px solid rgba(255,255,255,0.08);padding-top:24px}
+.sp-avatars{display:flex;margin-bottom:10px}
+.sp-av{width:36px;height:36px;border-radius:50%;border:2px solid var(--blk);display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:12px;font-weight:700;color:#fff;margin-left:-10px}
+.sp-av:first-child{margin-left:0}
+.sp-text{font-size:13px;color:rgba(255,255,255,0.5);font-family:var(--font-m)}
+.sp-text strong{color:#fff}
+
+/* RIGHT PANEL */
+.right-panel{background:var(--bg);display:flex;flex-direction:column;overflow-y:auto;max-height:100vh}
+.right-inner{padding:48px 52px;flex:1;display:flex;flex-direction:column;justify-content:center;max-width:520px;width:100%;margin:0 auto}
+
+/* form container animation */
+#signin-form-container{animation:fadeUp .35s ease both}
+
+@media(max-width:900px){body{grid-template-columns:1fr}.left-panel{display:none}}
+@media(max-width:600px){.right-inner{padding:32px 24px}}
+</style>
+</head>
+<body>
+
+<!-- LEFT — BRAND PANEL -->
+<div class="left-panel">
+  <div class="dots-bg"></div>
+  <a class="left-logo" href="hopefusion-homepage.html">
+    <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
+      <path d="M8 28 Q5 18 11 10" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M13 30 Q9 19 16 11" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <path d="M18 31 Q14 20 21 12" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
+      <path d="M23 30 Q19 19 25 12" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="21" cy="8" r="2.5" fill="#E02020"/>
+      <circle cx="26" cy="13" r="2.5" fill="#E02020"/>
+    </svg>
+    <div class="left-brand"><span class="h">Hope</span><span class="f">Fusion</span><span class="a">A F R I C A</span></div>
+  </a>
+  <div class="left-content">
+    <h2 class="left-headline">Welcome<br/>back to <em>Africa's</em><br/>startup hub.</h2>
+    <p class="left-sub">Thousands of founders, investors and mentors are active right now. Pick up where you left off.</p>
+    <div class="trust-badges">
+      <div class="trust-badge"><i class="ti ti-brain"></i> AI-powered matching</div>
+      <div class="trust-badge"><i class="ti ti-award"></i> Grant discovery</div>
+      <div class="trust-badge"><i class="ti ti-shield-check"></i> Secure &amp; verified</div>
+      <div class="trust-badge"><i class="ti ti-credit-card"></i> MTN MoMo &amp; Paystack</div>
+    </div>
+    <div class="social-proof">
+      <div class="sp-avatars">
+        <div class="sp-av" style="background:linear-gradient(135deg,#2DB562,#1e8a48)">AK</div>
+        <div class="sp-av" style="background:linear-gradient(135deg,#E8A020,#c07000)">KM</div>
+        <div class="sp-av" style="background:linear-gradient(135deg,#E02020,#b01515)">DU</div>
+        <div class="sp-av" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)">FY</div>
+        <div class="sp-av" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">BA</div>
+      </div>
+      <div class="sp-text"><strong>5,247 members</strong> across 14 African countries</div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT — SIGN IN FORM PANEL -->
+<div class="right-panel">
+  <div class="right-inner">
+    <div id="signin-form-container"></div>
+  </div>
+</div>
+
+<script src="/hopefusion-connection-layer.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Auto-redirect already-authenticated users to their dashboard
+    if (window.HFA && window.HFA.Auth && window.HFA.Auth.isLoggedIn()) {
+      window.HFA.Auth.redirectToDashboard();
+      return;
+    }
+
+    const container = document.getElementById('signin-form-container');
+    if (window.HFA && window.HFA.UI && container) {
+      window.HFA.UI.setupSignInForm(container, false, null);
+
+      // If redirected here with #forgot hash, open the forgot password panel
+      if (window.location.hash === '#forgot') {
+        const forgotLink = container.querySelector('#signin-forgot-link');
+        if (forgotLink) forgotLink.click();
+        history.replaceState(null, '', window.location.pathname);
+      }
+    }
+  });
+</script>
+</body>
+</html>

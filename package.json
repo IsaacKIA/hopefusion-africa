@@ -4,13 +4,13 @@
   "description": "HopeFusion Africa — AI-powered startup ecosystem platform",
   "type": "module",
   "scripts": {
-    "dev":        "nodemon --experimental-specifier-resolution=node src/server.js",
-    "start":      "node --experimental-specifier-resolution=node src/server.js",
+    "dev": "nodemon --experimental-specifier-resolution=node src/server.js",
+    "start": "node --experimental-specifier-resolution=node src/server.js",
     "db:migrate": "node --experimental-specifier-resolution=node src/scripts/setup-db.js",
-    "db:seed":    "node --experimental-specifier-resolution=node src/scripts/seed.js",
-    "test":       "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "lint":       "echo 'No linter configured'",
-    "health":     "curl -s http://localhost:3000/api/v1/health | node -e \"process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.stringify(JSON.parse(d),null,2)))\""
+    "db:seed": "node --experimental-specifier-resolution=node src/scripts/seed.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "lint": "echo 'No linter configured'",
+    "health": "curl -s http://localhost:3000/api/v1/health | node -e \"process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.stringify(JSON.parse(d),null,2)))\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
@@ -34,6 +34,7 @@
     "pdf-parse": "^1.1.1",
     "pg": "^8.11.5",
     "redis": "^4.7.1",
+    "resend": "^6.12.4",
     "socket.io": "^4.7.5",
     "uuid": "^10.0.0",
     "web-push": "^3.6.7",

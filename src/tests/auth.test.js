@@ -1,8 +1,9 @@
 import request from 'supertest';
 import { app, httpServer } from '../server.js';
-import { mockDbReset, mockDbExpectQuery } from '../config/db.js';
+import { mockDbReset, mockDbExpectQuery, redisMockStore } from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import { jest } from '@jest/globals';
+import jwt from 'jsonwebtoken';
 
 // Setup basic environment variables for the test run
 process.env.JWT_SECRET = 'supersecretjwtdevelopmentkeyforetestingruns';
@@ -193,5 +194,75 @@ describe('Auth Integration Tests', () => {
       expect(res.status).toBe(401);
       expect(res.body.error).toBe('Invalid email or password');
     }, 30000);
+  });
+
+  describe('POST /api/v1/auth/forgot-password & /reset-password', () => {
+    it('should send reset code for a valid email', async () => {
+      mockDbExpectQuery('SELECT id, first_name, email FROM users WHERE email', [{
+        id: '11111111-2222-3333-4444-555555555555',
+        first_name: 'Isaac',
+        email: 'test@hopefusion.com'
+      }]);
+
+      const res = await request(app)
+        .post('/api/v1/auth/forgot-password')
+        .send({ email: 'test@hopefusion.com' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toContain('reset code was sent');
+    });
+
+    it('should send reset code for a valid phone number', async () => {
+      mockDbExpectQuery('SELECT id, first_name, email FROM users WHERE email', [{
+        id: '11111111-2222-3333-4444-555555555555',
+        first_name: 'Isaac',
+        email: 'test@hopefusion.com'
+      }]);
+
+      const res = await request(app)
+        .post('/api/v1/auth/forgot-password')
+        .send({ email: '0501234567' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toContain('reset code was sent');
+    });
+
+    it('should reset password and revoke old tokens', async () => {
+      mockDbExpectQuery('SELECT id FROM users WHERE email', [{
+        id: '11111111-2222-3333-4444-555555555555'
+      }]);
+      mockDbExpectQuery('UPDATE users SET password_hash', []);
+
+      redisMockStore['reset:11111111-2222-3333-4444-555555555555'] = '"123456"';
+
+      const res = await request(app)
+        .post('/api/v1/auth/reset-password')
+        .send({
+          email: 'test@hopefusion.com',
+          code: '123456',
+          newPassword: 'NewPassword123'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toContain('Password reset successfully');
+
+      const revokedBefore = redisMockStore['revoked_before:11111111-2222-3333-4444-555555555555'];
+      expect(revokedBefore).toBeDefined();
+
+      const revokedTime = parseInt(revokedBefore);
+      const payload = { userId: '11111111-2222-3333-4444-555555555555', role: 'startup', iat: revokedTime - 10 };
+      const token = jwt.sign(payload, process.env.JWT_SECRET);
+
+      const authRes = await request(app)
+        .post('/api/v1/auth/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ code: '123456' });
+
+      expect(authRes.status).toBe(401);
+      expect(authRes.body.error).toBe('Token revoked');
+    });
   });
 });

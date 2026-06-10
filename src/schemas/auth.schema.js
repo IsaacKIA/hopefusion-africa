@@ -82,15 +82,15 @@ export const verifySchema = z.object({
 export const forgotPasswordSchema = z.object({
   email: z.string()
     .trim()
-    .email('Invalid email format')
-    .toLowerCase(),
+    .min(1, 'Email or phone number is required')
+    .transform(val => val.includes('@') ? val.toLowerCase() : val),
 });
 
 export const resetPasswordSchema = z.object({
   email: z.string()
     .trim()
-    .email('Invalid email format')
-    .toLowerCase(),
+    .min(1, 'Email or phone number is required')
+    .transform(val => val.includes('@') ? val.toLowerCase() : val),
   code: z.string()
     .trim()
     .length(6, 'Reset code must be exactly 6 digits'),

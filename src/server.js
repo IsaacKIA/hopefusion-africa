@@ -78,6 +78,7 @@ app.use(passport.initialize());
 
 // Versioned APIs
 app.use('/api/v1/auth', authRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/startups', startupsRouter);
 app.use('/api/v1/investors', investorsRouter);

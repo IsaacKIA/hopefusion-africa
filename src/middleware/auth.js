@@ -16,6 +16,12 @@ export const authenticate = async (req, res, next) => {
       return res.status(401).json({ error: 'Token revoked' });
     }
 
+    // Check if token was revoked due to a password reset
+    const revokedBefore = await redis.get(`revoked_before:${payload.userId}`);
+    if (revokedBefore && payload.iat < parseInt(revokedBefore)) {
+      return res.status(401).json({ error: 'Token revoked' });
+    }
+
     req.user = payload;
     next();
   } catch (err) {

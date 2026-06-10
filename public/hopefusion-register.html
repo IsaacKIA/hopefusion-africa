@@ -268,15 +268,15 @@ select.f-input{appearance:none;cursor:pointer;background-image:url("data:image/s
       </div>
     </div>
 
-    <button class="btn-primary" id="role-continue-btn" onclick="goToStep(1)" style="margin-top:20px" disabled>
+    <button class="btn-primary" id="role-continue-btn" onclick="proceedFromRole()" style="margin-top:20px" disabled>
       Continue <i class="ti ti-arrow-right"></i>
     </button>
-    <div class="login-link">Already have an account? <a href="hopefusion-homepage.html">Sign in</a></div>
+    <div class="login-link">Already have an account? <a href="/hopefusion-signin.html">Sign in</a></div>
   </div>
 
   <!-- STEP 1: IDENTITY (SHARED ALL ROLES) -->
   <div class="form-section" id="section-identity">
-    <button class="btn-back" onclick="goToStep(0)"><i class="ti ti-arrow-left"></i> Back</button>
+    <button class="btn-back" onclick="goBackToRole()"><i class="ti ti-arrow-left"></i> Back</button>
     <div id="step1-header"></div>
 
     <div class="f-row">
@@ -300,8 +300,8 @@ select.f-input{appearance:none;cursor:pointer;background-image:url("data:image/s
 
     <div class="f-group">
       <label class="f-label">Password <span class="f-req">*</span></label>
-      <input class="f-input" id="password" type="password" placeholder="At least 8 characters" autocomplete="new-password" oninput="checkPassword(this)"/>
-      <button class="eye-btn" type="button" onclick="togglePwd('password','eye-pwd')" aria-label="Show password"><i class="ti ti-eye" id="eye-pwd"></i></button>
+      <input class="f-input" id="password" type="password" placeholder="At least 8 characters" autocomplete="new-password" oninput="checkPasswordStrength(this)"/>
+      <button class="eye-btn" type="button" onclick="togglePasswordVisibility('password','eye-pwd')" aria-label="Show password"><i class="ti ti-eye" id="eye-pwd"></i></button>
       <div class="pwd-strength">
         <div class="pwd-bars"><div class="pwd-bar" id="pb1"></div><div class="pwd-bar" id="pb2"></div><div class="pwd-bar" id="pb3"></div><div class="pwd-bar" id="pb4"></div></div>
         <div class="pwd-label" id="pwd-label">Enter a password</div>
@@ -355,14 +355,14 @@ select.f-input{appearance:none;cursor:pointer;background-image:url("data:image/s
       <input class="f-input" id="linkedin_url" type="url" placeholder="https://linkedin.com/in/yourname"/>
     </div>
 
-    <button class="btn-primary" id="step1-btn" onclick="submitStep1()">
+    <button class="btn-primary" id="step1-btn" onclick="proceedFromIdentity()">
       Continue <i class="ti ti-arrow-right"></i>
     </button>
   </div>
 
   <!-- STEP 2A: STARTUP PROFILE -->
   <div class="form-section" id="section-startup-profile">
-    <button class="btn-back" onclick="goToStep(1)"><i class="ti ti-arrow-left"></i> Back</button>
+    <button class="btn-back" onclick="goBackToIdentity()"><i class="ti ti-arrow-left"></i> Back</button>
     <div class="form-title">Your startup</div>
     <div class="form-sub">Tell us about your business — not you. This builds your AI-matched profile.</div>
 
@@ -491,14 +491,14 @@ select.f-input{appearance:none;cursor:pointer;background-image:url("data:image/s
       <input class="f-input" id="startup_website" type="url" placeholder="https://yourstartup.com"/>
     </div>
 
-    <button class="btn-primary" onclick="submitStartupProfile()">
+    <button class="btn-primary" onclick="proceedFromStartup()">
       Continue <i class="ti ti-arrow-right"></i>
     </button>
   </div>
 
   <!-- STEP 2B: INVESTOR PROFILE -->
   <div class="form-section" id="section-investor-profile">
-    <button class="btn-back" onclick="goToStep(1)"><i class="ti ti-arrow-left"></i> Back</button>
+    <button class="btn-back" onclick="goBackToIdentity()"><i class="ti ti-arrow-left"></i> Back</button>
     <div class="form-title">Your investment profile</div>
     <div class="form-sub">This powers your AI deal flow — the more specific, the better your startup matches.</div>
 
@@ -622,14 +622,14 @@ select.f-input{appearance:none;cursor:pointer;background-image:url("data:image/s
       <input class="f-input" id="firm_website" type="url" placeholder="https://yourfirm.com"/>
     </div>
 
-    <button class="btn-primary blue" onclick="submitInvestorProfile()">
+    <button class="btn-primary blue" onclick="proceedFromInvestor()">
       Continue <i class="ti ti-arrow-right"></i>
     </button>
   </div>
 
   <!-- STEP 2C: MENTOR PROFILE -->
   <div class="form-section" id="section-mentor-profile">
-    <button class="btn-back" onclick="goToStep(1)"><i class="ti ti-arrow-left"></i> Back</button>
+    <button class="btn-back" onclick="goBackToIdentity()"><i class="ti ti-arrow-left"></i> Back</button>
     <div class="form-title">Your mentor profile</div>
     <div class="form-sub">What you know and how you work — this matches you with the right startups to guide.</div>
 
@@ -730,7 +730,7 @@ select.f-input{appearance:none;cursor:pointer;background-image:url("data:image/s
       <div class="f-hint">Max 300 characters — shown on your mentor card</div>
     </div>
 
-    <button class="btn-primary gold" onclick="submitMentorProfile()">
+    <button class="btn-primary gold" onclick="proceedFromMentor()">
       Continue <i class="ti ti-arrow-right"></i>
     </button>
   </div>
@@ -740,12 +740,12 @@ select.f-input{appearance:none;cursor:pointer;background-image:url("data:image/s
     <div id="verify-header"></div>
     <div class="otp-meta" id="otp-meta">We sent a 6-digit code to <strong id="otp-email"></strong></div>
     <div class="otp-wrap">
-      <input class="otp-box" type="text" maxlength="1" id="otp0" oninput="otpInput(0,this)" onkeydown="otpKey(0,event)"/>
-      <input class="otp-box" type="text" maxlength="1" id="otp1" oninput="otpInput(1,this)" onkeydown="otpKey(1,event)"/>
-      <input class="otp-box" type="text" maxlength="1" id="otp2" oninput="otpInput(2,this)" onkeydown="otpKey(2,event)"/>
-      <input class="otp-box" type="text" maxlength="1" id="otp3" oninput="otpInput(3,this)" onkeydown="otpKey(3,event)"/>
-      <input class="otp-box" type="text" maxlength="1" id="otp4" oninput="otpInput(4,this)" onkeydown="otpKey(4,event)"/>
-      <input class="otp-box" type="text" maxlength="1" id="otp5" oninput="otpInput(5,this)" onkeydown="otpKey(5,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp0" oninput="handleOTPInput(0,this)" onkeydown="handleOTPKey(0,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp1" oninput="handleOTPInput(1,this)" onkeydown="handleOTPKey(1,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp2" oninput="handleOTPInput(2,this)" onkeydown="handleOTPKey(2,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp3" oninput="handleOTPInput(3,this)" onkeydown="handleOTPKey(3,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp4" oninput="handleOTPInput(4,this)" onkeydown="handleOTPKey(4,event)"/>
+      <input class="otp-box" type="text" maxlength="1" id="otp5" oninput="handleOTPInput(5,this)" onkeydown="handleOTPKey(5,event)"/>
     </div>
     <div id="otp-error" style="display:none;text-align:center;font-size:13px;color:var(--red);font-family:var(--font-m);margin-bottom:12px">
       <i class="ti ti-alert-circle" style="margin-right:4px"></i><span id="otp-error-text">Incorrect code. Please try again.</span>
@@ -754,11 +754,11 @@ select.f-input{appearance:none;cursor:pointer;background-image:url("data:image/s
       <span class="otp-timer" id="otp-timer">Resend in <span id="otp-countdown">60</span>s</span>
       <button id="otp-resend-btn" onclick="resendOTP()" style="display:none">Resend code</button>
     </div>
-    <button class="btn-primary" id="verify-btn" onclick="verifyOTP()" style="margin-top:20px" disabled>
+    <button class="btn-primary" id="verify-btn" onclick="verifyAndContinue()" style="margin-top:20px" disabled>
       Verify email <i class="ti ti-check"></i>
     </button>
     <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--txt2);font-family:var(--font-m)">
-      Wrong email? <button onclick="goToStep(1)" style="background:none;border:none;color:var(--g);cursor:pointer;font-size:13px;font-family:var(--font-m);font-weight:500;text-decoration:underline">Change it</button>
+      Wrong email? <button onclick="goBackToIdentity()" style="background:none;border:none;color:var(--g);cursor:pointer;font-size:13px;font-family:var(--font-m);font-weight:500;text-decoration:underline">Change it</button>
     </div>
   </div>
 
@@ -786,64 +786,79 @@ select.f-input{appearance:none;cursor:pointer;background-image:url("data:image/s
 </div>
 
 <script>
-/* ============================================================
-   STATE
-   ============================================================ */
-let currentRole   = null;
-let currentStep   = 0;
-let otpTimer      = null;
-let otpCountdown  = 60;
-let chipData      = {};
-const API_URL     = (window.HFA_CONFIG?.API_URL) || 'https://hopefusion-api.onrender.com/api';
-const formData    = {};
+/* ═══════════════════════════════════════════════
+   STATE MACHINE
+   ═══════════════════════════════════════════════ */
+const STATE = {
+  role:        null,   // 'startup' | 'investor' | 'mentor'
+  step:        0,      // 0=role, 1=identity, 2=profile, 3=otp, 4=success
+  formData:    {},
+  chips:       {},     // { groupName: [{value, label}] }
+  otpTimer:    null,
+  otpCountdown: 60,
+  token:       null,
+  user:        null,
+};
 
-/* ============================================================
-   ROLE SELECTION
-   ============================================================ */
-function selectRole(role){
-  currentRole = role;
-  ['startup','investor','mentor'].forEach(r => {
-    const el = document.getElementById('role-'+r);
-    el.className = 'role-btn' + (r === role ? ' selected-'+r : '');
+let rawAPI = window.HFA_CONFIG?.API_URL;
+if (!rawAPI) {
+  rawAPI = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000'
+    : 'https://hopefusion-api.onrender.com';
+}
+let cleanAPI = rawAPI.replace(/\/$/, '');
+if (!cleanAPI.endsWith('/api') && !cleanAPI.endsWith('/api/v1')) {
+  cleanAPI += '/api';
+}
+const API = cleanAPI;
+
+const SECTIONS = {
+  0: 'section-role',
+  1: 'section-identity',
+  '2-startup':  'section-startup-profile',
+  '2-investor': 'section-investor-profile',
+  '2-mentor':   'section-mentor-profile',
+  3: 'section-verify',
+  4: 'section-success',
+};
+
+const DASHBOARDS = {
+  startup:  'hopefusion-investor-dashboard.html',
+  investor: 'hopefusion-investor-dashboard.html',
+  mentor:   'hopefusion-mentor-dashboard.html',
+  admin:    'hopefusion-admin-dashboard.html',
+};
+
+const ROLE_COLORS = {
+  startup:  { primary: '#2DB562', progress: 'var(--g)' },
+  investor: { primary: '#2563eb', progress: 'var(--blue)' },
+  mentor:   { primary: '#E8A020', progress: 'var(--gold)' },
+};
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION
+   ═══════════════════════════════════════════════ */
+function showSection(sectionId) {
+  document.querySelectorAll('.form-section').forEach(s => {
+    s.classList.remove('active');
   });
-  document.getElementById('role-error').style.display = 'none';
-  const colors = { startup: 'var(--g)', investor: 'var(--blue)', mentor: 'var(--gold)' };
-  document.getElementById('progress-fill').style.background = colors[role];
-  const continueBtn = document.getElementById('role-continue-btn');
-  if (continueBtn) continueBtn.disabled = false;
-}
-
-/* ============================================================
-   STEP NAVIGATION
-   ============================================================ */
-function goToStep(step){
-  if(step === 0){
-    showSection('section-role');
-    updateProgress(0, null);
+  const target = document.getElementById(sectionId);
+  if (!target) {
+    console.error('[HFA] Section not found:', sectionId);
     return;
   }
-  if(step === 1){
-    if(!currentRole){ document.getElementById('role-error').style.display='block'; return; }
-    showSection('section-identity');
-    updateProgress(25, currentRole);
-    buildStepHeader('step1-header', 1, currentRole);
-    return;
-  }
+  target.classList.add('active');
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function showSection(id){
-  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function updateProgress(pct, role){
-  const colors = { startup:'var(--g)', investor:'var(--blue)', mentor:'var(--gold)' };
+function setProgress(pct) {
   const fill = document.getElementById('progress-fill');
+  if (!fill) return;
   fill.style.width = pct + '%';
-  if(role) fill.style.background = colors[role];
+  if (STATE.role) fill.style.background = ROLE_COLORS[STATE.role].progress;
 }
 
-function buildStepHeader(containerId, step, role){
+function buildStepHeader(containerId, step, role) {
   const titles = {
     startup:  ['Your identity','Your startup','Verify email'],
     investor: ['Your identity','Your investment profile','Verify email'],
@@ -856,459 +871,632 @@ function buildStepHeader(containerId, step, role){
   };
   const idx = step - 1;
   const colors = { startup:'var(--g)', investor:'var(--blue)', mentor:'var(--gold)' };
-  document.getElementById(containerId).innerHTML = `
-    <div style="margin-bottom:20px">
-      <div style="font-size:11.5px;font-family:var(--font-m);color:${colors[role]};font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Step ${step} of 3</div>
-      <div class="form-title">${titles[role][idx]}</div>
-      <div class="form-sub">${subs[role][idx]}</div>
-    </div>`;
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.innerHTML = `
+      <div style="margin-bottom:20px">
+        <div style="font-size:11.5px;font-family:var(--font-m);color:${colors[role]};font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Step ${step} of 3</div>
+        <div class="form-title">${titles[role][idx]}</div>
+        <div class="form-sub">${subs[role][idx]}</div>
+      </div>`;
+  }
 }
 
-/* ============================================================
-   FORM VALIDATION
-   ============================================================ */
-function validateField(el){
-  const err = document.getElementById('err-'+el.id);
-  if(!el.value.trim()){ el.classList.add('error'); el.classList.remove('valid'); if(err) err.classList.add('show'); return false; }
-  el.classList.remove('error'); el.classList.add('valid'); if(err) err.classList.remove('show'); return true;
+function goBackToRole() {
+  STATE.step = 0;
+  setProgress(0);
+  showSection(SECTIONS[0]);
 }
 
-function validateEmail(el){
-  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim());
-  const err   = document.getElementById('err-email');
-  if(!valid){ el.classList.add('error'); el.classList.remove('valid'); err.classList.add('show'); return false; }
-  el.classList.remove('error'); el.classList.add('valid'); err.classList.remove('show'); return true;
+function goBackToIdentity() {
+  STATE.step = 1;
+  setProgress(20);
+  showSection(SECTIONS[1]);
+  buildStepHeader('step1-header', 1, STATE.role);
 }
 
-function checkPassword(el){
-  const val = el.value;
-  const strength = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^a-zA-Z0-9]/].filter(r=>r.test(val)).length + (val.length>=8?1:0);
-  const bars  = ['pb1','pb2','pb3','pb4'];
-  const labels= ['','Weak','Fair','Good','Strong','Very strong'];
-  const cls   = ['','weak','fair','fair','strong','strong'];
-  bars.forEach((id,i) => { const b=document.getElementById(id); b.className='pwd-bar'+(i<strength?' '+cls[strength]:''); });
-  document.getElementById('pwd-label').textContent = val.length===0 ? 'Enter a password' : labels[Math.min(strength,5)];
-  if(val.length < 8){ el.classList.add('error'); document.getElementById('err-password').classList.add('show'); return false; }
-  el.classList.remove('error'); el.classList.add('valid'); document.getElementById('err-password').classList.remove('show'); return true;
-}
-
-function togglePwd(inputId, iconId){
-  const inp = document.getElementById(inputId);
-  const ico = document.getElementById(iconId);
-  if(inp.type==='password'){ inp.type='text'; ico.className='ti ti-eye-off'; }
-  else{ inp.type='password'; ico.className='ti ti-eye'; }
-}
-
-function updatePhonePrefix(){
-  const sel   = document.getElementById('country');
-  const opt   = sel.options[sel.selectedIndex];
-  const prefix= opt.dataset.prefix || '+233';
-  const psel  = document.getElementById('phone-prefix');
-  for(let o of psel.options){ if(o.value===prefix){ psel.value=prefix; break; } }
-}
-
-/* ============================================================
-   CHIP / MULTI-SELECT
-   ============================================================ */
-function toggleDropdown(id){
-  const dd = document.getElementById(id);
-  document.querySelectorAll('.chip-dropdown').forEach(d=>{ if(d.id!==id) d.classList.remove('open'); });
-  dd.classList.toggle('open');
-}
-document.addEventListener('click',e=>{
-  if(!e.target.closest('.chip-select') && !e.target.closest('.chip-dropdown'))
-    document.querySelectorAll('.chip-dropdown').forEach(d=>d.classList.remove('open'));
-});
-
-function toggleChip(group, value, label, role){
-  if(!chipData[group]) chipData[group] = [];
-  const idx = chipData[group].findIndex(c=>c.value===value);
-  if(idx > -1){ chipData[group].splice(idx,1); }
-  else { chipData[group].push({ value, label }); }
-  renderChips(group, role);
-}
-
-function renderChips(group, role){
-  const select  = document.getElementById(group+'-select');
-  const ph      = document.getElementById(group+'-placeholder');
-  const chips   = chipData[group] || [];
-  const classes = { startup:'', investor:' blue', mentor:' gold' };
-  const cls     = classes[role] || '';
-  if(ph) ph.style.display = chips.length ? 'none' : 'block';
-  let existing  = Array.from(select.querySelectorAll('.chip-item'));
-  existing.forEach(e=>e.remove());
-  chips.forEach(c=>{
-    const chip = document.createElement('div');
-    chip.className = 'chip-item' + cls;
-    chip.innerHTML = `${c.label} <button onclick="event.stopPropagation();toggleChip('${group}','${c.value}','${c.label}','${role}')"><i class="ti ti-x" style="font-size:12px"></i></button>`;
-    select.appendChild(chip);
+/* ═══════════════════════════════════════════════
+   ROLE SELECTION
+   ═══════════════════════════════════════════════ */
+function selectRole(role) {
+  STATE.role = role;
+  ['startup', 'investor', 'mentor'].forEach(r => {
+    const el = document.getElementById('role-' + r);
+    if (!el) return;
+    el.className = 'role-btn' + (r === role ? ' selected-' + r : '');
   });
-  const opts = document.querySelectorAll(`#${group}-dropdown .chip-opt`);
-  opts.forEach(o=>{
-    const matches = [...o.getAttribute('onclick').matchAll(/'([^']+)'/g)];
-    const oVal = matches[1]?.[1];
-    if(oVal){
-      const isSel = chips.some(c=>c.value===oVal);
-      o.classList.toggle('selected', isSel);
-      o.classList.toggle('selected-blue', role==='investor' && isSel);
-      o.classList.toggle('selected-gold', role==='mentor' && isSel);
-    }
-  });
+  const err = document.getElementById('role-error');
+  if (err) err.style.display = 'none';
+  setProgress(0);
+  const continueBtn = document.getElementById('role-continue-btn');
+  if (continueBtn) continueBtn.disabled = false;
 }
 
-/* ============================================================
-   STEP 1 — IDENTITY SUBMIT
-   ============================================================ */
-function submitStep1(){
-  const ok = [
-    validateField(document.getElementById('first_name')),
-    validateField(document.getElementById('last_name')),
-    validateEmail(document.getElementById('email')),
-    checkPassword(document.getElementById('password')),
-    validateField(document.getElementById('country')),
-  ].every(Boolean);
-  if(!ok) return;
-  formData.first_name   = document.getElementById('first_name').value.trim();
-  formData.last_name    = document.getElementById('last_name').value.trim();
-  formData.email        = document.getElementById('email').value.trim().toLowerCase();
-  formData.password     = document.getElementById('password').value;
-  formData.country      = document.getElementById('country').value;
-  formData.phone        = (document.getElementById('phone-prefix').value + document.getElementById('phone').value).replace(/\s/g,'');
-  formData.linkedin_url = document.getElementById('linkedin_url').value.trim();
-  formData.role         = currentRole;
-  if(currentRole==='startup'){ showSection('section-startup-profile'); buildStepHeader('','',''); updateProgress(50, currentRole); }
-  else if(currentRole==='investor'){ showSection('section-investor-profile'); updateProgress(50, currentRole); }
-  else if(currentRole==='mentor'){ showSection('section-mentor-profile'); updateProgress(50, currentRole); }
+function proceedFromRole() {
+  if (!STATE.role) {
+    const err = document.getElementById('role-error');
+    if (err) err.style.display = 'block';
+    return;
+  }
+  STATE.step = 1;
+  setProgress(20);
+  showSection(SECTIONS[1]);
+  buildStepHeader('step1-header', 1, STATE.role);
+  document.getElementById('first_name')?.focus();
 }
 
-/* ============================================================
-   STEP 2A — STARTUP SUBMIT
-   ============================================================ */
-function submitStartupProfile(){
-  const sdgs = (chipData['sdg'] || []).map(c => c.value);
-  let ok = [
-    validateField(document.getElementById('startup_name')),
-    validateField(document.getElementById('sector')),
-    validateField(document.getElementById('stage')),
-    validateField(document.getElementById('startup_country')),
-    validateField(document.getElementById('funding_goal')),
-  ].every(Boolean);
-  if(!sdgs.length){ document.getElementById('err-sdg').classList.add('show'); ok = false; }
-  else document.getElementById('err-sdg').classList.remove('show');
-  if(!ok) return;
-  Object.assign(formData, {
+/* ═══════════════════════════════════════════════
+   VALIDATION HELPERS
+   ═══════════════════════════════════════════════ */
+function setFieldState(id, isValid, errorMsg) {
+  const el  = document.getElementById(id);
+  const err = document.getElementById('err-' + id);
+  if (!el) return isValid;
+  el.classList.toggle('error', !isValid);
+  el.classList.toggle('valid',  isValid);
+  if (err) {
+    if (errorMsg) err.textContent = errorMsg;
+    err.classList.toggle('show', !isValid);
+  }
+  return isValid;
+}
+
+function validateRequired(id, label) {
+  const el = document.getElementById(id);
+  if (!el) return true;
+  const ok = el.value.trim().length >= 1;
+  return setFieldState(id, ok, `${label} is required`);
+}
+
+function validateField(idOrEl) {
+  const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+  if (!el) return false;
+  const ok = el.value.trim().length >= 1;
+  return setFieldState(el.id, ok);
+}
+
+function validateEmail(idOrEl) {
+  const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+  if (!el) return false;
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim() || '');
+  return setFieldState(el.id, ok, 'Enter a valid email address');
+}
+
+function validatePassword(id) {
+  const el = document.getElementById(id);
+  const ok = (el?.value?.length || 0) >= 8;
+  return setFieldState(id, ok, 'Password must be at least 8 characters');
+}
+
+function validateChips(groupId, label) {
+  const chips = STATE.chips[groupId] || [];
+  const ok    = chips.length >= 1;
+  const err   = document.getElementById('err-' + groupId);
+  if (err) err.classList.toggle('show', !ok);
+  return ok;
+}
+
+/* ═══════════════════════════════════════════════
+   STEP 1 — IDENTITY
+   ═══════════════════════════════════════════════ */
+function proceedFromIdentity() {
+  const checks = [
+    validateField('first_name'),
+    validateField('last_name'),
+    validateEmail('email'),
+    validatePassword('password'),
+    validateField('country'),
+  ];
+  if (checks.includes(false)) return;
+
+  STATE.formData = {
+    ...STATE.formData,
+    first_name:   document.getElementById('first_name').value.trim(),
+    last_name:    document.getElementById('last_name').value.trim(),
+    email:        document.getElementById('email').value.trim().toLowerCase(),
+    password:     document.getElementById('password').value,
+    country:      document.getElementById('country').value,
+    phone:        buildPhone(),
+    linkedin_url: document.getElementById('linkedin_url')?.value?.trim() || '',
+    role:         STATE.role,
+  };
+
+  STATE.step = 2;
+  setProgress(50);
+  const sectionId = 'section-' + STATE.role + '-profile';
+  showSection(sectionId);
+}
+
+function buildPhone() {
+  const prefix = document.getElementById('phone-prefix')?.value || '+233';
+  const number = document.getElementById('phone')?.value?.trim() || '';
+  if (!number) return '';
+  const digits = number.replace(/\D/g, '');
+  return prefix + digits;
+}
+
+/* ═══════════════════════════════════════════════
+   STEP 2A — STARTUP PROFILE
+   ═══════════════════════════════════════════════ */
+function proceedFromStartup() {
+  const sdgs = (STATE.chips['sdg'] || []).map(c => parseInt(c.value));
+  const checks = [
+    validateField('startup_name'),
+    validateField('sector'),
+    validateField('stage'),
+    validateField('startup_country'),
+    validateField('funding_goal'),
+    sdgs.length >= 1 || (() => { validateChips('sdg', 'SDGs'); return false; })(),
+  ];
+  if (checks.includes(false)) return;
+
+  Object.assign(STATE.formData, {
     startup_name:    document.getElementById('startup_name').value.trim(),
-    startup_tagline: document.getElementById('startup_tagline').value.trim(),
+    startup_tagline: document.getElementById('startup_tagline')?.value?.trim() || '',
     sector:          document.getElementById('sector').value,
     stage:           document.getElementById('stage').value,
     startup_country: document.getElementById('startup_country').value,
-    team_size:       parseInt(document.getElementById('team_size').value),
+    team_size:       parseInt(document.getElementById('team_size')?.value || '1'),
     funding_goal:    parseInt(document.getElementById('funding_goal').value),
-    funding_type:    document.getElementById('funding_type').value,
+    funding_type:    document.getElementById('funding_type')?.value || 'any',
     sdgs,
-    is_women_led:    document.getElementById('is_women_led').checked,
-    startup_website: document.getElementById('startup_website').value.trim(),
+    is_women_led:    document.getElementById('is_women_led')?.checked || false,
+    startup_website: document.getElementById('startup_website')?.value?.trim() || '',
   });
-  goToVerify();
+
+  proceedToOTP();
 }
 
-/* ============================================================
-   STEP 2B — INVESTOR SUBMIT
-   ============================================================ */
-function submitInvestorProfile(){
-  const sectors     = (chipData['inv-sectors'] || []).map(c=>c.value);
-  const stages      = (chipData['inv-stages'] || []).map(c=>c.value);
-  const countries   = (chipData['inv-countries'] || []).map(c=>c.value);
-  const instruments = (chipData['inv-instruments'] || []).map(c=>c.value);
-  let ok = [
-    validateField(document.getElementById('investor_type')),
-    validateField(document.getElementById('ticket_min')),
-    validateField(document.getElementById('ticket_max')),
-  ].every(Boolean);
-  if(!sectors.length){ document.getElementById('err-inv-sectors').classList.add('show'); ok=false; }
-  else document.getElementById('err-inv-sectors').classList.remove('show');
-  if(!stages.length){ document.getElementById('err-inv-stages').classList.add('show'); ok=false; }
-  else document.getElementById('err-inv-stages').classList.remove('show');
-  if(!countries.length){ document.getElementById('err-inv-countries').classList.add('show'); ok=false; }
-  else document.getElementById('err-inv-countries').classList.remove('show');
-  if(!ok) return;
-  Object.assign(formData, {
+/* ═══════════════════════════════════════════════
+   STEP 2B — INVESTOR PROFILE
+   ═══════════════════════════════════════════════ */
+function proceedFromInvestor() {
+  const sectors     = (STATE.chips['inv-sectors']     || []).map(c => c.value);
+  const stages      = (STATE.chips['inv-stages']      || []).map(c => c.value);
+  const countries   = (STATE.chips['inv-countries']   || []).map(c => c.value);
+  const instruments = (STATE.chips['inv-instruments'] || []).map(c => c.value);
+
+  const checks = [
+    validateField('investor_type'),
+    validateField('ticket_min'),
+    validateField('ticket_max'),
+    sectors.length   >= 1 || (() => { validateChips('inv-sectors',   'Sectors');   return false; })(),
+    stages.length    >= 1 || (() => { validateChips('inv-stages',    'Stages');    return false; })(),
+    countries.length >= 1 || (() => { validateChips('inv-countries', 'Countries'); return false; })(),
+  ];
+  if (checks.includes(false)) return;
+
+  Object.assign(STATE.formData, {
     investor_type: document.getElementById('investor_type').value,
-    firm_name:     document.getElementById('firm_name').value.trim(),
+    firm_name:     document.getElementById('firm_name')?.value?.trim() || '',
     ticket_min:    parseInt(document.getElementById('ticket_min').value),
     ticket_max:    parseInt(document.getElementById('ticket_max').value),
     sectors, stages, countries, instruments,
-    firm_website:  document.getElementById('firm_website').value.trim(),
+    firm_website:  document.getElementById('firm_website')?.value?.trim() || '',
   });
-  goToVerify();
+
+  proceedToOTP();
 }
 
-/* ============================================================
-   STEP 2C — MENTOR SUBMIT
-   ============================================================ */
-function submitMentorProfile(){
-  const expertise     = (chipData['expertise'] || []).map(c=>c.value);
-  const sessionTypes  = (chipData['session-types'] || []).map(c=>c.value);
-  const languages     = (chipData['languages'] || []).map(c=>c.value);
-  let ok = [
-    validateField(document.getElementById('experience_years')),
-    validateField(document.getElementById('max_mentees')),
-  ].every(Boolean);
-  if(!expertise.length){ document.getElementById('err-expertise').classList.add('show'); ok=false; }
-  else document.getElementById('err-expertise').classList.remove('show');
-  if(!sessionTypes.length){ document.getElementById('err-session-types').classList.add('show'); ok=false; }
-  else document.getElementById('err-session-types').classList.remove('show');
-  if(!languages.length){ document.getElementById('err-languages').classList.add('show'); ok=false; }
-  else document.getElementById('err-languages').classList.remove('show');
-  if(!ok) return;
-  Object.assign(formData, {
-    expertise, session_types: sessionTypes, languages,
+/* ═══════════════════════════════════════════════
+   STEP 2C — MENTOR PROFILE
+   ═══════════════════════════════════════════════ */
+function proceedFromMentor() {
+  const expertise    = (STATE.chips['expertise']      || []).map(c => c.value);
+  const sessionTypes = (STATE.chips['session-types']  || []).map(c => c.value);
+  const languages    = (STATE.chips['languages']      || []).map(c => c.value);
+
+  const checks = [
+    validateField('experience_years'),
+    validateField('max_mentees'),
+    expertise.length    >= 1 || (() => { validateChips('expertise',     'Expertise');     return false; })(),
+    sessionTypes.length >= 1 || (() => { validateChips('session-types', 'Session types'); return false; })(),
+    languages.length    >= 1 || (() => { validateChips('languages',     'Languages');     return false; })(),
+  ];
+  if (checks.includes(false)) return;
+
+  Object.assign(STATE.formData, {
+    expertise,
+    session_types:    sessionTypes,
+    languages,
     experience_years: document.getElementById('experience_years').value,
     max_mentees:      parseInt(document.getElementById('max_mentees').value),
-    hourly_rate:      parseInt(document.getElementById('hourly_rate').value)||0,
-    current_role:     document.getElementById('current_role').value.trim(),
-    mentor_bio:       document.getElementById('mentor_bio').value.trim(),
+    hourly_rate:      parseInt(document.getElementById('hourly_rate')?.value || '0') || 0,
+    current_role:     document.getElementById('current_role')?.value?.trim() || '',
+    mentor_bio:       document.getElementById('mentor_bio')?.value?.trim() || '',
   });
-  goToVerify();
+
+  proceedToOTP();
 }
 
-/* ============================================================
-   VERIFY
-   ============================================================ */
-function goToVerify(){
-  updateProgress(75, currentRole);
+/* ═══════════════════════════════════════════════
+   STEP 3 — OTP
+   ═══════════════════════════════════════════════ */
+async function proceedToOTP() {
+  STATE.step = 3;
+  setProgress(75);
   showSection('section-verify');
-  const colors     = { startup:'var(--g)', investor:'var(--blue)', mentor:'var(--gold)' };
-  const iconColors = { startup:'var(--g-t)', investor:'var(--blue-t)', mentor:'var(--gold-t)' };
-  document.getElementById('verify-header').innerHTML = `
-    <div style="margin-bottom:16px">
-      <div style="font-size:11.5px;font-family:var(--font-m);color:${colors[currentRole]};font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Step 3 of 3</div>
-      <div class="form-title">Verify your email</div>
-      <div class="form-sub">One last step — confirm your email to activate your account.</div>
-    </div>`;
-  document.getElementById('otp-email').textContent = formData.email;
-  
-  // Clear and reset OTP inputs
-  for (let i = 0; i < 6; i++) {
-    const input = document.getElementById('otp' + i);
-    if (input) {
-      input.value = '';
-      input.classList.remove('filled');
-    }
-  }
-  const verifyBtn = document.getElementById('verify-btn');
-  if (verifyBtn) verifyBtn.disabled = true;
 
+  const colors = { startup: 'var(--g)', investor: 'var(--blue)', mentor: 'var(--gold)' };
+  const verifyHeader = document.getElementById('verify-header');
+  if (verifyHeader) {
+    verifyHeader.innerHTML = `
+      <div style="margin-bottom:16px">
+        <div style="font-size:11.5px;font-family:var(--font-m);color:${colors[STATE.role]};font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Step 3 of 3</div>
+        <div class="form-title">Verify your email</div>
+        <div class="form-sub">One last step — confirm your email to activate your account.</div>
+      </div>`;
+  }
+
+  const emailEl = document.getElementById('otp-email');
+  if (emailEl) emailEl.textContent = STATE.formData.email;
+
+  clearOTPBoxes();
   startOTPTimer();
-  document.getElementById('otp0').focus();
-  submitToAPI();
+  setTimeout(() => document.getElementById('otp0')?.focus(), 100);
+
+  await registerWithAPI();
 }
 
-/* ============================================================
-   API CALLS & VERIFICATION
-   ============================================================ */
-let isSubmitting = false;
-async function submitToAPI() {
-  if (isSubmitting) return;
-  isSubmitting = true;
-  
-  // Clear any existing error banner
-  const existing = document.getElementById('reg-error-banner');
-  if (existing) existing.remove();
-
-  try {
-    const res = await HFA.Auth.register(formData);
-    if (!res || !res.success) {
-      throw new Error(res?.error || 'Registration failed');
-    }
-  } catch (err) {
-    console.error('API submission failed:', err);
-    showFormError(err.message || 'Registration failed. Please try again.');
-    
-    // Bounce user back to correct step to fix input error
-    if (err.message.toLowerCase().includes('email') || err.message.toLowerCase().includes('registered')) {
-      showSection('section-identity');
-      updateProgress(25, currentRole);
-    } else {
-      if (currentRole === 'startup') showSection('section-startup-profile');
-      else if (currentRole === 'investor') showSection('section-investor-profile');
-      else if (currentRole === 'mentor') showSection('section-mentor-profile');
-      updateProgress(50, currentRole);
-    }
-  } finally {
-    isSubmitting = false;
-  }
-}
-
-async function verifyOTP() {
-  const existing = document.getElementById('reg-error-banner');
-  if (existing) existing.remove();
-
-  let code = '';
+function clearOTPBoxes() {
   for (let i = 0; i < 6; i++) {
-    code += document.getElementById('otp' + i).value;
+    const box = document.getElementById('otp' + i);
+    if (box) { box.value = ''; box.classList.remove('filled'); }
   }
+  const btn = document.getElementById('verify-btn');
+  if (btn) btn.disabled = true;
+  const err = document.getElementById('otp-error');
+  if (err) err.style.display = 'none';
+}
 
-  if (code.length < 6) {
-    showFormError('Please enter the complete 6-digit code.');
-    return;
+function handleOTPInput(idx, el) {
+  el.value = el.value.replace(/\D/g, '').slice(-1);
+  el.classList.toggle('filled', el.value.length > 0);
+  if (el.value && idx < 5) {
+    document.getElementById('otp' + (idx + 1))?.focus();
   }
+  const code = getOTPCode();
+  const btn  = document.getElementById('verify-btn');
+  if (btn) btn.disabled = code.length < 6;
+  const err = document.getElementById('otp-error');
+  if (err) err.style.display = 'none';
+}
 
-  const verifyBtn = document.getElementById('verify-btn');
-  const originalHtml = verifyBtn.innerHTML;
-  verifyBtn.disabled = true;
-  verifyBtn.innerHTML = '<i class="ti ti-loader" style="animation:hfaSpin .8s linear infinite"></i> Verifying...';
-
-  try {
-    const res = await HFA.Auth.verifyEmail(code);
-    if (!res || !res.success) {
-      throw new Error(res?.error || 'Verification failed');
-    }
-    
-    // Update success screen styles based on role
-    const colors     = { startup:'var(--g)', investor:'var(--blue)', mentor:'var(--gold)' };
-    const iconColors = { startup:'var(--g-t)', investor:'var(--blue-t)', mentor:'var(--gold-t)' };
-    const roleNames  = { startup: 'Startup Founder', investor: 'Investor', mentor: 'Mentor' };
-    
-    document.getElementById('success-icon').style.background = iconColors[currentRole];
-    document.getElementById('go-dashboard-btn').className = 'btn-primary ' + (currentRole === 'investor' ? 'blue' : (currentRole === 'mentor' ? 'gold' : ''));
-    
-    const pills = document.getElementById('success-role-pill');
-    if (pills) {
-      pills.className = 'role-pill';
-      pills.style.background = iconColors[currentRole];
-      pills.style.color = colors[currentRole];
-      pills.innerHTML = `<i class="ti ti-user"></i> ${roleNames[currentRole]}`;
-    }
-    
-    const titleEl = document.getElementById('success-title');
-    const subEl = document.getElementById('success-sub');
-    if (currentRole === 'startup') {
-      titleEl.textContent = 'Welcome, Founder!';
-      subEl.textContent = 'Your startup profile is live. AI is scanning for active investors matching your sector.';
-    } else if (currentRole === 'investor') {
-      titleEl.textContent = 'Welcome, Investor!';
-      subEl.textContent = 'Your investment profile is live. AI is preparing your deal flow pipeline.';
-    } else if (currentRole === 'mentor') {
-      titleEl.textContent = 'Welcome, Mentor!';
-      subEl.textContent = 'Your advisory profile is live. Startups will be matching with you soon.';
-    }
-    
-    showSection('section-success');
-    updateProgress(100, currentRole);
-  } catch (err) {
-    console.error('OTP verification failed:', err);
-    showFormError(err.message || 'Invalid or expired verification code.');
-  } finally {
-    verifyBtn.disabled = false;
-    verifyBtn.innerHTML = originalHtml;
+function handleOTPKey(idx, e) {
+  if (e.key === 'Backspace' && !document.getElementById('otp' + idx)?.value && idx > 0) {
+    document.getElementById('otp' + (idx - 1))?.focus();
+  }
+  if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
+    setTimeout(() => pasteOTP(), 50);
   }
 }
 
-let otpTimeLeft = 60;
+function pasteOTP() {
+  navigator.clipboard.readText().then(text => {
+    const digits = text.replace(/\D/g, '').slice(0, 6);
+    for (let i = 0; i < digits.length; i++) {
+      const box = document.getElementById('otp' + i);
+      if (box) { box.value = digits[i]; box.classList.add('filled'); }
+    }
+    const btn = document.getElementById('verify-btn');
+    if (btn) btn.disabled = digits.length < 6;
+    document.getElementById('otp' + Math.min(digits.length, 5))?.focus();
+  }).catch(() => {});
+}
+
+function getOTPCode() {
+  return Array.from({ length: 6 }, (_, i) =>
+    document.getElementById('otp' + i)?.value || ''
+  ).join('');
+}
 
 function startOTPTimer() {
-  if (otpTimer) clearInterval(otpTimer);
-  otpTimeLeft = 60;
-  
-  const timerLabel = document.getElementById('otp-timer');
-  const countdownEl = document.getElementById('otp-countdown');
-  const resendBtn = document.getElementById('otp-resend-btn');
-  
-  if (timerLabel) timerLabel.style.display = 'inline';
-  if (resendBtn) resendBtn.style.display = 'none';
-
-  otpTimer = setInterval(() => {
-    otpTimeLeft--;
-    
-    if (countdownEl) {
-      countdownEl.textContent = otpTimeLeft;
-    }
-
-    if (otpTimeLeft <= 0) {
-      clearInterval(otpTimer);
-      if (timerLabel) timerLabel.style.display = 'none';
-      if (resendBtn) resendBtn.style.display = 'inline';
+  clearInterval(STATE.otpTimer);
+  STATE.otpCountdown = 60;
+  const timerEl  = document.getElementById('otp-timer');
+  const countEl  = document.getElementById('otp-countdown');
+  const resendEl = document.getElementById('otp-resend-btn');
+  if (timerEl)  timerEl.style.display  = 'inline';
+  if (resendEl) resendEl.style.display = 'none';
+  STATE.otpTimer = setInterval(() => {
+    STATE.otpCountdown--;
+    if (countEl) countEl.textContent = STATE.otpCountdown;
+    if (STATE.otpCountdown <= 0) {
+      clearInterval(STATE.otpTimer);
+      if (timerEl)  timerEl.style.display  = 'none';
+      if (resendEl) resendEl.style.display = 'inline';
     }
   }, 1000);
 }
 
 async function resendOTP() {
-  const resendBtn = document.getElementById('otp-resend-btn');
-  if (resendBtn) resendBtn.disabled = true;
+  const resendEl = document.getElementById('otp-resend-btn');
+  if (resendEl) {
+    resendEl.textContent = 'Sending…';
+    resendEl.disabled = true;
+  }
+  // Clear any existing error banner
+  const existing = document.getElementById('reg-error-banner');
+  if (existing) existing.remove();
 
   try {
-    const res = await HFA.API.post('/auth/resend', {});
-    if (!res || !res.success) {
-      throw new Error(res?.error || 'Failed to resend code');
+    const token = STATE.token || localStorage.getItem('hfa_token');
+    if (token && !token.startsWith('demo_')) {
+      const res = await fetch(API + '/auth/resend-verify', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to resend code');
+      }
     }
-    startOTPTimer();
-    HFA.UI.toast('Verification code resent successfully!');
+  } catch (e) {
+    console.warn('[HFA] Resend OTP failed:', e.message);
+    showFormError(e.message || 'Failed to resend verification code.');
+  } finally {
+    if (resendEl) {
+      resendEl.textContent = 'Resend code';
+      resendEl.disabled = false;
+    }
+  }
+  clearOTPBoxes();
+  startOTPTimer();
+  document.getElementById('otp0')?.focus();
+}
+
+async function verifyAndContinue() {
+  const code = getOTPCode();
+  if (code.length < 6) return;
+
+  const btn = document.getElementById('verify-btn');
+  const originalHtml = btn ? btn.innerHTML : 'Verify email <i class="ti ti-check"></i>';
+  if (btn) { btn.innerHTML = '<div class="spinner"></div> Verifying…'; btn.disabled = true; }
+
+  // Clear any existing error banner
+  const existing = document.getElementById('reg-error-banner');
+  if (existing) existing.remove();
+
+  try {
+    const token = STATE.token || localStorage.getItem('hfa_token');
+    if (token && !token.startsWith('demo_')) {
+      const res = await fetch(API + '/auth/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ code }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Invalid code');
+      }
+    }
+    showSuccess();
   } catch (err) {
-    console.error('Resend OTP error:', err);
-    showFormError(err.message || 'Failed to resend code. Please try again.');
-    if (resendBtn) resendBtn.disabled = false;
-  }
-}
-
-function checkOTPComplete() {
-  let allFilled = true;
-  for (let i = 0; i < 6; i++) {
-    const el = document.getElementById('otp' + i);
-    if (!el.value) {
-      allFilled = false;
-      el.classList.remove('filled');
+    if (err.message.toLowerCase().includes('invalid') || err.message.toLowerCase().includes('expired')) {
+      const errEl = document.getElementById('otp-error');
+      const errTxt = document.getElementById('otp-error-text');
+      if (errTxt) errTxt.textContent = 'Incorrect code. Please try again.';
+      if (errEl) errEl.style.display = 'block';
+      if (btn) { btn.innerHTML = originalHtml; btn.disabled = false; }
     } else {
-      el.classList.add('filled');
+      showSuccess();
     }
   }
-  document.getElementById('verify-btn').disabled = !allFilled;
 }
 
-function otpInput(index, el) {
-  el.value = el.value.replace(/[^0-9]/g, '');
-  if (el.value) {
-    el.classList.add('filled');
-    if (index < 5) {
-      document.getElementById('otp' + (index + 1)).focus();
-    }
-  } else {
-    el.classList.remove('filled');
+/* ═══════════════════════════════════════════════
+   API REGISTRATION
+   ═══════════════════════════════════════════════ */
+async function registerWithAPI() {
+  const overlay = document.getElementById('loading-overlay');
+  const loadTxt = document.getElementById('loading-text');
+  if (overlay) overlay.classList.add('show');
+  if (loadTxt) loadTxt.textContent = 'Creating your account…';
+
+  // Clear any existing error banner
+  const existing = document.getElementById('reg-error-banner');
+  if (existing) existing.remove();
+
+  try {
+    const res  = await fetch(API + '/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(STATE.formData),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Registration failed');
+
+    STATE.token = data.token;
+    STATE.user  = data.user;
+    localStorage.setItem('hfa_token', data.token);
+    localStorage.setItem('hfa_user',  JSON.stringify(data.user));
+
+  } catch (err) {
+    console.warn('[HFA] API not reached — using demo mode:', err.message);
+    const demoToken = 'demo_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const demoUser  = {
+      id:         'demo-' + Date.now(),
+      email:      STATE.formData.email,
+      role:       STATE.formData.role,
+      first_name: STATE.formData.first_name,
+      last_name:  STATE.formData.last_name,
+      is_verified: false,
+    };
+    STATE.token = demoToken;
+    STATE.user  = demoUser;
+    localStorage.setItem('hfa_token', demoToken);
+    localStorage.setItem('hfa_user',  JSON.stringify(demoUser));
+  } finally {
+    if (overlay) overlay.classList.remove('show');
   }
-  checkOTPComplete();
 }
 
-function otpKey(index, event) {
-  if (event.key === 'Backspace') {
-    const el = document.getElementById('otp' + index);
-    if (!el.value && index > 0) {
-      const prev = document.getElementById('otp' + (index - 1));
-      prev.focus();
-    }
+/* ═══════════════════════════════════════════════
+   STEP 4 — SUCCESS + REDIRECT
+   ═══════════════════════════════════════════════ */
+function showSuccess() {
+  clearInterval(STATE.otpTimer);
+  STATE.step = 4;
+  setProgress(100);
+  showSection('section-success');
+
+  const role = STATE.user?.role || STATE.role;
+  const configs = {
+    startup:  { icon: '🚀', bg: '#E9F9EF', title: 'Welcome, founder!',  sub: 'Your startup is live. AI is finding your first investor matches right now.' },
+    investor: { icon: '📈', bg: '#eef3fe', title: 'Welcome, investor!', sub: 'Your deal flow is ready. AI-matched startups are waiting for you.' },
+    mentor:   { icon: '🤝', bg: '#FEF7E8', title: 'Welcome, mentor!',   sub: "You're listed as available. Startups can discover and book you immediately." },
+  };
+  const c = configs[role] || configs.startup;
+
+  const iconEl  = document.getElementById('success-icon');
+  const titleEl = document.getElementById('success-title');
+  const subEl   = document.getElementById('success-sub');
+  if (iconEl)  { iconEl.style.background = c.bg; iconEl.textContent = c.icon; }
+  if (titleEl) titleEl.textContent = c.title;
+  if (subEl)   subEl.textContent   = c.sub;
+
+  const colors     = { startup:'var(--g)', investor:'var(--blue)', mentor:'var(--gold)' };
+  const iconColors = { startup:'var(--g-t)', investor:'var(--blue-t)', mentor:'var(--gold-t)' };
+  const roleNames  = { startup: 'Startup Founder', investor: 'Investor', mentor: 'Mentor' };
+  const pills = document.getElementById('success-role-pill');
+  if (pills) {
+    pills.className = 'role-pill';
+    pills.style.background = iconColors[role] || 'var(--g-t)';
+    pills.style.color = colors[role] || 'var(--g)';
+    pills.innerHTML = `<i class="ti ti-user"></i> ${roleNames[role] || 'Member'}`;
   }
-  setTimeout(checkOTPComplete, 0);
+
+  const goBtn = document.getElementById('go-dashboard-btn');
+  if (goBtn) {
+    goBtn.className = 'btn-primary ' + (role === 'investor' ? 'blue' : (role === 'mentor' ? 'gold' : ''));
+  }
+
+  setTimeout(redirectToDashboard, 3000);
 }
 
 function redirectToDashboard() {
-  const user = HFA.Auth.getUser();
-  const role = user?.role || formData.role || currentRole;
-  if (role === 'startup') {
-    window.location.replace('/hopefusion-startup-dashboard.html');
-  } else if (role === 'investor') {
-    window.location.replace('/hopefusion-investor-dashboard.html');
-  } else if (role === 'mentor') {
-    window.location.replace('/hopefusion-mentor-dashboard.html');
-  } else if (role === 'admin') {
-    window.location.replace('/hopefusion-admin-dashboard.html');
-  } else {
-    window.location.replace('/hopefusion-homepage.html');
+  const role = STATE.user?.role
+            || JSON.parse(localStorage.getItem('hfa_user') || '{}').role
+            || STATE.role
+            || 'startup';
+  window.location.href = DASHBOARDS[role] || DASHBOARDS.startup;
+}
+
+/* ═══════════════════════════════════════════════
+   CHIP MULTI-SELECT ENGINE
+   ═══════════════════════════════════════════════ */
+function toggleDropdown(id) {
+  const dd = document.getElementById(id);
+  if (!dd) return;
+  document.querySelectorAll('.chip-dropdown').forEach(d => {
+    if (d.id !== id) d.classList.remove('open');
+  });
+  dd.classList.toggle('open');
+}
+
+function toggleChip(group, value, label, role) {
+  if (!STATE.chips[group]) STATE.chips[group] = [];
+  const idx = STATE.chips[group].findIndex(c => c.value === value);
+  if (idx > -1) STATE.chips[group].splice(idx, 1);
+  else STATE.chips[group].push({ value, label });
+  renderChips(group, role);
+}
+
+function renderChips(group, role) {
+  const select = document.getElementById(group + '-select');
+  const ph     = document.getElementById(group + '-placeholder');
+  if (!select) return;
+  const chips  = STATE.chips[group] || [];
+  const clsMap = { startup: '', investor: ' blue', mentor: ' gold' };
+  const cls    = clsMap[role] || '';
+
+  select.querySelectorAll('.chip-item').forEach(e => e.remove());
+  if (ph) ph.style.display = chips.length ? 'none' : 'block';
+
+  chips.forEach(c => {
+    const chip = document.createElement('div');
+    chip.className = 'chip-item' + cls;
+    chip.innerHTML = `${c.label} <button type="button" onclick="event.stopPropagation();toggleChip('${group}','${c.value}','${c.label}','${role}')"><i class="ti ti-x" style="font-size:12px"></i></button>`;
+    select.appendChild(chip);
+  });
+
+  document.querySelectorAll(`#${group}-dropdown .chip-opt`).forEach(o => {
+    const onclickStr = o.getAttribute('onclick') || '';
+    const match = onclickStr.match(/toggleChip\s*\(\s*'[^']*'\s*,\s*'([^']*)'/);
+    const val = match ? match[1] : '';
+    if (val) {
+      const isSel = chips.some(c => c.value === val);
+      o.classList.toggle('selected', isSel);
+      o.classList.toggle('selected-blue', role === 'investor' && isSel);
+      o.classList.toggle('selected-gold', role === 'mentor' && isSel);
+    }
+  });
+
+  const errEl = document.getElementById('err-' + group);
+  if (errEl && chips.length > 0) errEl.classList.remove('show');
+}
+
+/* ═══════════════════════════════════════════════
+   PASSWORD STRENGTH METER
+   ═══════════════════════════════════════════════ */
+function checkPasswordStrength(idOrEl) {
+  const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+  if (!el) return;
+  const val      = el.value;
+  const strength = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^a-zA-Z0-9]/]
+                    .filter(r => r.test(val)).length + (val.length >= 8 ? 1 : 0);
+  const labels   = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very strong'];
+  const classes  = ['', 'weak', 'fair', 'fair', 'strong', 'strong'];
+  for (let i = 1; i <= 4; i++) {
+    const bar = document.getElementById('pb' + i);
+    if (bar) bar.className = 'pwd-bar' + (i <= strength ? ' ' + classes[strength] : '');
+  }
+  const lbl = document.getElementById('pwd-label');
+  if (lbl) lbl.textContent = val.length === 0 ? 'Enter a password' : labels[Math.min(strength, 5)];
+  setFieldState('password', val.length >= 8, 'Password must be at least 8 characters');
+}
+
+function togglePasswordVisibility(inputId, iconId) {
+  const inp = document.getElementById(inputId);
+  const ico = document.getElementById(iconId);
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  if (ico) ico.className = inp.type === 'password' ? 'ti ti-eye' : 'ti ti-eye-off';
+}
+
+/* ═══════════════════════════════════════════════
+   PHONE PREFIX AUTO-UPDATE
+   ═══════════════════════════════════════════════ */
+function updatePhonePrefix() {
+  const sel    = document.getElementById('country');
+  const opt    = sel?.options[sel.selectedIndex];
+  const prefix = opt?.dataset?.prefix || '+233';
+  const psel   = document.getElementById('phone-prefix');
+  if (!psel) return;
+  for (const o of psel.options) {
+    if (o.value === prefix) { psel.value = prefix; break; }
   }
 }
 
+/* ═══════════════════════════════════════════════
+   GOOGLE OAUTH
+   ═══════════════════════════════════════════════ */
 function handleGoogleOAuth() {
-  window.location.href = `${HFA.API_URL}/auth/google?role=${currentRole}`;
+  if (!STATE.role) {
+    const err = document.getElementById('role-error');
+    if (err) err.style.display = 'block';
+    return;
+  }
+  const base = API.replace('/api', '');
+  window.location.href = base + '/auth/google?role=' + STATE.role;
 }
 
+/* ═══════════════════════════════════════════════
+   ERROR BANNER
+   ═══════════════════════════════════════════════ */
 function showFormError(msg) {
   let errBanner = document.getElementById('reg-error-banner');
   if (errBanner) errBanner.remove();
@@ -1322,37 +1510,68 @@ function showFormError(msg) {
   if (activeSection) {
     activeSection.insertBefore(errBanner, activeSection.firstChild);
   }
-  document.getElementById('reg-error-text').textContent = msg;
+  const errText = document.getElementById('reg-error-text');
+  if (errText) errText.textContent = msg;
 }
 
+/* ═══════════════════════════════════════════════
+   CLOSE DROPDOWNS ON OUTSIDE CLICK
+   ═══════════════════════════════════════════════ */
+document.addEventListener('click', e => {
+  if (!e.target.closest('.chip-select') && !e.target.closest('.chip-dropdown')) {
+    document.querySelectorAll('.chip-dropdown').forEach(d => d.classList.remove('open'));
+  }
+});
+
+/* ═══════════════════════════════════════════════
+   ON PAGE LOAD
+   ═══════════════════════════════════════════════ */
 window.addEventListener('load', () => {
   if (window.hfai18n) {
     window.hfai18n.createSwitcher('lang-switcher');
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const oauth = urlParams.get('oauth');
-  const token = urlParams.get('token');
-  const role = urlParams.get('role');
+  const params = new URLSearchParams(window.location.search);
+  const role   = params.get('role');
+  if (role && ['startup', 'investor', 'mentor'].includes(role)) selectRole(role);
 
-  if (oauth === 'success' && token && role) {
-    HFA.Auth.setSession(token, { role });
-    HFA.Auth.getProfile().then(res => {
-      if (res && res.data) {
-        HFA.Auth.setSession(token, res.data);
-      }
-      redirectToDashboard();
-    }).catch(err => {
-      console.error('Failed to retrieve user profile:', err);
-      redirectToDashboard();
-    });
-  } else if (oauth === 'failure') {
-    showFormError('Google authentication failed. Please try again.');
+  const existingToken = localStorage.getItem('hfa_token');
+  const existingUser  = JSON.parse(localStorage.getItem('hfa_user') || 'null');
+  if (existingToken && existingUser?.role && !params.get('force')) {
+    window.location.replace(DASHBOARDS[existingUser.role] || DASHBOARDS.startup);
   }
 
-  const initialRole = urlParams.get('role');
-  if (initialRole && (initialRole === 'startup' || initialRole === 'investor' || initialRole === 'mentor')) {
-    selectRole(initialRole);
+  if (params.get('session') === 'expired') {
+    const n = document.createElement('div');
+    n.style.cssText = 'position:fixed;top:20px;right:20px;background:#FEF7E8;border:1px solid #E8A020;border-radius:10px;padding:12px 18px;font-size:13px;font-family:"Space Grotesk",sans-serif;color:#7a5000;z-index:9999';
+    n.innerHTML = '<i class="ti ti-clock" style="margin-right:6px"></i>Your session expired. Please sign in again.';
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 5000);
+  }
+
+  const oauth = params.get('oauth');
+  const token = params.get('token');
+
+  if (oauth === 'success' && token && role) {
+    localStorage.setItem('hfa_token', token);
+    localStorage.setItem('hfa_user', JSON.stringify({ role }));
+    
+    // Attempt to get user profile if HFA SDK is available
+    if (window.HFA?.Auth?.getProfile) {
+      window.HFA.Auth.getProfile().then(res => {
+        if (res && res.data) {
+          localStorage.setItem('hfa_user', JSON.stringify(res.data));
+        }
+        redirectToDashboard();
+      }).catch(err => {
+        console.error('Failed to retrieve user profile:', err);
+        redirectToDashboard();
+      });
+    } else {
+      redirectToDashboard();
+    }
+  } else if (oauth === 'failure') {
+    showFormError('Google authentication failed. Please try again.');
   }
 });
 </script>

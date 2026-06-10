@@ -623,7 +623,7 @@ footer{background:#111;padding:64px 2.5rem 28px;color:rgba(255,255,255,0.5)}
   </ul>
   <div class="nav-right">
     <div id="lang-switcher" style="margin-right:12px"></div>
-    <button class="btn-nav-outline" data-i18n="nav.sign_in">Sign in</button>
+    <button class="btn-nav-outline" id="btn-nav-signin" data-i18n="nav.sign_in">Sign in</button>
     <button class="btn-nav-primary" data-i18n="nav.get_started">Get started →</button>
     <button class="hamburger" id="hamburger-btn" aria-label="Menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -645,7 +645,7 @@ footer{background:#111;padding:64px 2.5rem 28px;color:rgba(255,255,255,0.5)}
   <a href="/hopefusion-marketplace.html">Marketplace <i class="ti ti-chevron-right"></i></a>
   <div class="mobile-nav-divider"></div>
   <div class="mobile-nav-btns">
-    <button class="btn-nav-outline" onclick="showLoginModal();closeMobileNav()">Sign in</button>
+    <button class="btn-nav-outline" id="btn-mobile-signin" onclick="showLoginModal();closeMobileNav()">Sign in</button>
     <button class="btn-nav-primary" onclick="window.location.href='/hopefusion-register.html?role=startup'">Get started →</button>
   </div>
 </nav>
@@ -1210,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Bind Sign In button — opens login modal with no pre-filled credentials
-  const signInBtn = document.querySelector('.btn-nav-outline');
+  const signInBtn = document.getElementById('btn-nav-signin');
   if (signInBtn) {
     signInBtn.addEventListener('click', () => {
       showLoginModal();
@@ -1272,161 +1272,108 @@ function showVideoModal() {
   document.body.appendChild(overlay);
 }
 
-function showLoginModal(activeTab = 'founder') {
-  // Check if modal already exists
-  if (document.getElementById('hfa-login-modal')) return;
-
-  // Add styles
-  const style = document.createElement('style');
-  style.id = 'hfa-login-styles';
-  style.textContent = `
-    .login-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.65);
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      z-index: 10000; display: flex; align-items: center; justify-content: center;
-      animation: hfaFadeIn .25s ease;
-    }
-    .login-modal {
-      background: #222; border: 1.5px solid rgba(255,255,255,0.07);
-      border-radius: 18px; width: 100%; max-width: 420px; padding: 36px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.4); text-align: center;
-      font-family: 'DM Sans', sans-serif; color: #fff;
-      animation: hfaScaleUp .3s cubic-bezier(.34,1.56,.64,1);
-    }
-    .login-title { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-    .login-title span { color: #2DB562; }
-    .login-sub { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 20px; }
-    .login-tabs {
-      display: flex; background: rgba(255,255,255,0.05); padding: 4px;
-      border-radius: 10px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.05);
-    }
-    .login-tab {
-      flex: 1; padding: 10px; border-radius: 8px; font-size: 12.5px;
-      font-family: 'Space Grotesk', sans-serif; font-weight: 500;
-      color: rgba(255,255,255,0.6); cursor: pointer; transition: all .2s; border: none; background: none;
-    }
-    .login-tab.active { background: #2DB562; color: #fff; box-shadow: 0 4px 12px rgba(45,181,98,0.25); }
-    .login-group { margin-bottom: 18px; text-align: left; }
-    .login-label { font-size: 12px; font-family: 'Space Grotesk', sans-serif; color: rgba(255,255,255,0.6); margin-bottom: 6px; display: block; }
-    .login-input {
-      width: 100%; padding: 12px 16px; background: #2a2a2a; border: 1.5px solid rgba(255,255,255,0.07);
-      border-radius: 10px; color: #fff; font-size: 14px; outline: none; transition: border-color .2s;
-    }
-    .login-input:focus { border-color: #2DB562; }
-    .login-forgot { font-size: 12px; color: rgba(255,255,255,0.35); text-align: right; display: block; margin-top: 6px; cursor: pointer; }
-    .login-forgot:hover { color: #2DB562; }
-    .login-btn {
-      width: 100%; padding: 14px; background: #2DB562; border: none; border-radius: 10px;
-      color: #fff; font-size: 14px; font-family: 'Sora', sans-serif; font-weight: 600; cursor: pointer;
-      transition: all .2s; box-shadow: 0 4px 14px rgba(45,181,98,0.3); margin-top: 10px;
-    }
-    .login-btn:hover { background: #1e8a48; transform: translateY(-1px); }
-    .login-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; transform: none; }
-    .login-err {
-      font-size: 12.5px; color: #fff; background: rgba(224,32,32,0.15); border: 1px solid rgba(224,32,32,0.3);
-      border-radius: 8px; padding: 10px 14px; margin-top: 12px; display: none; text-align: left;
-    }
-    .login-close {
-      background: none; border: none; color: rgba(255,255,255,0.4); font-size: 18px;
-      cursor: pointer; position: absolute; top: 18px; right: 18px; transition: color .2s;
-    }
-    .login-close:hover { color: #fff; }
-    @keyframes hfaScaleUp { from { transform: scale(0.93); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    @keyframes hfaFadeIn { from { opacity: 0; } to { opacity: 1; } }
-  `;
-  document.head.appendChild(style);
-
-  const isInvestor = activeTab === 'investor';
-
-  // Create markup — NO pre-filled credentials for security
-  const overlay = document.createElement('div');
-  overlay.className = 'login-overlay';
-  overlay.id = 'hfa-login-modal';
-  overlay.innerHTML = `
-    <div class="login-modal" style="position: relative">
-      <button class="login-close" onclick="document.getElementById('hfa-login-modal').remove()"><i class="ti ti-x"></i></button>
-      <div class="login-title"><span>Hope</span>Fusion</div>
-      <div class="login-sub">Sign in to your HopeFusion Africa account.</div>
-      
-      <div class="login-tabs">
-        <button type="button" class="login-tab ${!isInvestor ? 'active' : ''}" id="tab-founder" onclick="switchLoginRole('founder')">Founder Portal</button>
-        <button type="button" class="login-tab ${isInvestor ? 'active' : ''}" id="tab-investor" onclick="switchLoginRole('investor')">Investor Portal</button>
-      </div>
-
-      <form id="hfa-login-form" autocomplete="on">
-        <div class="login-group">
-          <label class="login-label">EMAIL ADDRESS</label>
-          <input type="email" id="login-email" class="login-input" required autocomplete="email"
-            placeholder="${isInvestor ? 'investor@example.com' : 'founder@example.com'}" />
-        </div>
-        <div class="login-group">
-          <label class="login-label">PASSWORD</label>
-          <input type="password" id="login-password" class="login-input" required autocomplete="current-password" placeholder="Your password" />
-          <span class="login-forgot" onclick="">Forgot password?</span>
-        </div>
-        <button type="submit" class="login-btn" id="login-submit-btn"><i class="ti ti-login"></i> Sign in</button>
-        <div class="login-err" id="login-error-msg"></div>
-      </form>
-      <div style="margin-top: 20px; font-size: 12.5px; color: rgba(255,255,255,0.35)">
-        Don't have an account? <a href="/hopefusion-register.html" style="color: #2DB562; text-decoration: none" onclick="document.getElementById('hfa-login-modal').remove()">Register here</a>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-
-  // Close on backdrop click
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-
-  // Tab switching helper
-  window.switchLoginRole = (role) => {
-    const isInv = role === 'investor';
-    document.getElementById('tab-founder').classList.toggle('active', !isInv);
-    document.getElementById('tab-investor').classList.toggle('active', isInv);
-    document.getElementById('login-email').placeholder = isInv ? 'investor@example.com' : 'founder@example.com';
-    document.getElementById('login-email').value = '';
-  };
-
-  // Handle Form Submit
-  const form = document.getElementById('hfa-login-form');
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('login-submit-btn');
-    const errEl = document.getElementById('login-error-msg');
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Signing in...';
-    errEl.style.display = 'none';
-
-    try {
-      const email = document.getElementById('login-email').value.trim();
-      const pwd = document.getElementById('login-password').value;
-      
-      const res = await HFA.Auth.login(email, pwd);
-      
-      if (res && res.success) {
-        // Route by actual role from API response — never by email string
-        const userRole = res.user?.role;
-        if (userRole === 'investor') {
-          window.location.replace('/hopefusion-investor-dashboard.html');
-        } else if (userRole === 'admin') {
-          window.location.replace('/hopefusion-admin-dashboard.html');
-        } else if (userRole === 'mentor') {
-          window.location.replace('/hopefusion-mentor-dashboard.html');
-        } else {
-          window.location.replace('/hopefusion-startup-dashboard.html');
-        }
-      } else {
-        throw new Error(res?.error || 'Invalid credentials. Please check your email and password.');
-      }
-    } catch (error) {
-      errEl.innerHTML = '<i class="ti ti-alert-circle"></i> ' + (error.message || 'Something went wrong. Please try again.');
-      errEl.style.display = 'block';
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="ti ti-login"></i> Sign in';
+/* --- SMOOTH SCROLL with 66px header offset for nav links --- */
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    const target = document.querySelector(link.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      const top = target.getBoundingClientRect().top + window.scrollY - 66;
+      window.scrollTo({ top, behavior: 'smooth' });
     }
   });
+});
+
+function showLoginModal() {
+  // Prevent duplicate
+  if (document.getElementById('hfa-login-modal')) return;
+
+  // Inject modal overlay styles (once)
+  if (!document.getElementById('hfa-modal-overlay-styles')) {
+    const style = document.createElement('style');
+    style.id = 'hfa-modal-overlay-styles';
+    style.textContent = `
+      .hfa-modal-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        z-index: 10000; display: flex; align-items: center; justify-content: center;
+        animation: hfaModalFadeIn .25s ease;
+      }
+      .hfa-modal-box {
+        background: #fff; border-radius: 18px; width: 100%; max-width: 460px;
+        padding: 36px; box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        position: relative; overflow-y: auto; max-height: 92vh;
+        animation: hfaModalScaleUp .3s cubic-bezier(.34,1.56,.64,1);
+      }
+      .hfa-modal-close {
+        position: absolute; top: 16px; right: 16px;
+        background: none; border: none; cursor: pointer;
+        color: #888; font-size: 20px; line-height: 1;
+        display: flex; align-items: center; justify-content: center;
+        transition: color .2s; z-index: 1;
+      }
+      .hfa-modal-close:hover { color: #111; }
+      @keyframes hfaModalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes hfaModalScaleUp { from { transform: scale(0.93); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+      @media (max-width: 520px) { .hfa-modal-box { padding: 24px 20px; border-radius: 14px; } }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Build modal shell
+  const overlay = document.createElement('div');
+  overlay.className = 'hfa-modal-overlay';
+  overlay.id = 'hfa-login-modal';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Sign in');
+
+  const box = document.createElement('div');
+  box.className = 'hfa-modal-box';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'hfa-modal-close';
+  closeBtn.setAttribute('aria-label', 'Close sign in dialog');
+  closeBtn.innerHTML = '<i class="ti ti-x"></i>';
+
+  const formContainer = document.createElement('div');
+  formContainer.id = 'hfa-modal-form-container';
+
+  box.appendChild(closeBtn);
+  box.appendChild(formContainer);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // Render sign-in form inside modal shell using shared HFA.UI helper
+  if (window.HFA && window.HFA.UI) {
+    window.HFA.UI.setupSignInForm(formContainer, true, closeModal);
+  }
+
+  function closeModal() {
+    overlay.remove();
+    document.removeEventListener('keydown', escHandler);
+  }
+
+  // Close via close button
+  closeBtn.addEventListener('click', closeModal);
+
+  // Close via backdrop click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeModal();
+  });
+
+  // Close via Escape key (accessibility requirement)
+  function escHandler(e) {
+    if (e.key === 'Escape') closeModal();
+  }
+  document.addEventListener('keydown', escHandler);
+
+  // Focus first focusable element inside modal
+  setTimeout(() => {
+    const first = box.querySelector('button, input, select, textarea, [tabindex="0"]');
+    if (first) first.focus();
+  }, 80);
 }
 </script>
 

@@ -35,11 +35,31 @@ if (window.HFA_CONFIG) {
    TOKEN MANAGEMENT
    ============================================================ */
 const Auth = {
-  getToken:   ()    => localStorage.getItem('hfa_token'),
-  getUser:    ()    => { try { return JSON.parse(localStorage.getItem('hfa_user')); } catch { return null; } },
-  setSession: (t,u) => { localStorage.setItem('hfa_token', t); localStorage.setItem('hfa_user', JSON.stringify(u)); },
-  clear:      ()    => { localStorage.removeItem('hfa_token'); localStorage.removeItem('hfa_user'); },
-  isLoggedIn: ()    => !!localStorage.getItem('hfa_token'),
+  getToken:   ()    => localStorage.getItem('hfa_token') || sessionStorage.getItem('hfa_token'),
+  getUser:    ()    => {
+    try {
+      return JSON.parse(localStorage.getItem('hfa_user')) || JSON.parse(sessionStorage.getItem('hfa_user'));
+    } catch {
+      return null;
+    }
+  },
+  setSession: (t, u, remember = true) => {
+    if (remember) {
+      localStorage.setItem('hfa_token', t);
+      localStorage.setItem('hfa_user', JSON.stringify(u));
+    } else {
+      sessionStorage.setItem('hfa_token', t);
+      sessionStorage.setItem('hfa_user', JSON.stringify(u));
+    }
+  },
+  clear:      ()    => {
+    localStorage.removeItem('hfa_token');
+    localStorage.removeItem('hfa_user');
+    localStorage.removeItem('hfa_refresh');
+    sessionStorage.removeItem('hfa_token');
+    sessionStorage.removeItem('hfa_user');
+  },
+  isLoggedIn: ()    => !!(localStorage.getItem('hfa_token') || sessionStorage.getItem('hfa_token')),
   getRole:    ()    => Auth.getUser()?.role || null,
 };
 window.HFA.Auth = Auth;
@@ -85,10 +105,13 @@ window.HFA.API = API;
    AUTH FUNCTIONS
    ============================================================ */
 const HFAAuth = {
-  async login(email, password) {
+  async login(email, password, remember = true) {
     const data = await API.post('/auth/login', { email, password });
     if (data?.token) {
-      Auth.setSession(data.token, data.user);
+      Auth.setSession(data.token, data.user, remember);
+      if (remember && data.refreshToken) {
+        localStorage.setItem('hfa_refresh', data.refreshToken);
+      }
       HFASocket.connect();
     }
     return data;
@@ -96,7 +119,7 @@ const HFAAuth = {
 
   async register(payload) {
     const data = await API.post('/auth/register', payload);
-    if (data?.token) Auth.setSession(data.token, data.user);
+    if (data?.token) Auth.setSession(data.token, data.user, true);
     return data;
   },
 
@@ -114,7 +137,7 @@ const HFAAuth = {
   async updateProfile(updates) {
     const data = await API.patch('/users/me', updates);
     const current = Auth.getUser();
-    Auth.setSession(Auth.getToken(), { ...current, ...updates });
+    Auth.setSession(Auth.getToken(), { ...current, ...updates }, !!localStorage.getItem('hfa_token'));
     return data;
   },
 
@@ -130,6 +153,19 @@ const HFAAuth = {
     return API.post('/auth/reset-password', { email, code, newPassword });
   },
 
+  redirectToDashboard(role) {
+    const r = role || Auth.getRole();
+    if (r === 'startup' || r === 'investor') {
+      window.location.replace('/hopefusion-investor-dashboard.html');
+    } else if (r === 'mentor') {
+      window.location.replace('/hopefusion-mentor-dashboard.html');
+    } else if (r === 'admin') {
+      window.location.replace('/hopefusion-admin-dashboard.html');
+    } else {
+      window.location.replace('/hopefusion-homepage.html');
+    }
+  },
+
   /* Route guard — call at top of every protected page */
   guard(allowedRoles = null) {
     if (!Auth.isLoggedIn()) {
@@ -142,8 +178,798 @@ const HFAAuth = {
     }
     return true;
   },
+
+  /* Renders the full interactive sign-in and forgot-password panels inside any container */
+  setupSignInForm(container, isModal = false, onClose = null) {
+    if (!container) return;
+
+    // Inject styles dynamically if not present
+    if (!document.getElementById('hfa-signin-shared-styles')) {
+      const style = document.createElement('style');
+      style.id = 'hfa-signin-shared-styles';
+      style.textContent = `
+        .hfa-signin-form-wrap {
+          font-family: var(--font-b);
+          color: var(--txt);
+          text-align: left;
+          width: 100%;
+        }
+        .hfa-signin-form-wrap .form-title {
+          font-family: var(--font-h);
+          font-size: 24px;
+          font-weight: 700;
+          color: #111;
+          margin-bottom: 6px;
+          text-align: center;
+        }
+        .hfa-signin-form-wrap .form-sub {
+          font-size: 13.5px;
+          color: var(--txt2);
+          margin-bottom: 24px;
+          line-height: 1.6;
+          font-family: var(--font-m);
+          text-align: center;
+        }
+        .hfa-signin-form-wrap .f-group {
+          margin-bottom: 18px;
+          position: relative;
+          text-align: left;
+        }
+        .hfa-signin-form-wrap .f-label {
+          font-size: 13px;
+          font-weight: 500;
+          font-family: var(--font-m);
+          color: #333;
+          display: block;
+          margin-bottom: 7px;
+        }
+        .hfa-signin-form-wrap .f-input {
+          width: 100%;
+          padding: 12px 16px;
+          border: 1.5px solid var(--border-l);
+          border-radius: 10px;
+          font-size: 14px;
+          font-family: var(--font-b);
+          color: var(--txt);
+          background: #fff;
+          outline: none;
+          transition: all .2s;
+          box-sizing: border-box;
+        }
+        .hfa-signin-form-wrap .f-input:focus {
+          border-color: var(--g);
+          box-shadow: 0 0 0 3px rgba(45,181,98,0.08);
+        }
+        .hfa-signin-form-wrap .f-input.error {
+          border-color: var(--red);
+          box-shadow: 0 0 0 3px rgba(224,32,32,0.08);
+        }
+        .hfa-signin-form-wrap .f-err-msg {
+          font-size: 11.5px;
+          color: var(--red);
+          margin-top: 5px;
+          font-family: var(--font-m);
+          display: none;
+        }
+        .hfa-signin-form-wrap .f-err-msg.show {
+          display: block;
+        }
+        .hfa-signin-form-wrap .eye-btn {
+          position: absolute;
+          right: 14px;
+          top: 38px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: var(--txt2);
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
+        .hfa-signin-form-wrap .eye-btn:hover {
+          color: var(--txt);
+        }
+        .hfa-signin-form-wrap .pwd-strength {
+          margin-top: 8px;
+        }
+        .hfa-signin-form-wrap .pwd-bars {
+          display: flex;
+          gap: 4px;
+          margin-bottom: 4px;
+        }
+        .hfa-signin-form-wrap .pwd-bar {
+          flex: 1;
+          height: 3px;
+          border-radius: 2px;
+          background: var(--border-l);
+          transition: background .3s;
+        }
+        .hfa-signin-form-wrap .pwd-bar.weak {
+          background: var(--red);
+        }
+        .hfa-signin-form-wrap .pwd-bar.fair {
+          background: var(--gold);
+        }
+        .hfa-signin-form-wrap .pwd-bar.strong {
+          background: var(--g);
+        }
+        .hfa-signin-form-wrap .pwd-label {
+          font-size: 11px;
+          font-family: var(--font-m);
+          color: var(--txt2);
+        }
+        .hfa-signin-form-wrap .otp-wrap {
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          margin: 20px 0;
+        }
+        .hfa-signin-form-wrap .otp-box {
+          width: 48px;
+          height: 54px;
+          border: 1.5px solid var(--border-l);
+          border-radius: 10px;
+          font-size: 20px;
+          font-weight: 700;
+          font-family: var(--font-h);
+          text-align: center;
+          outline: none;
+          transition: all .2s;
+          color: #111;
+          background: #fff;
+          box-sizing: border-box;
+        }
+        .hfa-signin-form-wrap .otp-box:focus {
+          border-color: var(--g);
+          box-shadow: 0 0 0 3px rgba(45,181,98,0.1);
+        }
+        .hfa-signin-form-wrap .otp-box.filled {
+          border-color: var(--g);
+          color: var(--g);
+        }
+        .hfa-signin-form-wrap .btn-primary {
+          width: 100%;
+          padding: 14px;
+          border-radius: 10px;
+          background: var(--g);
+          color: #fff;
+          border: none;
+          font-size: 15px;
+          font-family: var(--font-m);
+          font-weight: 500;
+          cursor: pointer;
+          transition: all .2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 8px;
+          box-sizing: border-box;
+        }
+        .hfa-signin-form-wrap .btn-primary:hover {
+          background: var(--g-dark);
+        }
+        .hfa-signin-form-wrap .btn-primary:disabled {
+          opacity: .6;
+          cursor: not-allowed;
+        }
+        .hfa-signin-form-wrap .btn-google {
+          width: 100%;
+          padding: 12px;
+          border-radius: 10px;
+          background: #fff;
+          border: 1.5px solid var(--border-l);
+          font-size: 14px;
+          font-family: var(--font-m);
+          font-weight: 500;
+          cursor: pointer;
+          transition: all .2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          color: var(--txt);
+          margin-bottom: 16px;
+          box-sizing: border-box;
+        }
+        .hfa-signin-form-wrap .btn-google:hover {
+          border-color: #bbb;
+          background: var(--bg);
+        }
+        .hfa-signin-form-wrap .divider {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin: 6px 0 16px;
+          font-size: 13px;
+          color: var(--txt2);
+          font-family: var(--font-m);
+        }
+        .hfa-signin-form-wrap .divider::before,
+        .hfa-signin-form-wrap .divider::after {
+          content: '';
+          flex: 1;
+          height: 1px;
+          background: var(--border-l);
+        }
+        .hfa-signin-form-wrap .login-link {
+          text-align: center;
+          font-size: 13.5px;
+          font-family: var(--font-m);
+          color: var(--txt2);
+          margin-top: 20px;
+        }
+        .hfa-signin-form-wrap .login-link a {
+          color: var(--g);
+          text-decoration: none;
+          font-weight: 500;
+        }
+        .hfa-signin-form-wrap .login-link a:hover {
+          text-decoration: underline;
+        }
+        .hfa-signin-form-wrap .btn-back {
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 13.5px;
+          font-family: var(--font-m);
+          color: var(--txt2);
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 0;
+          margin-bottom: 20px;
+          transition: color .2s;
+        }
+        .hfa-signin-form-wrap .btn-back:hover {
+          color: var(--txt);
+        }
+        .hfa-signin-form-wrap .success-screen {
+          text-align: center;
+          padding: 20px 0;
+        }
+        .hfa-signin-form-wrap .success-icon {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 36px;
+          margin: 0 auto 24px;
+        }
+        .hfa-signin-form-wrap .success-title {
+          font-family: var(--font-h);
+          font-size: 24px;
+          font-weight: 700;
+          color: #111;
+          margin-bottom: 10px;
+        }
+        .hfa-signin-form-wrap .success-sub {
+          font-size: 14px;
+          color: var(--txt2);
+          line-height: 1.7;
+          margin-bottom: 28px;
+          font-family: var(--font-m);
+        }
+        .hfa-signin-form-wrap .login-tabs {
+          display: flex;
+          background: rgba(0, 0, 0, 0.03);
+          padding: 4px;
+          border-radius: 10px;
+          margin-bottom: 24px;
+          border: 1px solid var(--border-l);
+        }
+        .hfa-signin-form-wrap .login-tab {
+          flex: 1;
+          padding: 10px;
+          border-radius: 8px;
+          font-size: 12.5px;
+          font-family: var(--font-m);
+          font-weight: 500;
+          color: var(--txt2);
+          cursor: pointer;
+          transition: all .2s;
+          border: none;
+          background: none;
+        }
+        .hfa-signin-form-wrap .login-tab.active {
+          background: var(--white);
+          color: var(--g-deep);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .hfa-signin-form-wrap .hfa-form-banner {
+          background: rgba(224,32,32,0.1);
+          border: 1px solid rgba(224,32,32,0.3);
+          border-radius: 10px;
+          padding: 12px 16px;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 13px;
+          color: #111;
+          font-family: var(--font-m);
+        }
+        @keyframes hfaSpin { to { transform: rotate(360deg); } }
+        .hfa-signin-form-wrap .hfa-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2.5px solid rgba(255,255,255,0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: hfaSpin .8s linear infinite;
+          display: inline-block;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hfa-signin-form-wrap *, .hfa-signin-form-wrap .btn-primary, .hfa-signin-form-wrap .f-input {
+            animation: none !important;
+            transition: none !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    const tabsHTML = `
+      <div class="login-tabs">
+        <button type="button" class="login-tab active" id="hfa-tab-signin">Sign in</button>
+        <button type="button" class="login-tab" id="hfa-tab-signup">Create account</button>
+      </div>
+    `;
+
+    const htmlContent = `
+      <div class="hfa-signin-form-wrap">
+        ${tabsHTML}
+        
+        <!-- SIGN IN PANEL -->
+        <div class="login-panel" id="hfa-panel-signin">
+          <div class="form-title">Welcome back</div>
+          <div class="form-sub">Sign in to HopeFusion Africa</div>
+
+          <button type="button" class="btn-google" id="hfa-google-login">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z" fill="#4285F4"/><path d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 01-7.18-2.54H1.83v2.07A8 8 0 008.98 17z" fill="#34A853"/><path d="M4.5 10.52a4.8 4.8 0 010-3.04V5.41H1.83a8 8 0 000 7.18l2.67-2.07z" fill="#FBBC05"/><path d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 001.83 5.4L4.5 7.49a4.77 4.77 0 014.48-3.3z" fill="#EA4335"/></svg>
+            Continue with Google
+          </button>
+          <div class="divider">or</div>
+
+          <form id="hfa-signin-subform">
+            <div id="signin-banner" class="hfa-form-banner" style="display:none"></div>
+            
+            <div class="f-group">
+              <label class="f-label" for="signin-email">Email address</label>
+              <input class="f-input" id="signin-email" type="email" placeholder="you@example.com" required autocomplete="email" />
+              <div class="f-err-msg" id="err-signin-email">Enter a valid email address</div>
+            </div>
+
+            <div class="f-group" style="position:relative;">
+              <label class="f-label" for="signin-password">Password</label>
+              <input class="f-input" id="signin-password" type="password" placeholder="Enter your password" required autocomplete="current-password" />
+              <button class="eye-btn" type="button" id="signin-toggle-pwd" aria-label="Show password"><i class="ti ti-eye"></i></button>
+              <div class="f-err-msg" id="err-signin-password">Password is required</div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; font-size:13px; font-family:var(--font-m);">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--txt);">
+                <input type="checkbox" id="signin-remember" style="accent-color:var(--g);" checked /> Remember me
+              </label>
+              <span class="forgot-link" id="signin-forgot-link" style="color:var(--g); cursor:pointer; font-weight:500;">Forgot password?</span>
+            </div>
+
+            <button type="submit" class="btn-primary" id="signin-submit-btn">
+              <span>Sign in →</span>
+            </button>
+          </form>
+
+          <div class="login-link">Don't have an account? <a href="/hopefusion-register.html">Sign up</a></div>
+        </div>
+
+        <!-- FORGOT PASSWORD PANEL -->
+        <div class="login-panel" id="hfa-panel-forgot" style="display:none">
+          <button type="button" class="btn-back" id="forgot-back-btn"><i class="ti ti-arrow-left"></i> Back to sign in</button>
+          <div class="form-title">Forgot password</div>
+          <div class="form-sub">Enter your registered email or phone and we'll send a reset code</div>
+
+          <form id="hfa-forgot-subform">
+            <div id="forgot-banner" class="hfa-form-banner" style="display:none"></div>
+            
+            <div class="f-group">
+              <label class="f-label" for="forgot-email">Email or Phone number</label>
+              <input class="f-input" id="forgot-email" type="text" placeholder="you@example.com or +233..." required />
+              <div class="f-err-msg" id="err-forgot-email">Enter your registered email or phone number</div>
+            </div>
+
+            <button type="submit" class="btn-primary" id="forgot-submit-btn">
+              <span>Send reset code</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- ENTER OTP + RESET PASSWORD PANEL -->
+        <div class="login-panel" id="hfa-panel-reset" style="display:none">
+          <button type="button" class="btn-back" id="reset-back-btn"><i class="ti ti-arrow-left"></i> Back to sign in</button>
+          <div class="form-title">Reset password</div>
+          <div class="form-sub">Enter the 6-digit code sent to your email</div>
+
+          <form id="hfa-reset-subform">
+            <div id="reset-banner" class="hfa-form-banner" style="display:none"></div>
+            
+            <!-- OTP Grid -->
+            <div class="otp-wrap">
+              <input type="text" id="otp-0" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+              <input type="text" id="otp-1" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+              <input type="text" id="otp-2" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+              <input type="text" id="otp-3" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+              <input type="text" id="otp-4" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+              <input type="text" id="otp-5" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+            </div>
+
+            <div class="f-group" style="position:relative; text-align:left;">
+              <label class="f-label" for="reset-password">New password</label>
+              <input class="f-input" id="reset-password" type="password" placeholder="At least 8 characters" required />
+              <button class="eye-btn" type="button" id="reset-toggle-pwd" aria-label="Show password"><i class="ti ti-eye"></i></button>
+              
+              <div class="pwd-strength">
+                <div class="pwd-bars">
+                  <div class="pwd-bar" id="rpb1"></div>
+                  <div class="pwd-bar" id="rpb2"></div>
+                  <div class="pwd-bar" id="rpb3"></div>
+                  <div class="pwd-bar" id="rpb4"></div>
+                </div>
+                <div class="pwd-label" id="reset-pwd-label">Enter a password</div>
+              </div>
+              <div class="f-err-msg" id="err-reset-password">Password must contain at least 8 characters, an uppercase letter, lowercase letter, and a number</div>
+            </div>
+
+            <div class="f-group" style="position:relative; text-align:left;">
+              <label class="f-label" for="reset-confirm">Confirm new password</label>
+              <input class="f-input" id="reset-confirm" type="password" placeholder="Confirm new password" required />
+              <button class="eye-btn" type="button" id="reset-toggle-confirm" aria-label="Show password"><i class="ti ti-eye"></i></button>
+              <div class="f-err-msg" id="err-reset-confirm">Passwords do not match</div>
+            </div>
+
+            <button type="submit" class="btn-primary" id="reset-submit-btn">
+              <span>Reset password</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- SUCCESS SCREEN -->
+        <div class="login-panel" id="hfa-panel-success" style="display:none">
+          <div class="success-screen">
+            <div class="success-icon" style="background:var(--g-t); color:var(--g);">✓</div>
+            <div class="success-title">Password reset</div>
+            <div class="success-sub">Your password has been successfully updated. You can now sign in.</div>
+            <button type="button" class="btn-primary" id="success-done-btn">Back to sign in</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    container.innerHTML = htmlContent;
+
+    // Grab wrapper references
+    const wrapper = container.querySelector('.hfa-signin-form-wrap');
+    
+    // Tab switching
+    const tabSignin = wrapper.querySelector('#hfa-tab-signin');
+    const tabSignup = wrapper.querySelector('#hfa-tab-signup');
+    tabSignup.addEventListener('click', () => {
+      window.location.href = '/hopefusion-register.html';
+    });
+
+    // Google Login click listener
+    const googleBtn = wrapper.querySelector('#hfa-google-login');
+    if (googleBtn) {
+      googleBtn.addEventListener('click', () => {
+        window.location.href = `${window.HFA.API_URL}/auth/google`;
+      });
+    }
+
+    // Panel switching helper
+    const showPanel = (panelId) => {
+      wrapper.querySelectorAll('.login-panel').forEach(p => p.style.display = 'none');
+      wrapper.querySelector('#' + panelId).style.display = 'block';
+    };
+
+    // Show/Hide Password function
+    const setupPasswordToggle = (inputId, btnId) => {
+      const input = wrapper.querySelector('#' + inputId);
+      const btn = wrapper.querySelector('#' + btnId);
+      if (input && btn) {
+        btn.addEventListener('click', () => {
+          const isPwd = input.type === 'password';
+          input.type = isPwd ? 'text' : 'password';
+          btn.innerHTML = `<i class="ti ti-eye${isPwd ? '-off' : ''}"></i>`;
+        });
+      }
+    };
+    setupPasswordToggle('signin-password', 'signin-toggle-pwd');
+    setupPasswordToggle('reset-password', 'reset-toggle-pwd');
+    setupPasswordToggle('reset-confirm', 'reset-toggle-confirm');
+
+    // Validation email on blur
+    const emailInput = wrapper.querySelector('#signin-email');
+    const emailErr = wrapper.querySelector('#err-signin-email');
+    emailInput.addEventListener('blur', () => {
+      const emailVal = emailInput.value.trim();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+      if (!valid && emailVal.length > 0) {
+        emailInput.classList.add('error');
+        emailErr.classList.add('show');
+      } else {
+        emailInput.classList.remove('error');
+        emailErr.classList.remove('show');
+      }
+    });
+    emailInput.addEventListener('input', () => {
+      emailInput.classList.remove('error');
+      emailErr.classList.remove('show');
+    });
+
+    // Sign In Submission
+    const signinForm = wrapper.querySelector('#hfa-signin-subform');
+    signinForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = wrapper.querySelector('#signin-submit-btn');
+      const banner = wrapper.querySelector('#signin-banner');
+      const email = emailInput.value.trim();
+      const password = wrapper.querySelector('#signin-password').value;
+      const remember = wrapper.querySelector('#signin-remember').checked;
+
+      // Inline validate email before sending
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailInput.classList.add('error');
+        emailErr.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="hfa-spinner"></span>';
+      banner.style.display = 'none';
+
+      try {
+        const res = await window.HFA.Auth.login(email, password, remember);
+        if (res && res.success) {
+          if (onClose) onClose();
+          window.HFA.Auth.redirectToDashboard(res.user?.role);
+        } else {
+          throw new Error(res?.error || 'Incorrect email or password. Try again.');
+        }
+      } catch (err) {
+        banner.className = 'hfa-form-banner';
+        banner.style.color = '#8b1515';
+        banner.style.background = 'rgba(224,32,32,0.1)';
+        banner.style.border = '1px solid rgba(224,32,32,0.3)';
+        
+        let displayError = err.message;
+        if (err.message.includes('401') || err.message.toLowerCase().includes('invalid')) {
+          displayError = 'Incorrect email or password. Try again.';
+        } else if (err.message.includes('403') || err.message.toLowerCase().includes('suspended')) {
+          displayError = 'Your account has been suspended. Contact support.';
+        } else if (err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('fetch') || err.message.toLowerCase().includes('connection')) {
+          displayError = 'Connection failed. Check your internet and try again.';
+        }
+        
+        banner.innerHTML = `<i class="ti ti-alert-circle" style="color:var(--red);font-size:18px"></i> <span>${displayError}</span>`;
+        banner.style.display = 'flex';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Sign in →</span>';
+      }
+    });
+
+    // Forgot Password Trigger
+    const forgotLink = wrapper.querySelector('#signin-forgot-link');
+    forgotLink.addEventListener('click', () => {
+      showPanel('hfa-panel-forgot');
+    });
+
+    // Back to Sign In buttons
+    wrapper.querySelector('#forgot-back-btn').addEventListener('click', () => showPanel('hfa-panel-signin'));
+    wrapper.querySelector('#reset-back-btn').addEventListener('click', () => showPanel('hfa-panel-signin'));
+    wrapper.querySelector('#success-done-btn').addEventListener('click', () => showPanel('hfa-panel-signin'));
+
+    // Forgot Password Submit
+    const forgotForm = wrapper.querySelector('#hfa-forgot-subform');
+    let resetEmailTarget = '';
+    forgotForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = wrapper.querySelector('#forgot-submit-btn');
+      const input = wrapper.querySelector('#forgot-email');
+      const err = wrapper.querySelector('#err-forgot-email');
+      const banner = wrapper.querySelector('#forgot-banner');
+      const target = input.value.trim();
+
+      if (!target) {
+        input.classList.add('error');
+        err.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="hfa-spinner"></span>';
+      banner.style.display = 'none';
+
+      try {
+        const res = await window.HFA.Auth.forgotPassword(target);
+        if (res && res.success) {
+          resetEmailTarget = target;
+          showPanel('hfa-panel-reset');
+          // Autofocus first OTP box
+          setTimeout(() => wrapper.querySelector('#otp-0').focus(), 100);
+        } else {
+          throw new Error(res?.error || 'Forgot password failed');
+        }
+      } catch (err) {
+        banner.className = 'hfa-form-banner';
+        banner.style.color = '#8b1515';
+        banner.style.background = 'rgba(224,32,32,0.1)';
+        banner.style.border = '1px solid rgba(224,32,32,0.3)';
+        banner.innerHTML = `<i class="ti ti-alert-circle" style="color:var(--red);font-size:18px"></i> <span>${err.message}</span>`;
+        banner.style.display = 'flex';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Send reset code</span>';
+      }
+    });
+
+    // OTP auto-advance & backspace
+    const otpBoxes = wrapper.querySelectorAll('.otp-box');
+    otpBoxes.forEach((box, index) => {
+      box.addEventListener('input', (e) => {
+        box.value = box.value.replace(/[^0-9]/g, '');
+        if (box.value) {
+          box.classList.add('filled');
+          if (index < 5) otpBoxes[index + 1].focus();
+        } else {
+          box.classList.remove('filled');
+        }
+      });
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace') {
+          if (!box.value && index > 0) {
+            otpBoxes[index - 1].focus();
+          } else {
+            box.value = '';
+            box.classList.remove('filled');
+          }
+        }
+      });
+    });
+
+    // Password strength check helper
+    const checkResetPasswordStrength = (el) => {
+      const val = el.value;
+      const strength = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^a-zA-Z0-9]/].filter(r=>r.test(val)).length + (val.length>=8?1:0);
+      const bars  = ['rpb1','rpb2','rpb3','rpb4'];
+      const labels= ['','Weak','Fair','Good','Strong','Very strong'];
+      const cls   = ['','weak','fair','fair','strong','strong'];
+      bars.forEach((id,i) => {
+        const b = wrapper.querySelector('#' + id);
+        if (b) b.className = 'pwd-bar' + (i < strength ? ' ' + cls[strength] : '');
+      });
+      const lbl = wrapper.querySelector('#reset-pwd-label');
+      if (lbl) lbl.textContent = val.length === 0 ? 'Enter a password' : labels[Math.min(strength, 5)];
+      const err = wrapper.querySelector('#err-reset-password');
+      if (val.length < 8) {
+        el.classList.add('error');
+        if (err) err.classList.add('show');
+        return false;
+      }
+      el.classList.remove('error');
+      if (err) err.classList.remove('show');
+      return true;
+    };
+    const resetPwdInput = wrapper.querySelector('#reset-password');
+    resetPwdInput.addEventListener('input', () => checkResetPasswordStrength(resetPwdInput));
+
+    // Reset Password Submit
+    const resetForm = wrapper.querySelector('#hfa-reset-subform');
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = wrapper.querySelector('#reset-submit-btn');
+      const banner = wrapper.querySelector('#reset-banner');
+      const newPwd = resetPwdInput.value;
+      const confirmPwd = wrapper.querySelector('#reset-confirm').value;
+      const confirmErr = wrapper.querySelector('#err-reset-confirm');
+      const pwdErr = wrapper.querySelector('#err-reset-password');
+
+      let hasError = false;
+
+      // Validate password regex
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+      if (!passwordRegex.test(newPwd)) {
+        resetPwdInput.classList.add('error');
+        pwdErr.classList.add('show');
+        hasError = true;
+      } else {
+        resetPwdInput.classList.remove('error');
+        pwdErr.classList.remove('show');
+      }
+
+      if (newPwd !== confirmPwd) {
+        wrapper.querySelector('#reset-confirm').classList.add('error');
+        confirmErr.classList.add('show');
+        hasError = true;
+      } else {
+        wrapper.querySelector('#reset-confirm').classList.remove('error');
+        confirmErr.classList.remove('show');
+      }
+
+      if (hasError) return;
+
+      // Extract code
+      let code = '';
+      otpBoxes.forEach(b => code += b.value);
+      if (code.length < 6) {
+        banner.className = 'hfa-form-banner';
+        banner.style.color = '#8b1515';
+        banner.style.background = 'rgba(224,32,32,0.1)';
+        banner.style.border = '1px solid rgba(224,32,32,0.3)';
+        banner.innerHTML = `<i class="ti ti-alert-circle" style="color:var(--red);font-size:18px"></i> <span>Please enter the complete 6-digit code.</span>`;
+        banner.style.display = 'flex';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="hfa-spinner"></span>';
+      banner.style.display = 'none';
+
+      try {
+        const res = await window.HFA.Auth.resetPassword(resetEmailTarget, code, newPwd);
+        if (res && res.success) {
+          showPanel('hfa-panel-success');
+        } else {
+          throw new Error(res?.error || 'Password reset failed');
+        }
+      } catch (err) {
+        banner.className = 'hfa-form-banner';
+        banner.style.color = '#8b1515';
+        banner.style.background = 'rgba(224,32,32,0.1)';
+        banner.style.border = '1px solid rgba(224,32,32,0.3)';
+        banner.innerHTML = `<i class="ti ti-alert-circle" style="color:var(--red);font-size:18px"></i> <span>${err.message}</span>`;
+        banner.style.display = 'flex';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Reset password</span>';
+      }
+    });
+
+    // Trap focus helper if in modal
+    if (isModal) {
+      const focusables = wrapper.querySelectorAll('button, input, select, textarea, [tabindex="0"]');
+      if (focusables.length) {
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        
+        container.addEventListener('keydown', (e) => {
+          if (e.key === 'Tab') {
+            if (e.shiftKey) {
+              if (document.activeElement === first) {
+                last.focus();
+                e.preventDefault();
+              }
+            } else {
+              if (document.activeElement === last) {
+                first.focus();
+                e.preventDefault();
+              }
+            }
+          }
+        });
+      }
+    }
+  }
 };
 window.HFA.Auth = { ...Auth, ...HFAAuth };
+
+/* Expose shared UI helpers as window.HFA.UI (per implementation plan) */
+window.HFA.UI = {
+  setupSignInForm: HFAAuth.setupSignInForm.bind(HFAAuth),
+};
 
 /* ============================================================
    REAL-TIME SOCKET

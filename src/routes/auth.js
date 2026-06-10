@@ -1,12 +1,12 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import nodemailer from 'nodemailer';
 import passport from 'passport';
 import { db, redis, cacheGet, cacheSet, cacheDel } from '../config/db.js';
 import { authenticate } from '../middleware/auth.js';
 import { rateLimit } from '../middleware/rate-limiter.js';
 import { validate } from '../middleware/validation.js';
+import { sendEmail, buildOTPEmail } from '../services/email.js';
 import {
   registerSchema,
   loginSchema,
@@ -39,21 +39,6 @@ const normalizePhoneNumber = (phone) => {
     return '+233' + cleaned.slice(1);
   }
   return '+233' + cleaned;
-};
-
-const sendEmail = async (to, subject, html) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 5000,
-  });
-  return transporter.sendMail({
-    from: `"HopeFusion Africa" <${process.env.SMTP_FROM}>`,
-    to, subject, html,
-  });
 };
 
 /* ============================================================
@@ -154,20 +139,12 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
     // Store verify code in Redis (10 min)
     await cacheSet(`verify:${user.id}`, code, 600);
 
-    // Send verification email
-    try {
-      await sendEmail(email, 'Verify your HopeFusion Africa account', `
-        <div style="font-family:sans-serif;max-width:480px;margin:auto">
-          <h2 style="color:#2DB562">Welcome to HopeFusion Africa!</h2>
-          <p>Hi ${first_name}, your verification code is:</p>
-          <div style="font-size:36px;font-weight:700;letter-spacing:8px;color:#1A1A1A;margin:24px 0">${code}</div>
-          <p style="color:#666">This code expires in 10 minutes.</p>
-          <p style="color:#666;font-size:12px">Empower. Innovate. Thrive.</p>
-        </div>
-      `);
-    } catch (emailErr) {
-      console.error('Email send failed:', emailErr.message);
-    }
+    // Send verification email (non-blocking — account is created regardless)
+    sendEmail(
+      email,
+      'Your HopeFusion Africa verification code',
+      buildOTPEmail(first_name, code, 'verify')
+    ).catch(err => console.error('[Auth] Verification email error:', err.message));
 
     const token = generateToken(user.id, user.role);
     return res.status(201).json({
@@ -294,21 +271,23 @@ router.post('/logout', authenticate, async (req, res) => {
 router.post('/forgot-password', rateLimit(3, 300), validate(forgotPasswordSchema), async (req, res) => {
   try {
     const { email } = req.body;
-    const { rows } = await db.query('SELECT id, first_name FROM users WHERE email = $1', [email]);
+    const normalizedPhone = normalizePhoneNumber(email);
+    const { rows } = await db.query(
+      'SELECT id, first_name, email FROM users WHERE email = $1 OR (phone IS NOT NULL AND phone = $2)',
+      [email.toLowerCase(), normalizedPhone]
+    );
     if (!rows.length) {
-      return res.json({ success: true, message: 'If that email exists, a reset link was sent.' });
+      return res.json({ success: true, message: 'If that email exists, a reset code was sent.' });
     }
     const code = generateVerifyCode();
     await cacheSet(`reset:${rows[0].id}`, code, 1800);
-    await sendEmail(email, 'Reset your HopeFusion Africa password', `
-      <div style="font-family:sans-serif;max-width:480px;margin:auto">
-        <h2 style="color:#2DB562">Password reset</h2>
-        <p>Hi ${rows[0].first_name}, your reset code is:</p>
-        <div style="font-size:36px;font-weight:700;letter-spacing:8px;color:#1A1A1A;margin:24px 0">${code}</div>
-        <p style="color:#666">This code expires in 30 minutes.</p>
-      </div>
-    `);
-    return res.json({ success: true, message: 'Reset code sent if email exists.' });
+    
+    await sendEmail(
+      rows[0].email,
+      'Your HopeFusion Africa password reset code',
+      buildOTPEmail(rows[0].first_name, code, 'reset')
+    ).catch(err => console.error('[Auth] Password reset email error:', err.message));
+    return res.json({ success: true, message: 'If that email exists, a reset code was sent.' });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -318,7 +297,11 @@ router.post('/forgot-password', rateLimit(3, 300), validate(forgotPasswordSchema
 router.post('/reset-password', rateLimit(5, 300), validate(resetPasswordSchema), async (req, res) => {
   try {
     const { email, code, newPassword } = req.body;
-    const { rows } = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    const normalizedPhone = normalizePhoneNumber(email);
+    const { rows } = await db.query(
+      'SELECT id FROM users WHERE email = $1 OR (phone IS NOT NULL AND phone = $2)',
+      [email.toLowerCase(), normalizedPhone]
+    );
     if (!rows.length) {
       return res.status(400).json({ error: 'Invalid request' });
     }
@@ -329,6 +312,10 @@ router.post('/reset-password', rateLimit(5, 300), validate(resetPasswordSchema),
     const hash = await hashPassword(newPassword);
     await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, rows[0].id]);
     await cacheDel(`reset:${rows[0].id}`);
+    
+    // Revoke all existing tokens by setting revocation timestamp in Redis (expires in 7 days)
+    await redis.setEx(`revoked_before:${rows[0].id}`, 7 * 24 * 3600, Math.floor(Date.now() / 1000).toString());
+    
     return res.json({ success: true, message: 'Password reset successfully. Please log in.' });
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -358,8 +345,8 @@ router.get('/google/callback', passport.authenticate('google', { session: false,
   }
 });
 
-// POST /auth/resend
-router.post('/resend', authenticate, async (req, res) => {
+// POST /auth/resend and /auth/resend-verify
+router.post(['/resend', '/resend-verify'], authenticate, async (req, res) => {
   try {
     const userId = req.user.userId;
     const { rows } = await db.query('SELECT email, first_name FROM users WHERE id = $1', [userId]);
@@ -371,19 +358,11 @@ router.post('/resend', authenticate, async (req, res) => {
     
     await cacheSet(`verify:${userId}`, code, 600);
     
-    try {
-      await sendEmail(email, 'Verify your HopeFusion Africa account', `
-        <div style="font-family:sans-serif;max-width:480px;margin:auto">
-          <h2 style="color:#2DB562">Verify your HopeFusion Africa account</h2>
-          <p>Hi ${first_name}, your new verification code is:</p>
-          <div style="font-size:36px;font-weight:700;letter-spacing:8px;color:#1A1A1A;margin:24px 0">${code}</div>
-          <p style="color:#666">This code expires in 10 minutes.</p>
-          <p style="color:#666;font-size:12px">Empower. Innovate. Thrive.</p>
-        </div>
-      `);
-    } catch (emailErr) {
-      console.error('Email send failed:', emailErr.message);
-    }
+    await sendEmail(
+      email,
+      'Your HopeFusion Africa verification code',
+      buildOTPEmail(first_name, code, 'verify')
+    ).catch(err => console.error('[Auth] Resend OTP email error:', err.message));
     
     return res.json({ success: true, message: 'Verification code resent successfully' });
   } catch (err) {
