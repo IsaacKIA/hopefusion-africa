@@ -1,0 +1,96 @@
+# ================================================================
+# HopeFusion Africa — Docker Compose (Local Development)
+# Usage: docker-compose -f docker-compose.dev.yml up -d --build
+# ================================================================
+
+version: '3.9'
+
+services:
+  # ── Database (PostgreSQL) ──────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: hopefusion-dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: hopefusion_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Cache (Redis) ──────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: hopefusion-dev-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata-dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend API ───────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hopefusion-dev-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:password123@db:5432/hopefusion_dev
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: super_secret_dev_key_must_be_long_enough_to_pass_validation_checks_123456789
+      JWT_EXPIRES_IN: 7d
+      JWT_REFRESH_EXPIRES_IN: 30d
+      FRONTEND_URL: http://localhost:3001
+      VAPID_PUBLIC_KEY: BH-t_wz9OOWp02h6_wHqZ4lVigD5lUoV6r8E-t8y-zTqf29uLqM
+      VAPID_PRIVATE_KEY: mock_private_key_value
+      VAPID_SUBJECT: mailto:dev@hopefusionafrica.com
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Frontend (Next.js) ────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3000
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: BH-t_wz9OOWp02h6_wHqZ4lVigD5lUoV6r8E-t8y-zTqf29uLqM
+    container_name: hopefusion-dev-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata-dev:
+  redisdata-dev:

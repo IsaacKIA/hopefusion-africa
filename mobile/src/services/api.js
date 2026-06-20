@@ -1,4 +1,4 @@
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://hopefusion-api.onrender.com/api';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://hopefusion-api.onrender.com/api/v1';
 let authToken = null;
 
 export const api = {

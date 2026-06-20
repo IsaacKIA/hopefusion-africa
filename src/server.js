@@ -29,6 +29,13 @@ import aiRouter from './routes/ai.js';
 import { initAgent } from './services/agent.js';
 import paymentsRouter from './routes/payments.js';
 import pushRouter from './routes/push.js';
+import workspaceRouter from './routes/workspace.js';
+import opportunitiesRouter from './routes/opportunities.js';
+import impactRouter from './routes/impact.js';
+import governmentRouter from './routes/government.js';
+import corporateRouter from './routes/corporate.js';
+import syndicateRouter from './routes/syndicate.js';
+import telephonyRouter from './routes/telephony.js';
 import { validateEnv } from './scripts/validate-env.js';
 
 dotenv.config();
@@ -48,7 +55,7 @@ const allowedOrigins = [
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin === process.env.FRONTEND_URL) {
+    if (allowedOrigins.includes(origin) || origin === process.env.FRONTEND_URL) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -72,13 +79,17 @@ app.set('io', io);
 
 app.use(helmet());
 app.use(cors(corsOptions));
+
+// Raw parser for webhooks BEFORE express.json()
+app.use('/api/v1/payments/paystack/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/v1/payments/flutterwave/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan('combined'));
 app.use(passport.initialize());
 
 // Versioned APIs
 app.use('/api/v1/auth', authRouter);
-app.use('/api/auth', authRouter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/startups', startupsRouter);
 app.use('/api/v1/investors', investorsRouter);
@@ -87,6 +98,13 @@ app.use('/api/v1/grants', grantsRouter);
 app.use('/api/v1/ai', aiRouter);
 app.use('/api/v1/payments', paymentsRouter);
 app.use('/api/v1/push', pushRouter);
+app.use('/api/v1/opportunities', opportunitiesRouter);
+app.use('/api/v1/impact', impactRouter);
+app.use('/api/v1/government', governmentRouter);
+app.use('/api/v1/corporate', corporateRouter);
+app.use('/api/v1/syndicate', syndicateRouter);
+app.use('/api/v1/telephony', telephonyRouter);
+app.use('/api/v1', workspaceRouter);
 
 // Secondary Services (Sessions, Messages, Notifications, Health, Analytics)
 app.use('/api/v1', servicesRouter);

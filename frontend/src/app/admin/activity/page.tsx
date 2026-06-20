@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { API as apiClient } from '../../../lib/api';
 
 const ACTION_COLORS: Record<string, string> = {
   user_suspended: '#ef4444', user_activated: '#2db562', user_deleted: '#f97316',
@@ -27,32 +26,29 @@ export default function AdminActivity() {
   const [page, setPage]       = useState(1);
   const [action, setAction]   = useState('');
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('hfa_token') || '' : '';
-
   const fetch_ = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), limit: '50' });
     if (action) params.set('action', action);
     try {
-      const r = await fetch(`${API}/api/v1/admin/activity?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const d = await r.json();
-      if (d.success) setItems(d.data);
+      const d = await apiClient.get(`/admin/activity?${params}`);
+      if (d && d.success) setItems(d.data);
+    } catch (err) {
+      console.error('Failed to fetch activity:', err);
     } finally { setLoading(false); }
-  }, [page, action, token]);
+  }, [page, action]);
 
   useEffect(() => { fetch_(); }, [fetch_]);
 
   function exportCSV() {
     const cols = ['action','entity','user','email','ip','timestamp'];
-    const rows = items.map(i => [
+    const rows = items.map((i: Activity) => [
       i.action, i.entity,
       `${i.first_name || ''} ${i.last_name || ''}`.trim(),
       i.email || '', i.ip_address || '',
       new Date(i.created_at).toISOString(),
     ]);
-    const csv = [cols, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const csv = [cols, ...rows].map((r: string[]) => r.map((c: string) => `"${c}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a'); a.href = url;
@@ -88,7 +84,7 @@ export default function AdminActivity() {
           <div className="feed-loading">Loading activity…</div>
         ) : items.length === 0 ? (
           <div className="feed-empty">No activity found for this filter</div>
-        ) : items.map(item => (
+        ) : items.map((item: Activity) => (
           <div key={item.id} className="feed-item">
             <div className="feed-action-col">
               <span className="feed-badge" style={{ background: `${getActionColor(item.action)}1a`, color: getActionColor(item.action), borderColor: `${getActionColor(item.action)}33` }}>
@@ -117,9 +113,9 @@ export default function AdminActivity() {
 
       {/* Pagination */}
       <div className="pagination">
-        <button className="pg-btn" disabled={page === 1} onClick={() => setPage(p => p-1)}>← Prev</button>
+        <button className="pg-btn" disabled={page === 1} onClick={() => setPage((p: number) => p-1)}>← Prev</button>
         <span className="pg-info">Page {page}</span>
-        <button className="pg-btn" disabled={items.length < 50} onClick={() => setPage(p => p+1)}>Next →</button>
+        <button className="pg-btn" disabled={items.length < 50} onClick={() => setPage((p: number) => p+1)}>Next →</button>
       </div>
 
       <style>{`

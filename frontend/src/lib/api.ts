@@ -1,25 +1,95 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
-async function apiFetch(path: string, options: RequestInit = {}) {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('hfa_token') : null;
+let isRefreshing = false;
+
+async function attemptTokenRefresh(): Promise<boolean> {
+  if (isRefreshing) return false;
+  isRefreshing = true;
+  try {
+    const refreshToken = localStorage.getItem('hfa_refresh_token');
+    const body = refreshToken ? JSON.stringify({ refreshToken }) : undefined;
+
+    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      ...(body && { body }),
+      credentials: 'include',
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        isRefreshing = false;
+        return true;
+      }
+    }
+  } catch (err) {
+    console.error('Error refreshing token:', err);
+  }
+  isRefreshing = false;
+  return false;
+}
+
+async function apiFetch(path: string, options: RequestInit = {}, timeoutMs = 5000) {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      credentials: 'include',
+      signal: controller.signal,
+    });
+  } catch (err: any) {
+    clearTimeout(timer);
+    if (err?.name === 'AbortError') {
+      throw new Error('Request timed out. Please check your connection.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (res.status === 401 && typeof window !== 'undefined') {
+    if (!path.includes('/auth/login') && !path.includes('/auth/refresh') && !path.includes('/auth/logout')) {
+      const refreshed = await attemptTokenRefresh();
+      if (refreshed) {
+        const ctrl2 = new AbortController();
+        const timer2 = setTimeout(() => ctrl2.abort(), timeoutMs);
+        try {
+          res = await fetch(`${API_BASE_URL}${path}`, {
+            ...options,
+            headers,
+            credentials: 'include',
+            signal: ctrl2.signal,
+          });
+        } finally {
+          clearTimeout(timer2);
+        }
+      }
+    }
+  }
 
   const data = await res.json().catch(() => ({}));
 
   if (res.status === 401 && typeof window !== 'undefined') {
-    localStorage.removeItem('hfa_token');
     localStorage.removeItem('hfa_user');
-    // Prevent redirect loops in non-browser environments or specific routes
-    if (!window.location.pathname.includes('/login')) {
+    const path = window.location.pathname;
+    const isPublic = path === '/' || 
+                     path.startsWith('/login') || 
+                     path.startsWith('/register') || 
+                     path.startsWith('/forgot-password') || 
+                     path.startsWith('/reset-password') ||
+                     path.startsWith('/terms') ||
+                     path.startsWith('/privacy');
+    if (!isPublic) {
       window.location.href = '/login?session=expired';
     }
     return null;
@@ -66,6 +136,10 @@ export interface UserProfile {
 
 export const HFAApi = {
   // Auth
+  async getAuthStatus(): Promise<{ success: boolean; user: any }> {
+    return API.get('/auth/status');
+  },
+
   async getProfile(): Promise<{ success: boolean; data: UserProfile }> {
     return API.get('/users/me');
   },

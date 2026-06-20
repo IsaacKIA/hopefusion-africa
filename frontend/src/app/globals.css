@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+/* Fonts loaded via next/font in layout.tsx — no @import needed */
 
 /* ============================================================
    DESIGN SYSTEM VARIABLE TOKENS
@@ -45,7 +45,7 @@
 html, body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -55,7 +55,7 @@ html, body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.25;
@@ -512,3 +512,21 @@ button, input, textarea, select {
   transition: transform 2.5s ease-out, opacity 2.5s ease-out;
 }
 
+/* ============================================================
+   RESPONSIVE NAV
+   ============================================================ */
+.desktop-links {
+  display: flex;
+}
+.mobile-hamburger-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-links {
+    display: none !important;
+  }
+  .mobile-hamburger-btn {
+    display: flex !important;
+  }
+}

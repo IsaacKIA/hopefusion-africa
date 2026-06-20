@@ -39,7 +39,7 @@ export async function requestPermission(): Promise<NotificationPermission> {
 }
 
 /* ── Subscribe to Push ─────────────────────────────────────── */
-export async function subscribeToPush(token: string): Promise<boolean> {
+export async function subscribeToPush(token?: string): Promise<boolean> {
   try {
     const permission = await requestPermission();
     if (permission !== 'granted') {
@@ -71,8 +71,9 @@ export async function subscribeToPush(token: string): Promise<boolean> {
       method:  'POST',
       headers: {
         'Content-Type':  'application/json',
-        'Authorization': `Bearer ${token}`,
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       },
+      credentials: 'include',
       body: JSON.stringify({
         type:        'webpush',
         endpoint,
@@ -92,7 +93,7 @@ export async function subscribeToPush(token: string): Promise<boolean> {
 }
 
 /* ── Unsubscribe from Push ─────────────────────────────────── */
-export async function unsubscribeFromPush(token: string): Promise<void> {
+export async function unsubscribeFromPush(token?: string): Promise<void> {
   try {
     if (!('serviceWorker' in navigator)) return;
 
@@ -107,8 +108,9 @@ export async function unsubscribeFromPush(token: string): Promise<void> {
         method:  'DELETE',
         headers: {
           'Content-Type':  'application/json',
-          'Authorization': `Bearer ${token}`,
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify({ endpoint }),
       });
       console.log('[Push] Unsubscribed ✅');

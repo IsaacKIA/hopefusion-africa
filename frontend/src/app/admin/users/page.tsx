@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { API as apiClient } from '../../../lib/api';
 
 const ROLE_COLORS: Record<string, string> = {
   startup: '#2db562', investor: '#3b82f6', mentor: '#f59e0b', admin: '#ef4444',
@@ -24,8 +23,6 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState('');
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('hfa_token') || '' : '';
-
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), limit: '25' });
@@ -33,23 +30,22 @@ export default function AdminUsers() {
     if (role)   params.set('role', role);
     if (status) params.set('status', status);
     try {
-      const r = await fetch(`${API}/api/v1/admin/users?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const d = await r.json();
-      if (d.success) { setUsers(d.data); setTotal(d.total); }
+      const d = await apiClient.get(`/admin/users?${params}`);
+      if (d && d.success) { setUsers(d.data); setTotal(d.total); }
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
     } finally { setLoading(false); }
-  }, [page, search, role, status, token]);
+  }, [page, search, role, status]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   async function toggleStatus(id: string, currentActive: boolean) {
     setActionId(id);
-    await fetch(`${API}/api/v1/admin/users/${id}/status`, {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_active: !currentActive }),
-    });
+    try {
+      await apiClient.patch(`/admin/users/${id}/status`, { is_active: !currentActive });
+    } catch (err) {
+      console.error('Failed to toggle status:', err);
+    }
     setActionId('');
     fetchUsers();
   }
@@ -57,9 +53,11 @@ export default function AdminUsers() {
   async function deleteUser(id: string, name: string) {
     if (!confirm(`Delete ${name}? This cannot be undone.`)) return;
     setActionId(id);
-    await fetch(`${API}/api/v1/admin/users/${id}`, {
-      method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      await apiClient.delete(`/admin/users/${id}`);
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+    }
     setActionId('');
     fetchUsers();
   }

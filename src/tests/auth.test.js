@@ -265,4 +265,64 @@ describe('Auth Integration Tests', () => {
       expect(authRes.body.error).toBe('Token revoked');
     });
   });
+
+  describe('Onboarding & Status & Passports V2', () => {
+    it('should block unverified user from accessing protected users/me', async () => {
+      const payload = { userId: '11111111-2222-3333-4444-555555555555', role: 'startup' };
+      const token = jwt.sign(payload, process.env.JWT_SECRET);
+
+      mockDbExpectQuery('SELECT is_verified FROM users WHERE id', [{ is_verified: false }]);
+
+      const res = await request(app)
+        .get('/api/v1/users/me')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toContain('verification required');
+    });
+
+    it('should create startup passport during verify', async () => {
+      const payload = { userId: '11111111-2222-3333-4444-555555555555', role: 'startup' };
+      const token = jwt.sign(payload, process.env.JWT_SECRET);
+      
+      redisMockStore['verify:11111111-2222-3333-4444-555555555555'] = '"123456"';
+      
+      mockDbExpectQuery('UPDATE users SET is_verified', []);
+      mockDbExpectQuery('INSERT INTO startup_passports', [{ id: '88888888-8888-8888-8888-888888888888' }]);
+
+      const res = await request(app)
+        .post('/api/v1/auth/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ code: '123456' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it('should allow progressive onboarding with goals, roles, and profiles update', async () => {
+      const payload = { userId: '11111111-2222-3333-4444-555555555555', role: 'startup' };
+      const token = jwt.sign(payload, process.env.JWT_SECRET);
+
+      mockDbExpectQuery('UPDATE users SET goals', []);
+      mockDbExpectQuery('SELECT id FROM startups WHERE founder_id', [{ id: '99999999-9999-9999-9999-999999999999' }]);
+      mockDbExpectQuery('UPDATE startups', []);
+      mockDbExpectQuery('UPDATE startup_passports', []);
+
+      const res = await request(app)
+        .post('/api/v1/auth/onboard')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          goals: ['Raise Funding', 'Find Mentors'],
+          country: 'Ghana',
+          roles: ['startup'],
+          startup_name: 'Super Startup Ltd',
+          sector: 'fintech',
+          stage: 'seed'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toContain('completed successfully');
+    });
+  });
 });

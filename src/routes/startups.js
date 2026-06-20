@@ -5,6 +5,7 @@ import { validate } from '../middleware/validation.js';
 import { startupProfileSchema, investorProfileSchema } from '../schemas/startup.schema.js';
 import { generateEmbedding, formatStartupText, formatInvestorText } from '../utils/embeddings.js';
 import Anthropic from '@anthropic-ai/sdk';
+import { verifyCompany } from '../services/registrar.js';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -126,6 +127,87 @@ startupsRouter.post('/', authenticate, authorize('startup'), validate(startupPro
     }
 
     return res.json({ success: true, data: rows[0] });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/v1/startups/verify-kyb — verify KYB for the logged-in startup
+startupsRouter.post('/verify-kyb', authenticate, authorize('startup'), async (req, res) => {
+  try {
+    const { registry_number, incorporation_country } = req.body;
+    if (!registry_number || !incorporation_country) {
+      return res.status(400).json({ error: 'registry_number and incorporation_country are required' });
+    }
+
+    // Call registrar service
+    const verification = verifyCompany(registry_number, incorporation_country);
+    if (!verification.verified) {
+      return res.status(400).json({ success: false, error: verification.error });
+    }
+
+    // Get startup profile
+    const startupRes = await db.query('SELECT id FROM startups WHERE founder_id = $1', [req.user.userId]);
+    if (!startupRes.rows.length) {
+      return res.status(404).json({ error: 'Startup profile not found for this user' });
+    }
+
+    const startupId = startupRes.rows[0].id;
+
+    // Find or create the startup's graph node ID first to update startup_profiles_v4
+    let graphNodeId;
+    const nodeRes = await db.query(
+      `SELECT id FROM graph_nodes WHERE entity_type = 'startup' AND (properties->>'startup_id') = $1`,
+      [startupId]
+    );
+
+    if (!nodeRes.rows.length) {
+      // Create graph node if it doesn't exist
+      const insertNode = await db.query(
+        `INSERT INTO graph_nodes (entity_type, properties, created_at)
+         VALUES ($1, $2, NOW()) RETURNING id`,
+        ['startup', JSON.stringify({ startup_id: startupId, name: verification.company_name })]
+      );
+      graphNodeId = insertNode.rows[0].id;
+    } else {
+      graphNodeId = nodeRes.rows[0].id;
+    }
+
+    // Update or insert startup_profiles_v4
+    const profileCheck = await db.query(
+      `SELECT id FROM startup_profiles_v4 WHERE startup_node_id = $1`,
+      [graphNodeId]
+    );
+
+    if (profileCheck.rows.length) {
+      await db.query(
+        `UPDATE startup_profiles_v4
+         SET is_registered_incorporation = true,
+             registry_number = $1,
+             incorporation_country = $2,
+             updated_at = NOW()
+         WHERE startup_node_id = $3`,
+        [verification.registry_number, verification.country, graphNodeId]
+      );
+    } else {
+      await db.query(
+        `INSERT INTO startup_profiles_v4 (
+           startup_node_id, is_registered_incorporation, registry_number, incorporation_country, created_at, updated_at
+         )
+         VALUES ($1, true, $2, $3, NOW(), NOW())`,
+        [graphNodeId, verification.registry_number, verification.country]
+      );
+    }
+
+    // Clear caches
+    await cacheDel(`user:${req.user.userId}`);
+    await cacheDel(`financials:${startupId}`);
+
+    return res.json({
+      success: true,
+      message: 'KYB verification successful. Incorporation status updated.',
+      data: verification
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

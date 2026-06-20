@@ -97,3 +97,27 @@ Target Countries: ${countries}.
 Investment Tickets: ${tickets}.
 Impact Alignment: ${sdgs}.`.trim();
 }
+
+/**
+ * Formats an opportunity's fields into a dense textual context block.
+ * @param {object} opp 
+ * @returns {string}
+ */
+export function formatOpportunityText(opp) {
+  if (!opp) return '';
+  const title = opp.title || '';
+  const description = opp.description || '';
+  const type = opp.opportunity_type || '';
+  const val = opp.value_amount ? `value: ${opp.value_amount} ${opp.currency || 'USD'}` : '';
+  const countries = Array.isArray(opp.eligible_countries) ? opp.eligible_countries.join(', ') : '';
+  const sectors = Array.isArray(opp.eligible_sectors) ? opp.eligible_sectors.join(', ') : '';
+  const stages = Array.isArray(opp.eligible_stages) ? opp.eligible_stages.join(', ') : '';
+
+  return `Opportunity: ${title}.
+Type: ${type}.
+Description: ${description}.
+Value: ${val}.
+Eligible Countries: ${countries}.
+Target Sectors: ${sectors}.
+Eligible Stages: ${stages}.`.trim();
+}

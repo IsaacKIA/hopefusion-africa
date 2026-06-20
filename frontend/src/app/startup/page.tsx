@@ -96,12 +96,18 @@ function StartupDashboardContent() {
               {user?.startup_profile?.tagline || 'Define your tagline to match with investors.'}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <Link href="/matching" className="btn-primary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
-              🤖 Run AI Match
+              🤖 AI Investor Match
             </Link>
-            <Link href="/grants" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
-              🏆 Apply for Grants
+            <Link href="/dashboard/workspace" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
+              📊 Founder Workspace (OS)
+            </Link>
+            <Link href="/dashboard/workspace/documents" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
+              📝 AI Document Studio
+            </Link>
+            <Link href="/dashboard/matching" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
+              🎯 Match Opportunities
             </Link>
           </div>
         </div>
@@ -249,6 +255,16 @@ function StartupDashboardContent() {
               <div style={{ width: '100%', height: '6px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '99px', overflow: 'hidden' }}>
                 <div style={{ width: '45%', height: '100%', backgroundColor: 'var(--brand-green)' }} />
               </div>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '24px' }}>
+              <h3 style={{ fontSize: '1rem', marginBottom: '12px' }}>Operational Runway</h3>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                Track bank cash flows, simulate runway scenarios, and manage CRM deals.
+              </p>
+              <Link href="/dashboard/workspace" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.8rem', width: '100%', justifyContent: 'center' }}>
+                📊 Open Founder Workspace
+              </Link>
             </div>
           </div>
 

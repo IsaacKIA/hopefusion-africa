@@ -14,6 +14,7 @@ function LoginFormContent() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const redirectPath = searchParams.get('redirect') || '/dashboard';
 
@@ -94,28 +95,51 @@ function LoginFormContent() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
+              autoComplete="username"
               required
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Password</label>
+          <div className="form-group" style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="form-label">Password</label>
+              <Link href="/forgot-password" style={{ color: 'var(--brand-green)', fontSize: '0.75rem', marginBottom: '6px' }}>
+                Forgot password?
+              </Link>
+            </div>
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               className="form-input"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
+              autoComplete="current-password"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '12px',
+                bottom: '10px',
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                fontSize: '0.75rem',
+                cursor: 'pointer'
+              }}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
           </div>
 
           <button
             type="submit"
             className="btn-primary"
             disabled={loading}
-            style={{ width: '100%', justifyContent: 'center', marginTop: '12px' }}
+            style={{ width: '100%', justifyContent: 'center', marginTop: '20px' }}
           >
             {loading ? (
               <div className="spinner" style={{ width: '20px', height: '20px' }} />

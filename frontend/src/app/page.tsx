@@ -526,15 +526,7 @@ export default function Home() {
         </div>
       </footer>
 
-      <style jsx global>{`
-        .desktop-links { display: flex; }
-        .mobile-hamburger-btn { display: none; }
-        
-        @media(max-width: 768px) {
-          .desktop-links { display: none !important; }
-          .mobile-hamburger-btn { display: flex !important; }
-        }
-      `}</style>
+
     </div>
   );
 }

@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { API as apiClient } from '../../lib/api';
 
 interface Analytics {
   users: { total: string; startups: string; investors: string; mentors: string; suspended: string; new_30d: string };
@@ -96,11 +95,8 @@ export default function AdminOverview() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('hfa_token');
-    if (!token) return;
-    fetch(`${API}/api/v1/admin/analytics`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(r => { if (r.success) setData(r.data); else setError(r.error); })
+    apiClient.get('/admin/analytics')
+      .then(r => { if (r && r.success) setData(r.data); else setError(r?.error || 'Failed to load analytics'); })
       .catch(() => setError('Failed to load analytics'))
       .finally(() => setLoading(false));
   }, []);

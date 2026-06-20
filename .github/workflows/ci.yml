@@ -46,7 +46,6 @@ jobs:
           NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hopefusion_test
           REDIS_URL: redis://localhost:6379
-        continue-on-error: true
       
       - name: Upload coverage
         uses: codecov/codecov-action@v3
@@ -72,7 +71,6 @@ jobs:
       
       - name: TypeScript type check
         run: cd frontend && npx tsc --noEmit
-        continue-on-error: true
       
       - name: Run ESLint
         run: cd frontend && npx eslint src/ --ext .ts,.tsx,.js,.jsx
@@ -80,7 +78,6 @@ jobs:
       
       - name: Run frontend tests
         run: cd frontend && npm test -- --coverage
-        continue-on-error: true
       
       - name: Build frontend
         run: cd frontend && npm run build
@@ -130,11 +127,9 @@ jobs:
       
       - name: Compile Solidity
         run: cd contracts && npm run compile
-        continue-on-error: true
       
       - name: Run contract tests
         run: cd contracts && npm test
-        continue-on-error: true
 
   security-scan:
     runs-on: ubuntu-latest

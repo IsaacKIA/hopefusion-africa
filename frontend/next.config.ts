@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
 
   // Environment variables exposed to browser
   env: {
-    NEXT_PUBLIC_API_URL:            process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
+    NEXT_PUBLIC_API_URL:            process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1",
     NEXT_PUBLIC_VAPID_PUBLIC_KEY:   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "",
   },
 };

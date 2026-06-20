@@ -24,9 +24,16 @@ export function attachSocketIO(httpServer, corsOptions) {
   /* ── AUTH MIDDLEWARE ─────────────────────────────────────────── */
   io.use(async (socket, next) => {
     try {
-      const token =
+      let token =
         socket.handshake.auth?.token ||
         socket.handshake.headers?.authorization?.split(' ')[1];
+
+      if (!token && socket.handshake.headers?.cookie) {
+        const cookies = Object.fromEntries(
+          socket.handshake.headers.cookie.split(';').map(c => c.trim().split('='))
+        );
+        token = cookies.hfa_token;
+      }
 
       if (!token) return next(new Error('No token — authentication required'));
 

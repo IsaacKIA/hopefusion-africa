@@ -162,7 +162,7 @@ paymentsRouter.post('/paystack/refund', authenticate, async (req, res) => {
 });
 
 // Paystack Webhook Handler
-paymentsRouter.post('/paystack/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+paymentsRouter.post('/paystack/webhook', async (req, res) => {
   try {
     const signature = req.headers['x-paystack-signature'];
     const body      = req.body;
@@ -383,7 +383,7 @@ paymentsRouter.get('/flutterwave/verify/:tx_ref', authenticate, async (req, res)
 });
 
 // Flutterwave Webhook
-paymentsRouter.post('/flutterwave/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+paymentsRouter.post('/flutterwave/webhook', async (req, res) => {
   try {
     const secretHash = process.env.FLUTTERWAVE_WEBHOOK_SECRET;
     const signature  = req.headers['verif-hash'];

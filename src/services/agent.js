@@ -3,7 +3,7 @@
  * Handles background sweeps, self-healing vector calculations, and real-time Socket.io match alerts.
  */
 
-import { db } from '../config/db.js';
+import { db, redis } from '../config/db.js';
 import { generateEmbedding, formatStartupText, formatInvestorText } from '../utils/embeddings.js';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -13,21 +13,66 @@ const MATCHING_SYSTEM = `You are HopeFusion Africa's AI matching engine.
 Your job is to evaluate compatibility between startups and investors/mentors.
 You understand the African startup ecosystem deeply — its funding landscape,
 regulatory environments across 14 countries, cultural contexts, and the SDG
-priorities that drive impact investment on the continent.
+prior priorities that drive impact investment on the continent.
 
 Always respond with valid JSON only. No markdown, no prose outside the JSON.`;
 
 let consecutiveErrors = 0;
 const MAX_CONSECUTIVE_ERRORS = 5;
-let anthropicCreditsOk = true; // set to false on credit-exhaustion error
+
+// Concurrency helper
+const pLimit = (concurrency) => {
+  const queue = [];
+  let activeCount = 0;
+  const next = () => {
+    if (queue.length === 0 || activeCount >= concurrency) return;
+    activeCount++;
+    const { fn, resolve, reject } = queue.shift();
+    fn().then(resolve, reject).finally(() => {
+      activeCount--;
+      next();
+    });
+  };
+  return (fn) => new Promise((resolve, reject) => {
+    queue.push({ fn, resolve, reject });
+    next();
+  });
+};
+
+async function checkCreditsOk() {
+  try {
+    if (redis && redis.isOpen) {
+      const blocked = await redis.get('anthropic:circuit_open');
+      return !blocked;
+    }
+  } catch (err) {
+    console.warn('[Agent] Redis circuit fetch failed:', err.message);
+  }
+  return true;
+}
+
+async function markCreditsExhausted() {
+  try {
+    if (redis && redis.isOpen) {
+      await redis.set('anthropic:circuit_open', '1', { EX: 3600 });
+    }
+  } catch (err) {
+    console.warn('[Agent] Redis circuit write failed:', err.message);
+  }
+}
 
 function parseAIResponse(content) {
-  const text = content
-    .filter(b => b.type === 'text')
-    .map(b => b.text)
-    .join('');
-  const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
+  try {
+    const text = content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  } catch (err) {
+    console.warn('[Agent] Failed to parse JSON response:', err.message);
+    throw new Error('AI returned an invalid response format.');
+  }
 }
 
 /**
@@ -47,8 +92,8 @@ async function runAgentSweep(io) {
   console.log('[Proactive Match Agent] Executing sweep & vector healing sweep...');
 
   try {
-    // 1. Self-heal startups missing embeddings
-    const startupsRes = await db.query('SELECT * FROM startups WHERE embedding IS NULL');
+    // 1. Self-heal startups missing embeddings (limit to 20 to prevent locking)
+    const startupsRes = await db.query('SELECT * FROM startups WHERE embedding IS NULL LIMIT 20');
     for (const startup of startupsRes.rows) {
       try {
         console.log(`[Proactive Match Agent] Self-healing startup vector: "${startup.name}"`);
@@ -62,8 +107,8 @@ async function runAgentSweep(io) {
       }
     }
 
-    // 2. Self-heal investors missing embeddings
-    const investorsRes = await db.query('SELECT * FROM investors WHERE embedding IS NULL');
+    // 2. Self-heal investors missing embeddings (limit to 20)
+    const investorsRes = await db.query('SELECT * FROM investors WHERE embedding IS NULL LIMIT 20');
     for (const investor of investorsRes.rows) {
       try {
         console.log(`[Proactive Match Agent] Self-healing investor vector: "${investor.firm_name}"`);
@@ -78,10 +123,17 @@ async function runAgentSweep(io) {
     }
 
     // 3. Proactively pre-calculate matches for high-similarity pairs
-    if (process.env.ANTHROPIC_API_KEY && anthropicCreditsOk) {
-      const activeStartups = await db.query('SELECT * FROM startups WHERE embedding IS NOT NULL');
+    const creditsOk = await checkCreditsOk();
+    if (process.env.ANTHROPIC_API_KEY && creditsOk) {
+      const activeStartups = await db.query('SELECT * FROM startups WHERE embedding IS NOT NULL LIMIT 50');
+      const limit = pLimit(3); // max 3 concurrent Claude calls
+      let matchesCalculated = 0;
+      const maxMatchesPerSweep = 10;
+      const tasks = [];
+
       for (const startup of activeStartups.rows) {
-        
+        if (matchesCalculated >= maxMatchesPerSweep) break;
+
         // Query top 3 closest investors by cosine distance
         const closestRes = await db.query(
           `SELECT i.*, u.id as user_uid, (i.embedding <=> $1) as distance
@@ -94,6 +146,8 @@ async function runAgentSweep(io) {
         );
 
         for (const investor of closestRes.rows) {
+          if (matchesCalculated >= maxMatchesPerSweep) break;
+
           // Check if matching row already exists
           const matchCheck = await db.query(
             'SELECT * FROM matches WHERE startup_id = $1 AND target_id = $2 AND target_type = $3',
@@ -101,10 +155,13 @@ async function runAgentSweep(io) {
           );
 
           if (!matchCheck.rows.length) {
-            try {
-              console.log(`[Proactive Match Agent] Calculating pre-match compatibility: "${startup.name}" + "${investor.firm_name}"`);
-              
-              const prompt = `Evaluate the compatibility between this startup and investor for HopeFusion Africa.
+            matchesCalculated++;
+            tasks.push(
+              limit(async () => {
+                try {
+                  console.log(`[Proactive Match Agent] Calculating pre-match compatibility: "${startup.name}" + "${investor.firm_name}"`);
+
+                  const prompt = `Evaluate the compatibility between this startup and investor for HopeFusion Africa.
 
 STARTUP PROFILE:
 ${JSON.stringify({
@@ -147,57 +204,63 @@ Return a JSON object with exactly this structure:
   "ticket_fit": <integer 0-100>
 }`;
 
-              const response = await anthropic.messages.create({
-                model: 'claude-3-5-sonnet-20241022',
-                max_tokens: 1000,
-                system: MATCHING_SYSTEM,
-                messages: [{ role: 'user', content: prompt }]
-              });
-
-              const result = parseAIResponse(response.content);
-
-              await db.query(
-                `INSERT INTO matches (startup_id, target_id, target_type, ai_score, ai_grade, ai_reasons, ai_breakdown)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-                [startup.id, investor.id, 'investor', result.score, result.grade, result.reasons, JSON.stringify(result)]
-              );
-
-              console.log(`[Proactive Match Agent] Calculated & saved match (${result.score}%) for "${startup.name}"`);
-
-              // If the match is stellar (Excellent/Strong >= 85), push alert notifications
-              if (result.score >= 85) {
-                const title = `🤖 New Elite Match Found: ${result.score}%`;
-                const body = `Awesome news! Oasis Impact Ventures (${investor.firm_name}) has been matches with your crop insurance model. View compatibility reasons now!`;
-
-                // DB notification insert
-                await db.query(
-                  'INSERT INTO notifications (user_id, type, title, body) VALUES ($1, $2, $3, $4)',
-                  [startup.founder_id, 'new_match', title, body]
-                );
-
-                // Live websocket event
-                if (io) {
-                  io.to(`user:${startup.founder_id}`).emit('notification:new', {
-                    type: 'new_match',
-                    title,
-                    body,
-                    created_at: new Date()
+                  const response = await anthropic.messages.create({
+                    model: 'claude-3-5-sonnet-20241022',
+                    max_tokens: 1000,
+                    system: MATCHING_SYSTEM,
+                    messages: [{ role: 'user', content: prompt }]
                   });
-                  console.log(`[Proactive Match Agent] Dispatched live match socket notify to user ${startup.founder_id}`);
+
+                  const result = parseAIResponse(response.content);
+
+                  await db.query(
+                    `INSERT INTO matches (startup_id, target_id, target_type, ai_score, ai_grade, ai_reasons, ai_breakdown)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                    [startup.id, investor.id, 'investor', result.score, result.grade, result.reasons, JSON.stringify(result)]
+                  );
+
+                  console.log(`[Proactive Match Agent] Calculated & saved match (${result.score}%) for "${startup.name}"`);
+
+                  // If the match is stellar (Excellent/Strong >= 85), push alert notifications
+                  if (result.score >= 85) {
+                    const title = `🤖 New Elite Match Found: ${result.score}%`;
+                    const body = `Awesome news! Oasis Impact Ventures (${investor.firm_name}) has been matches with your crop insurance model. View compatibility reasons now!`;
+
+                    // DB notification insert
+                    await db.query(
+                      'INSERT INTO notifications (user_id, type, title, body) VALUES ($1, $2, $3, $4)',
+                      [startup.founder_id, 'new_match', title, body]
+                    );
+
+                    // Live websocket event
+                    if (io) {
+                      io.to(`user:${startup.founder_id}`).emit('notification:new', {
+                        type: 'new_match',
+                        title,
+                        body,
+                        created_at: new Date()
+                      });
+                      console.log(`[Proactive Match Agent] Dispatched live match socket notify to user ${startup.founder_id}`);
+                    }
+                  }
+                  consecutiveErrors = 0;
+                } catch (err) {
+                  if (err.message && err.message.includes('credit balance is too low')) {
+                    console.warn('[Proactive Match Agent] Anthropic credits exhausted — opening Redis circuit breaker.');
+                    await markCreditsExhausted();
+                  } else {
+                    consecutiveErrors++;
+                  }
+                  console.error(`[Proactive Match Agent] Match calculation failed:`, err.message);
                 }
-              }
-              consecutiveErrors = 0;
-            } catch (err) {
-              if (err.message && err.message.includes('credit balance is too low')) {
-                console.warn('[Proactive Match Agent] Anthropic credits exhausted — disabling AI match calculations for this session.');
-                anthropicCreditsOk = false;
-              } else {
-                consecutiveErrors++;
-              }
-              console.error(`[Proactive Match Agent] Match calculation failed:`, err.message);
-            }
+              })
+            );
           }
         }
+      }
+
+      if (tasks.length > 0) {
+        await Promise.all(tasks);
       }
     }
   } catch (err) {

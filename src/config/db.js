@@ -43,6 +43,13 @@ const dbMockQueryHandler = async (sql, params) => {
     return { rows: [] };
   }
 
+  // Auto-handle the is_verified middleware lookup: default to verified=true
+  // so tests that don't explicitly mock this query are not blocked by the
+  // email verification gate added to the authenticate() middleware.
+  if (sql.includes('SELECT is_verified FROM users WHERE id')) {
+    return { rows: [{ is_verified: true }] };
+  }
+
   console.warn(`[DbMock] Unmatched query executed: ${sql} with params:`, params);
   return { rows: [] };
 };
@@ -89,26 +96,129 @@ if (process.env.NODE_ENV === 'test') {
 
   // Real Redis client (supports Upstash rediss:// TLS URLs)
   const redisUrl = process.env.REDIS_URL || '';
-  redisInstance = createClient({
+  const realRedis = createClient({
     url: redisUrl,
     socket: {
       ...(redisUrl.startsWith('rediss://') ? { tls: true, rejectUnauthorized: false } : {}),
-      connectTimeout: 10000,
+      connectTimeout: 3000,
       reconnectStrategy: (retries) => {
-        if (retries >= 5) {
-          console.error('[Redis] Max reconnect attempts reached. Giving up.');
-          return new Error('Redis max retries exceeded');
+        if (retries >= 3) {
+          return new Error('Redis unavailable — running without cache');
         }
-        return Math.min(retries * 500, 3000);
+        return Math.min(retries * 1000, 3000);
       },
     },
   });
-  redisInstance.on('error', (err) => {
-    console.error('[Redis] Client error:', err);
+
+  const devMemoryStore = {};
+  const devHashStore = {};
+
+  const safeRedisProxy = {
+    isOpen: false,
+    _realClient: realRedis,
+    get: async (key) => {
+      if (safeRedisProxy.isOpen) {
+        try { return await realRedis.get(key); } catch {}
+      }
+      return devMemoryStore[key] || null;
+    },
+    set: async (key, val, options) => {
+      if (safeRedisProxy.isOpen) {
+        try { return await realRedis.set(key, val, options); } catch {}
+      }
+      devMemoryStore[key] = val;
+      return 'OK';
+    },
+    setEx: async (key, ttl, val) => {
+      if (safeRedisProxy.isOpen) {
+        try { await realRedis.setEx(key, ttl, val); return; } catch {}
+      }
+      devMemoryStore[key] = val;
+    },
+    del: async (key) => {
+      if (safeRedisProxy.isOpen) {
+        try { await realRedis.del(key); return; } catch {}
+      }
+      delete devMemoryStore[key];
+    },
+    incr: async (key) => {
+      if (safeRedisProxy.isOpen) {
+        try { return await realRedis.incr(key); } catch {}
+      }
+      const val = (parseInt(devMemoryStore[key]) || 0) + 1;
+      devMemoryStore[key] = val.toString();
+      return val;
+    },
+    expire: async (key, ttl) => {
+      if (safeRedisProxy.isOpen) {
+        try { return await realRedis.expire(key, ttl); } catch {}
+      }
+      return 1;
+    },
+    hSet: async (hash, field, val) => {
+      if (safeRedisProxy.isOpen) {
+        try { return await realRedis.hSet(hash, field, val); } catch {}
+      }
+      if (!devHashStore[hash]) devHashStore[hash] = {};
+      devHashStore[hash][field] = val;
+      return 1;
+    },
+    hGet: async (hash, field) => {
+      if (safeRedisProxy.isOpen) {
+        try { return await realRedis.hGet(hash, field); } catch {}
+      }
+      return devHashStore[hash]?.[field] || null;
+    },
+    hDel: async (hash, field) => {
+      if (safeRedisProxy.isOpen) {
+        try { return await realRedis.hDel(hash, field); } catch {}
+      }
+      if (devHashStore[hash]) {
+        delete devHashStore[hash][field];
+      }
+      return 1;
+    },
+    ping: async () => {
+      if (safeRedisProxy.isOpen) {
+        try { return await realRedis.ping(); } catch {}
+      }
+      return 'PONG';
+    },
+    quit: async () => {
+      if (safeRedisProxy.isOpen) {
+        try { await realRedis.quit(); return; } catch {}
+      }
+    },
+    disconnect: async () => {
+      if (safeRedisProxy.isOpen) {
+        try { await realRedis.disconnect(); return; } catch {}
+      }
+    },
+    connect: async () => {
+      try {
+        await realRedis.connect();
+        safeRedisProxy.isOpen = true;
+      } catch (err) {
+        safeRedisProxy.isOpen = false;
+      }
+    }
+  };
+
+  realRedis.on('connect', () => {
+    safeRedisProxy.isOpen = true;
+    console.log('[Redis] Connected successfully');
   });
-  redisInstance.connect()
-    .then(() => console.log('[Redis] Connected successfully'))
-    .catch((err) => console.error('[Redis] Connection error:', err));
+  realRedis.on('error', (err) => {
+    safeRedisProxy.isOpen = false;
+    if (!realRedis._errorLogged) {
+      console.warn('[Redis] Not available — falling back to local memory store for cache/OTP.');
+      realRedis._errorLogged = true;
+    }
+  });
+
+  safeRedisProxy.connect().catch(() => {});
+  
+  redisInstance = safeRedisProxy;
 }
 
 export const db = dbInstance;

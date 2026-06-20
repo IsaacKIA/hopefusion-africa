@@ -9,7 +9,8 @@ const memoryStore = new Map();
  * @param {number} windowSec - Time window in seconds.
  */
 export const rateLimit = (maxReqs, windowSec) => async (req, res, next) => {
-  const key = `ratelimit:${req.ip}:${req.path}`;
+  const identifier = req.user?.userId || req.ip;
+  const key = `ratelimit:${identifier}:${req.path}`;
 
   try {
     if (redis.isOpen) {

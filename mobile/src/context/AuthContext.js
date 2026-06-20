@@ -18,10 +18,14 @@ export function AuthProvider({ children }) {
         SecureStore.getItemAsync('hfa_token'),
         SecureStore.getItemAsync('hfa_user'),
       ]);
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+      if (storedToken) {
         api.setToken(storedToken);
+        setToken(storedToken);
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+        // Fresh status validation check on background app loads
+        await checkStatus();
       }
     } catch (err) {
       console.error('Auth load error:', err);
@@ -30,27 +34,61 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function checkStatus() {
+    try {
+      const data = await api.get('/auth/status');
+      if (data && data.user) {
+        setUser(data.user);
+        await SecureStore.setItemAsync('hfa_user', JSON.stringify(data.user));
+        return data.user;
+      }
+    } catch (err) {
+      console.error('Status check failed:', err);
+      if (err.message?.includes('401') || err.message?.includes('Unauthorized') || err.message?.includes('Forbidden')) {
+        await logout();
+      }
+    }
+  }
+
   async function login(email, password) {
     const data = await api.post('/auth/login', { email, password });
-    await Promise.all([
-      SecureStore.setItemAsync('hfa_token', data.token),
-      SecureStore.setItemAsync('hfa_user',  JSON.stringify(data.user)),
-    ]);
     api.setToken(data.token);
     setToken(data.token);
-    setUser(data.user);
+    await SecureStore.setItemAsync('hfa_token', data.token);
+    
+    // Sync full user information from status endpoint
+    const freshUser = await api.get('/auth/status').then(d => d.user).catch(() => data.user);
+    setUser(freshUser);
+    await SecureStore.setItemAsync('hfa_user', JSON.stringify(freshUser));
     return data;
   }
 
   async function register(payload) {
     const data = await api.post('/auth/register', payload);
-    await Promise.all([
-      SecureStore.setItemAsync('hfa_token', data.token),
-      SecureStore.setItemAsync('hfa_user',  JSON.stringify(data.user)),
-    ]);
     api.setToken(data.token);
     setToken(data.token);
-    setUser(data.user);
+    await SecureStore.setItemAsync('hfa_token', data.token);
+    
+    // Sync full user information from status endpoint
+    const freshUser = await api.get('/auth/status').then(d => d.user).catch(() => data.user);
+    setUser(freshUser);
+    await SecureStore.setItemAsync('hfa_user', JSON.stringify(freshUser));
+    return data;
+  }
+
+  async function verifyOTP(code) {
+    const data = await api.post('/auth/verify', { code });
+    await checkStatus();
+    return data;
+  }
+
+  async function resendOTP() {
+    return await api.post('/auth/resend', {});
+  }
+
+  async function completeOnboarding(payload) {
+    const data = await api.post('/auth/onboard', payload);
+    await checkStatus();
     return data;
   }
 
@@ -73,7 +111,10 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{
+      user, token, loading, login, register, logout, updateProfile,
+      checkStatus, verifyOTP, resendOTP, completeOnboarding
+    }}>
       {children}
     </AuthContext.Provider>
   );

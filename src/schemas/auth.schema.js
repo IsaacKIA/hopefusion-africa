@@ -10,9 +10,9 @@ export const registerSchema = z.object({
   password: z.string()
     .min(8, 'Password must be at least 8 characters long')
     .regex(passwordRegex, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  role: z.enum(['startup', 'investor', 'mentor'], {
-    errorMap: () => ({ message: 'Role must be startup, investor, or mentor' }),
-  }),
+  role: z.enum(['startup', 'investor', 'mentor', 'corporate', 'government', 'student', 'service_provider'], {
+    errorMap: () => ({ message: 'Invalid role selection' }),
+  }).optional().default('startup'),
   first_name: z.string()
     .trim()
     .min(1, 'First name is required'),
@@ -63,6 +63,42 @@ export const registerSchema = z.object({
   current_role: z.string().trim().optional(),
   mentor_bio: z.string().trim().optional(),
 });
+
+export const onboardingSchema = z.object({
+  goals: z.array(z.string()).nonempty('At least one goal is required'),
+  country: z.string().trim().min(1, 'Country is required'),
+  roles: z.array(z.enum(['startup', 'investor', 'mentor', 'corporate', 'government', 'student', 'service_provider'])).nonempty('At least one role is required'),
+  // Startup details (optional)
+  startup_name: z.string().trim().optional(),
+  sector: z.string().trim().optional(),
+  stage: z.string().trim().optional(),
+  team_size: z.number().int().nonnegative().optional(),
+  funding_goal: z.number().int().nonnegative().optional(),
+  sdgs: z.array(z.number().int().min(1).max(17)).optional(),
+  is_women_led: z.boolean().optional(),
+  startup_tagline: z.string().trim().optional(),
+  startup_website: z.string().trim().optional(),
+  // Investor details (optional)
+  firm_name: z.string().trim().optional(),
+  investor_type: z.string().trim().optional(),
+  sectors: z.array(z.string()).optional(),
+  stages: z.array(z.string()).optional(),
+  countries: z.array(z.string()).optional(),
+  ticket_min: z.number().int().nonnegative().optional(),
+  ticket_max: z.number().int().nonnegative().optional(),
+  instruments: z.array(z.string()).optional(),
+  firm_website: z.string().trim().optional(),
+  // Mentor details (optional)
+  expertise: z.array(z.string()).optional(),
+  session_types: z.array(z.string()).optional(),
+  languages: z.array(z.string()).optional(),
+  experience_years: z.coerce.number().int().nonnegative().optional(),
+  max_mentees: z.number().int().nonnegative().optional(),
+  hourly_rate: z.number().int().nonnegative().optional(),
+  current_role: z.string().trim().optional(),
+  mentor_bio: z.string().trim().optional(),
+});
+
 
 export const loginSchema = z.object({
   email: z.string()

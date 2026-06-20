@@ -19,7 +19,32 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
    ============================================================ */
 const THREAD_TTL_SECONDS = 60 * 60 * 24; // 24-hour conversation memory
 const MAX_HISTORY_TURNS = 20;             // keep last 20 message pairs per thread
-const memoryStore = new Map();
+class SimpleLRUCache {
+  constructor(maxSize = 500) {
+    this.maxSize = maxSize;
+    this.cache = new Map();
+  }
+  get(key) {
+    if (!this.cache.has(key)) return undefined;
+    const value = this.cache.get(key);
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+  set(key, value) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, value);
+  }
+  delete(key) {
+    this.cache.delete(key);
+  }
+}
+const memoryStore = new SimpleLRUCache(500);
 
 /**
  * Retrieve conversation history for a thread.
@@ -120,13 +145,46 @@ Always respond with valid JSON only. No markdown, no prose outside the JSON.`;
 /* ============================================================
    HELPER: safe JSON parse from Claude response
    ============================================================ */
-function parseAIResponse(content) {
-  const text = content
-    .filter(b => b.type === 'text')
-    .map(b => b.text)
-    .join('');
-  const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
+const SAFE_STARTUP_FIELDS = [
+  'name', 'tagline', 'description', 'sector', 'stage',
+  'country', 'team_size', 'funding_goal', 'funding_type', 'sdgs', 'is_women_led', 'website_url'
+];
+
+const SAFE_INVESTOR_FIELDS = [
+  'firm_name', 'investor_type', 'sectors', 'stages', 'countries', 'instruments', 'ticket_min', 'ticket_max', 'sdgs'
+];
+
+function sanitizeForPrompt(obj, allowedFields) {
+  if (!obj || typeof obj !== 'object') return {};
+  return Object.fromEntries(
+    allowedFields
+      .filter(k => k in obj)
+      .map(k => {
+        const val = obj[k];
+        if (Array.isArray(val)) {
+          return [k, val.slice(0, 50).map(x => String(x).slice(0, 200))];
+        }
+        if (typeof val === 'object' && val !== null) {
+          return [k, JSON.stringify(val).slice(0, 500)];
+        }
+        return [k, String(val || '').slice(0, 1000)];
+      })
+  );
+}
+
+function parseAIResponse(content, fallback = null) {
+  try {
+    const text = content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  } catch (err) {
+    console.warn('[AI] Failed to parse JSON response:', err.message);
+    if (fallback !== null) return fallback;
+    throw new Error('AI returned an invalid response format. Please try again.');
+  }
 }
 
 /* ============================================================
@@ -140,13 +198,16 @@ aiRouter.post('/match', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'startup and investor objects required' });
     }
 
+    const safeStartup = sanitizeForPrompt(startup, SAFE_STARTUP_FIELDS);
+    const safeInvestor = sanitizeForPrompt(investor, SAFE_INVESTOR_FIELDS);
+
     const prompt = `Evaluate the compatibility between this startup and investor for HopeFusion Africa.
 
 STARTUP PROFILE:
-${JSON.stringify(startup, null, 2)}
+${JSON.stringify(safeStartup, null, 2)}
 
 INVESTOR PROFILE:
-${JSON.stringify(investor, null, 2)}
+${JSON.stringify(safeInvestor, null, 2)}
 
 Return a JSON object with exactly this structure:
 {
@@ -191,13 +252,16 @@ aiRouter.post('/match/batch', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'startup and investors array required' });
     }
 
-    const prompt = `You are ranking ${investors.length} investors for a startup.
+    const safeStartup = sanitizeForPrompt(startup, SAFE_STARTUP_FIELDS);
+    const safeInvestors = investors.map(i => sanitizeForPrompt(i, SAFE_INVESTOR_FIELDS));
+
+    const prompt = `You are ranking ${safeInvestors.length} investors for a startup.
 
 STARTUP:
-${JSON.stringify(startup, null, 2)}
+${JSON.stringify(safeStartup, null, 2)}
 
 INVESTORS:
-${JSON.stringify(investors, null, 2)}
+${JSON.stringify(safeInvestors, null, 2)}
 
 Score each investor's compatibility with this startup.
 Return JSON array sorted by score descending:
@@ -691,6 +755,120 @@ Return JSON:
     const response = await client.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1000,
+      system: PITCH_SYSTEM,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const result = parseAIResponse(response.content);
+    res.json({ success: true, data: result });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ============================================================
+   12. AI GRANT WRITER (APPLICATION DRAFTER)
+   POST /api/v1/ai/grants/write
+   ============================================================ */
+aiRouter.post('/grants/write', authenticate, async (req, res) => {
+  try {
+    const { startup, grant, question, word_limit = 300 } = req.body;
+    if (!startup || !grant || !question) {
+      return res.status(400).json({ error: 'startup, grant, and question are required' });
+    }
+
+    const prompt = `Write a compelling grant proposal answer for this startup applying to the target grant.
+
+STARTUP PROFILE:
+${JSON.stringify(startup, null, 2)}
+
+GRANT PROGRAMME:
+${JSON.stringify(grant, null, 2)}
+
+APPLICATION QUESTION:
+"${question}"
+
+WORD LIMIT: ${word_limit} words.
+
+Ensure the answer:
+1. Directly and comprehensively answers the question.
+2. Incorporates startup metrics (e.g., country, sector, stage, team size, women-led status) naturally.
+3. Aligns with the grant's goals and target SDG impact sectors.
+4. Keeps tone professional, persuasive, and impact-driven.
+
+Return JSON:
+{
+  "draft": "<compelling proposal answer text under ${word_limit} words>",
+  "word_count": <integer>,
+  "strengths_leveraged": [<2-4 strengths or data points from startup woven in>],
+  "suggested_edits": [<2-3 actionable tips for startup founder to customize this answer further>]
+}`;
+
+    const response = await client.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 1500,
+      system: GRANT_SYSTEM,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const result = parseAIResponse(response.content);
+    res.json({ success: true, data: result });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ============================================================
+   13. AI FUNDRAISER (OUTREACH DRAFTER)
+   POST /api/v1/ai/fundraiser/draft
+   ============================================================ */
+aiRouter.post('/fundraiser/draft', authenticate, async (req, res) => {
+  try {
+    const { startup, investor, channel = 'email', tone = 'professional' } = req.body;
+    if (!startup || !investor) {
+      return res.status(400).json({ error: 'startup and investor are required' });
+    }
+
+    const allowedChannels = ['email', 'linkedin', 'warm_intro'];
+    const allowedTones = ['professional', 'visionary', 'analytical'];
+
+    if (!allowedChannels.includes(channel)) {
+      return res.status(400).json({ error: `channel must be one of: ${allowedChannels.join(', ')}` });
+    }
+    if (!allowedTones.includes(tone)) {
+      return res.status(400).json({ error: `tone must be one of: ${allowedTones.join(', ')}` });
+    }
+
+    const prompt = `Draft a personalized investor outreach message for this startup targeting this investor.
+
+STARTUP PROFILE:
+${JSON.stringify(startup, null, 2)}
+
+INVESTOR PROFILE:
+${JSON.stringify(investor, null, 2)}
+
+OUTREACH CHANNEL: ${channel}
+MESSAGE TONE: ${tone}
+
+Ensure the message:
+1. Leverages the selected channel format (e.g., subject + body for email, direct short note for LinkedIn, intro request text for warm_intro).
+2. Uses the specified tone (${tone}).
+3. Highlights startup's traction and matches the investor's thesis/focus sectors.
+4. Keeps it concise, hook-driven, and includes a clear call to action.
+
+Return JSON:
+{
+  "subject": "<compelling subject line or null if not email>",
+  "body": "<the outreach message text>",
+  "personalization_hooks": [<2-3 hooks referencing the investor's specific thesis, stage, or sectors>],
+  "call_to_action": "<the call to action ask>"
+}`;
+
+    const response = await client.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 1500,
       system: PITCH_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
     });

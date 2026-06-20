@@ -104,6 +104,41 @@ export default function DashboardScreen({ navigation }) {
           ))}
         </View>
 
+        {/* Portal Workspace / Escrow Tracker Banners */}
+        {(profile?.role === 'admin' || (profile?.role === 'investor' && (profile?.investor_profile?.investor_type === 'government' || profile?.investor_profile?.investor_type === 'corporate'))) && (
+          <TouchableOpacity
+            style={[styles.portalBanner, { borderColor: COLORS.gold }]}
+            onPress={() => navigation.navigate('PortalWorkspace')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.aiBannerLeft}>
+              <Text style={[styles.aiBannerTag, { color: COLORS.gold }]}>🏛 Ecosystem Portal Active</Text>
+              <Text style={styles.aiBannerTitle}>
+                Manage Grants, Challenges & Escrows
+              </Text>
+              <Text style={styles.aiBannerSub}>Tap to access your administrative tools</Text>
+            </View>
+            <Ionicons name="business" size={36} color={COLORS.gold} />
+          </TouchableOpacity>
+        )}
+
+        {(profile?.role === 'startup' || user?.role === 'startup' || profile?.role === 'founder' || user?.role === 'founder') && (
+          <TouchableOpacity
+            style={[styles.portalBanner, { borderColor: COLORS.green }]}
+            onPress={() => navigation.navigate('EscrowTracker')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.aiBannerLeft}>
+              <Text style={[styles.aiBannerTag, { color: COLORS.green }]}>🛡 Escrow & Milestones Tracker</Text>
+              <Text style={styles.aiBannerTitle}>
+                Track Payouts & Submit Proofs
+              </Text>
+              <Text style={styles.aiBannerSub}>Tap to view locked funds and milestone status</Text>
+            </View>
+            <Ionicons name="shield-checkmark" size={36} color={COLORS.green} />
+          </TouchableOpacity>
+        )}
+
         {/* AI Banner */}
         <TouchableOpacity
           style={styles.aiBanner}
@@ -113,8 +148,7 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.aiBannerLeft}>
             <Text style={styles.aiBannerTag}>🤖 AI Engine Active</Text>
             <Text style={styles.aiBannerTitle}>
-              {matches?.count || 0} new matches{'
-'}ready for you
+              {matches?.count || 0} new matches{'\n'}ready for you
             </Text>
             <Text style={styles.aiBannerSub}>Tap to view your ranked matches</Text>
           </View>
@@ -192,6 +226,7 @@ const styles = StyleSheet.create({
   statVal:         { fontSize: 18, fontFamily: 'Sora-Bold', color: '#111', marginBottom: 2 },
   statLabel:       { fontSize: 10, color: COLORS.txt2, fontFamily: 'SpaceGrotesk-Regular', textAlign: 'center' },
   aiBanner:        { marginHorizontal: 16, backgroundColor: COLORS.black, borderRadius: 16, padding: 20, flexDirection: 'row', alignItems: 'center', marginBottom: 16, borderWidth: 1, borderColor: 'rgba(45,181,98,0.3)' },
+  portalBanner:    { marginHorizontal: 16, backgroundColor: COLORS.black, borderRadius: 16, padding: 20, flexDirection: 'row', alignItems: 'center', marginBottom: 16, borderWidth: 1 },
   aiBannerLeft:    { flex: 1 },
   aiBannerTag:     { fontSize: 11, color: '#6fdfa3', fontFamily: 'SpaceGrotesk-Medium', marginBottom: 6 },
   aiBannerTitle:   { fontSize: 20, fontFamily: 'Sora-Bold', color: COLORS.white, marginBottom: 6, lineHeight: 26 },

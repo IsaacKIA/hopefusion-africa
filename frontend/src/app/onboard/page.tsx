@@ -1,0 +1,494 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { API } from '../../lib/api';
+
+export default function OnboardPage() {
+  const { user, refreshProfile } = useAuth();
+  const router = useRouter();
+
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Wizard state values
+  const [goals, setGoals] = useState<string[]>([]);
+  const [country, setCountry] = useState('Ghana');
+  const [roles, setRoles] = useState<string[]>(['startup']);
+  
+  // Role profile fields
+  const [startupName, setStartupName] = useState('');
+  const [startupSector, setStartupSector] = useState('fintech');
+  const [startupStage, setStartupStage] = useState('idea');
+  const [teamSize, setTeamSize] = useState(1);
+  
+  const [firmName, setFirmName] = useState('');
+  const [investorType, setInvestorType] = useState('angel');
+  const [ticketMin, setTicketMin] = useState(1000);
+  const [ticketMax, setTicketMax] = useState(50000);
+
+  const [expertise, setExpertise] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>(['English']);
+  const [experienceYears, setExperienceYears] = useState(1);
+  const [mentorBio, setMentorBio] = useState('');
+
+  const [sectors, setSectors] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!user) {
+      router.replace('/login');
+    }
+  }, [user, router]);
+
+  const toggleGoal = (goal: string) => {
+    if (goals.includes(goal)) {
+      setGoals(goals.filter(g => g !== goal));
+    } else {
+      setGoals([...goals, goal]);
+    }
+  };
+
+  const toggleRole = (r: string) => {
+    if (roles.includes(r)) {
+      if (roles.length > 1) {
+        setRoles(roles.filter(role => role !== r));
+      }
+    } else {
+      setRoles([...roles, r]);
+    }
+  };
+
+  const toggleSector = (sec: string) => {
+    if (sectors.includes(sec)) {
+      setSectors(sectors.filter(s => s !== sec));
+    } else {
+      setSectors([...sectors, sec]);
+    }
+  };
+
+  const nextStep = () => {
+    if (step === 1 && goals.length === 0) {
+      setError('Please select at least one goal to proceed.');
+      return;
+    }
+    setError(null);
+    setStep(step + 1);
+  };
+
+  const prevStep = () => {
+    setError(null);
+    setStep(step - 1);
+  };
+
+  const handleFinish = async () => {
+    setLoading(true);
+    setError(null);
+
+    const payload = {
+      goals,
+      country,
+      roles,
+      // startup fields
+      ...(roles.includes('startup') && {
+        startup_name: startupName || `${user?.first_name}'s Startup`,
+        sector: startupSector,
+        stage: startupStage,
+        team_size: teamSize,
+      }),
+      // investor fields
+      ...(roles.includes('investor') && {
+        firm_name: firmName,
+        investor_type: investorType,
+        ticket_min: ticketMin,
+        ticket_max: ticketMax,
+      }),
+      // mentor fields
+      ...(roles.includes('mentor') && {
+        expertise,
+        languages,
+        experience_years: experienceYears,
+        mentor_bio: mentorBio,
+      }),
+      // interests sectors
+      sectors,
+    };
+
+    try {
+      const res = await API.post('/auth/onboard', payload);
+      if (res?.success) {
+        await refreshProfile();
+        router.replace('/dashboard');
+      } else {
+        setError(res?.error || 'Failed to complete onboarding.');
+        setLoading(false);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Verification update failed.');
+      setLoading(false);
+    }
+  };
+
+  const availableGoals = [
+    'Raise Funding',
+    'Find Grants',
+    'Find Mentors',
+    'Find Opportunities',
+    'Hire Talent',
+    'Learn Entrepreneurship',
+    'Invest in Startups',
+    'Support Entrepreneurs'
+  ];
+
+  const countries = ['Ghana', 'Nigeria', 'Kenya', 'Egypt', 'South Africa', 'Rwanda'];
+  
+  const roleOptions = [
+    { value: 'startup', label: 'Startup Founder' },
+    { value: 'investor', label: 'Ecosystem Investor' },
+    { value: 'mentor', label: 'Professional Mentor' },
+    { value: 'student', label: 'Ecosystem Student' },
+    { value: 'corporate', label: 'Corporate Innovation Partner' },
+    { value: 'government', label: 'Government Officer' },
+    { value: 'service_provider', label: 'Service Provider' },
+  ];
+
+  const sectorOptions = ['fintech', 'agritech', 'healthtech', 'cleantech', 'edtech', 'logistics', 'e-commerce', 'ai'];
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--bg-primary)',
+      padding: '40px 24px',
+    }}>
+      <div className="glass-panel" style={{
+        width: '100%',
+        maxWidth: '560px',
+        padding: '40px',
+        boxShadow: 'var(--shadow-lg)'
+      }}>
+        {/* Progress Bar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+          <span>Step {step} of 6</span>
+          <span>{Math.round((step / 6) * 100)}% Completed</span>
+        </div>
+        <div style={{ width: '100%', height: '4px', backgroundColor: 'var(--bg-secondary)', borderRadius: '2px', marginBottom: '32px' }}>
+          <div style={{ width: `${(step / 6) * 100}%`, height: '100%', backgroundColor: 'var(--brand-green)', borderRadius: '2px', transition: 'width 0.3s' }} />
+        </div>
+
+        {error && (
+          <div style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#ef4444',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '24px'
+          }}>
+            {error}
+          </div>
+        )}
+
+        {/* STEP 1: GOAL FIRST ONBOARDING */}
+        {step === 1 && (
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>What brings you to HopeFusion today?</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>Select all items that match your objectives. We will personalize your dashboard recommendations.</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', marginBottom: '32px' }}>
+              {availableGoals.map((g) => {
+                const selected = goals.includes(g);
+                return (
+                  <button
+                    key={g}
+                    onClick={() => toggleGoal(g)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: `1px solid ${selected ? 'var(--brand-green)' : 'rgba(255,255,255,0.08)'}`,
+                      backgroundColor: selected ? 'rgba(45,181,98,0.08)' : 'var(--bg-secondary)',
+                      color: selected ? 'white' : 'var(--text-secondary)',
+                      textAlign: 'left',
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    {g}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: COUNTRY SELECTION */}
+        {step === 2 && (
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Choose your active country</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>We align opportunities and compliance rules with your selected region.</p>
+            <div className="form-group" style={{ marginBottom: '32px' }}>
+              <label className="form-label">Ecosystem Base Country</label>
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="form-input"
+                style={{ color: 'white', backgroundColor: 'var(--bg-secondary)' }}
+              >
+                {countries.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: ROLE SELECTION (MULTI-ROLE) */}
+        {step === 3 && (
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Select your ecosystem roles</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>Select all roles that apply. You can combine multiple roles (e.g. Founder + Mentor).</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', marginBottom: '32px' }}>
+              {roleOptions.map((opt) => {
+                const selected = roles.includes(opt.value);
+                return (
+                  <div
+                    key={opt.value}
+                    onClick={() => toggleRole(opt.value)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: `1px solid ${selected ? 'var(--brand-green)' : 'rgba(255,255,255,0.08)'}`,
+                      backgroundColor: selected ? 'rgba(45,181,98,0.08)' : 'var(--bg-secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: selected ? 'white' : 'var(--text-secondary)' }}>{opt.label}</span>
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => {}} // Swallowed: div handles click
+                      style={{ accentColor: 'var(--brand-green)', cursor: 'pointer' }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: CONDITIONAL ROLE PROFILES */}
+        {step === 4 && (
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Define Profile Details</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>Fill in particulars for your selected roles.</p>
+            
+            {roles.includes('startup') && (
+              <div style={{ borderBottom: roles.length > 1 ? '1px solid rgba(255,255,255,0.08)' : 'none', paddingBottom: '20px', marginBottom: '24px' }}>
+                <h3 style={{ color: 'var(--brand-green)', fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}>Startup Founder Details</h3>
+                <div className="form-group">
+                  <label className="form-label">Startup Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="My Company Ltd"
+                    value={startupName}
+                    onChange={(e) => setStartupName(e.target.value)}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Industry Sector</label>
+                    <select
+                      value={startupSector}
+                      onChange={(e) => setStartupSector(e.target.value)}
+                      className="form-input"
+                      style={{ color: 'white', backgroundColor: 'var(--bg-secondary)' }}
+                    >
+                      {sectorOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Company Stage</label>
+                    <select
+                      value={startupStage}
+                      onChange={(e) => setStartupStage(e.target.value)}
+                      className="form-input"
+                      style={{ color: 'white', backgroundColor: 'var(--bg-secondary)' }}
+                    >
+                      <option value="idea">Idea</option>
+                      <option value="mvp">MVP</option>
+                      <option value="early_traction">Early Traction</option>
+                      <option value="growth">Growth</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {roles.includes('investor') && (
+              <div style={{ borderBottom: roles.includes('mentor') ? '1px solid rgba(255,255,255,0.08)' : 'none', paddingBottom: '20px', marginBottom: '24px' }}>
+                <h3 style={{ color: 'var(--brand-green)', fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}>Investor Details</h3>
+                <div className="form-group">
+                  <label className="form-label">Firm Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Ecosystem Capital"
+                    value={firmName}
+                    onChange={(e) => setFirmName(e.target.value)}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Ticket Min (USD)</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={ticketMin}
+                      onChange={(e) => setTicketMin(parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Ticket Max (USD)</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={ticketMax}
+                      onChange={(e) => setTicketMax(parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {roles.includes('mentor') && (
+              <div>
+                <h3 style={{ color: 'var(--brand-green)', fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}>Mentor Profile Details</h3>
+                <div className="form-group">
+                  <label className="form-label">Biography Overview</label>
+                  <textarea
+                    className="form-input"
+                    style={{ height: '80px', fontFamily: 'inherit', resize: 'vertical' }}
+                    placeholder="Short summary of advisor experience..."
+                    value={mentorBio}
+                    onChange={(e) => setMentorBio(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {!roles.includes('startup') && !roles.includes('investor') && !roles.includes('mentor') && (
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No dynamic profile fields required for selected roles. Proceed to next step.</p>
+            )}
+          </div>
+        )}
+
+        {/* STEP 5: INTERESTS & SECTORS */}
+        {step === 5 && (
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Select Areas of Interest</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>Choose the startup sectors you are interested in tracking.</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
+              {sectorOptions.map((s) => {
+                const selected = sectors.includes(s);
+                return (
+                  <button
+                    key={s}
+                    onClick={() => toggleSector(s)}
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      border: `1px solid ${selected ? 'var(--brand-green)' : 'rgba(255,255,255,0.08)'}`,
+                      backgroundColor: selected ? 'rgba(45,181,98,0.08)' : 'var(--bg-secondary)',
+                      color: selected ? 'white' : 'var(--text-secondary)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      textTransform: 'capitalize'
+                    }}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 6: DASHBOARD ACTIVATION */}
+        {step === 6 && (
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '12px' }}>Onboarding Complete! 🎉</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '32px', lineHeight: '20px' }}>
+              We've updated your HopeScore and personalized recommendations. You are now ready to access the continent's opportunities operating system!
+            </p>
+
+            <button
+              onClick={handleFinish}
+              className="btn-primary"
+              disabled={loading}
+              style={{ width: '100%', justifyContent: 'center', padding: '16px', marginBottom: '16px' }}
+            >
+              {loading ? <div className="spinner" style={{ width: '20px', height: '20px' }} /> : 'Activate Dashboard'}
+            </button>
+          </div>
+        )}
+
+        {/* Wizard Controls */}
+        {step < 6 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '24px' }}>
+            {step > 1 ? (
+              <button onClick={prevStep} style={{
+                background: 'none',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'white',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}>
+                Back
+              </button>
+            ) : (
+              <div />
+            )}
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => router.push('/dashboard')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.85rem'
+                }}
+              >
+                Skip wizard
+              </button>
+
+              <button
+                onClick={nextStep}
+                className="btn-primary"
+                style={{ padding: '12px 24px' }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

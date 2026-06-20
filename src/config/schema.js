@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email         TEXT UNIQUE NOT NULL,
   password_hash TEXT,
-  role          TEXT NOT NULL CHECK (role IN ('startup','investor','mentor','admin')),
+  role          TEXT NOT NULL CHECK (role IN ('startup','investor','mentor','admin','corporate','government','student','service_provider')),
   first_name    TEXT NOT NULL,
   last_name     TEXT NOT NULL,
   phone         TEXT,
@@ -25,10 +25,28 @@ CREATE TABLE IF NOT EXISTS users (
   oauth_id      TEXT,
   last_login    TIMESTAMPTZ,
   created_at    TIMESTAMPTZ DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ DEFAULT NOW()
+  updated_at    TIMESTAMPTZ DEFAULT NOW(),
+  roles         TEXT[] DEFAULT ARRAY['startup']::TEXT[],
+  goals         TEXT[] DEFAULT '{}'::TEXT[],
+  onboarding_completed BOOLEAN DEFAULT FALSE
 );
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_role  ON users(role);
+
+-- ─── STARTUP PASSPORTS ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS startup_passports (
+  id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id              UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  profile_completion   INTEGER DEFAULT 10,
+  verification_status  TEXT DEFAULT 'Verified',
+  hope_score           INTEGER DEFAULT 300,
+  funding_readiness    TEXT DEFAULT 'Low',
+  opportunity_readiness TEXT DEFAULT 'Low',
+  created_at           TIMESTAMPTZ DEFAULT NOW(),
+  updated_at           TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_passports_user ON startup_passports(user_id);
+
 
 -- ─── STARTUPS ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS startups (
@@ -357,4 +375,160 @@ CREATE INDEX        IF NOT EXISTS idx_push_user           ON push_subscriptions(
 -- Alter table queries to add columns if they already exist
 ALTER TABLE mentors ADD COLUMN IF NOT EXISTS experience_years INTEGER DEFAULT 0;
 ALTER TABLE mentors ADD COLUMN IF NOT EXISTS "current_role" TEXT;
+
+-- ─── V4 ECOSYSTEM GRAPH ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS graph_nodes (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  entity_type TEXT NOT NULL CHECK (entity_type IN ('founder', 'startup', 'investor', 'mentor', 'talent', 'university', 'government', 'corporate', 'accelerator', 'supplier', 'development_partner')),
+  properties  JSONB DEFAULT '{}'::jsonb,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_nodes_type ON graph_nodes(entity_type);
+CREATE INDEX IF NOT EXISTS idx_nodes_properties ON graph_nodes USING gin (properties);
+
+CREATE TABLE IF NOT EXISTS graph_edges (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  source_id         UUID NOT NULL REFERENCES graph_nodes(id) ON DELETE CASCADE,
+  target_id         UUID NOT NULL REFERENCES graph_nodes(id) ON DELETE CASCADE,
+  relationship_type TEXT NOT NULL CHECK (relationship_type IN ('invested_in', 'mentored_by', 'founded', 'studied_at', 'worked_at', 'partnered_with', 'funded_by', 'contracted_by', 'endorsed_by')),
+  weight            NUMERIC(5,2) DEFAULT 1.0,
+  metadata          JSONB DEFAULT '{}'::jsonb,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT unique_source_target_rel UNIQUE (source_id, target_id, relationship_type)
+);
+CREATE INDEX IF NOT EXISTS idx_edges_source ON graph_edges(source_id);
+CREATE INDEX IF NOT EXISTS idx_edges_target ON graph_edges(target_id);
+CREATE INDEX IF NOT EXISTS idx_edges_type   ON graph_edges(relationship_type);
+
+-- ─── V4 OPPORTUNITIES ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS opportunities (
+  id                 UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title              TEXT NOT NULL,
+  description        TEXT,
+  opportunity_type   TEXT CHECK (opportunity_type IN ('grant', 'investment', 'job', 'accelerator', 'competition', 'scholarship', 'procurement', 'corporate_challenge', 'government_program')),
+  value_amount       NUMERIC(15,2),
+  currency           VARCHAR(3) DEFAULT 'USD',
+  eligible_countries JSONB DEFAULT '[]'::jsonb,
+  eligible_sectors   JSONB DEFAULT '[]'::jsonb,
+  eligible_stages    JSONB DEFAULT '[]'::jsonb,
+  deadline           TIMESTAMPTZ,
+  embedding          vector(384),
+  metadata           JSONB DEFAULT '{}'::jsonb,
+  created_at         TIMESTAMPTZ DEFAULT NOW(),
+  updated_at         TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_opp_deadline ON opportunities(deadline);
+CREATE INDEX IF NOT EXISTS idx_opp_type     ON opportunities(opportunity_type);
+
+-- ─── V4 MATCH OPPORTUNITIES FUNCTION ────────────────────────────
+CREATE OR REPLACE FUNCTION match_opportunities(
+  startup_embedding vector(384),
+  startup_country TEXT,
+  startup_sector TEXT,
+  startup_stage TEXT,
+  match_limit INT
+)
+RETURNS TABLE (
+  opportunity_id UUID,
+  title TEXT,
+  raw_similarity FLOAT,
+  adjusted_score FLOAT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    o.id AS opportunity_id,
+    o.title,
+    (1 - (o.embedding <=> startup_embedding))::FLOAT AS raw_similarity,
+    (
+      (1 - (o.embedding <=> startup_embedding)) * 0.7 +
+      (CASE WHEN COALESCE(o.eligible_countries, '[]'::jsonb) ? startup_country THEN 0.15 ELSE 0 END) +
+      (CASE WHEN COALESCE(o.eligible_sectors, '[]'::jsonb) ? startup_sector THEN 0.10 ELSE 0 END) +
+      (CASE WHEN COALESCE(o.eligible_stages, '[]'::jsonb) ? startup_stage THEN 0.05 ELSE 0 END)
+    )::FLOAT AS adjusted_score
+  FROM opportunities o
+  WHERE (o.deadline IS NULL OR o.deadline > CURRENT_TIMESTAMP)
+    AND (
+      COALESCE(o.eligible_countries, '[]'::jsonb) ? startup_country 
+      OR COALESCE(o.eligible_countries, '[]'::jsonb) ? 'ALL'
+      OR jsonb_array_length(COALESCE(o.eligible_countries, '[]'::jsonb)) = 0
+    )
+  ORDER BY adjusted_score DESC
+  LIMIT match_limit;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ─── V4 FOUNDER OS WORKSPACE ──────────────────────────────────
+CREATE TABLE IF NOT EXISTS founder_financial_ledgers (
+  id                       UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  startup_id               UUID NOT NULL REFERENCES startups(id) ON DELETE CASCADE UNIQUE,
+  bank_balance             NUMERIC(15,2) NOT NULL,
+  monthly_burn_rate        NUMERIC(12,2) NOT NULL,
+  currency                 VARCHAR(3) DEFAULT 'USD',
+  ledger_history           JSONB DEFAULT '[]'::jsonb,
+  forecasted_runway_months NUMERIC(4,1) DEFAULT 0.0,
+  updated_at               TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ledgers_startup ON founder_financial_ledgers(startup_id);
+
+CREATE TABLE IF NOT EXISTS founder_investor_relations (
+  id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  startup_id           UUID NOT NULL REFERENCES startups(id) ON DELETE CASCADE,
+  investor_node_id     UUID NOT NULL REFERENCES graph_nodes(id) ON DELETE CASCADE,
+  pipeline_stage       TEXT DEFAULT 'lead' CHECK (pipeline_stage IN ('lead', 'contacted', 'pitching', 'due_diligence', 'term_sheet', 'funded', 'passed')),
+  last_interaction_at TIMESTAMPTZ,
+  notes                TEXT,
+  equity_offered       NUMERIC(5,2) DEFAULT 0.00,
+  created_at           TIMESTAMPTZ DEFAULT NOW(),
+  updated_at           TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_inv_relations_startup ON founder_investor_relations(startup_id);
+
+-- ─── V4 METRICS, ESCROW & MILESTONES ───────────────────────────
+CREATE TABLE IF NOT EXISTS startup_profiles_v4 (
+  id                               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  startup_node_id                  UUID NOT NULL REFERENCES graph_nodes(id) ON DELETE CASCADE,
+  industry_sector                  TEXT NOT NULL,
+  current_stage                    TEXT NOT NULL,
+  monthly_recurring_revenue        NUMERIC(15,2) DEFAULT 0.00,
+  annual_recurring_revenue         NUMERIC(15,2) DEFAULT 0.00,
+  headcount                        INT DEFAULT 1,
+  female_representation_percentage NUMERIC(5,2) DEFAULT 0.00,
+  youth_representation_percentage  NUMERIC(5,2) DEFAULT 0.00,
+  sdg_alignment_targets            INTEGER[] DEFAULT '{}',
+  is_registered_incorporation      BOOLEAN DEFAULT FALSE,
+  registry_number                  TEXT,
+  incorporation_country            VARCHAR(3)
+);
+CREATE INDEX IF NOT EXISTS idx_profile4_node ON startup_profiles_v4(startup_node_id);
+
+CREATE TABLE IF NOT EXISTS platform_escrows_v4 (
+  id                 UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  deal_id            TEXT NOT NULL,
+  investor_node_id   UUID NOT NULL REFERENCES graph_nodes(id) ON DELETE CASCADE,
+  startup_node_id    UUID NOT NULL REFERENCES graph_nodes(id) ON DELETE CASCADE,
+  total_amount       NUMERIC(15,2) NOT NULL,
+  currency           VARCHAR(3) DEFAULT 'USD',
+  escrow_type        TEXT NOT NULL CHECK (escrow_type IN ('MATIC', 'ERC20', 'MOBILE_MONEY', 'CARD')),
+  token_address      VARCHAR(42),
+  status             TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'disputed', 'cancelled')),
+  arbitrator_node_id UUID NOT NULL REFERENCES graph_nodes(id) ON DELETE CASCADE,
+  created_at         TIMESTAMPTZ DEFAULT NOW(),
+  updated_at         TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_escrow4_investor ON platform_escrows_v4(investor_node_id);
+CREATE INDEX IF NOT EXISTS idx_escrow4_startup  ON platform_escrows_v4(startup_node_id);
+
+CREATE TABLE IF NOT EXISTS escrow_milestones_v4 (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  escrow_id       UUID NOT NULL REFERENCES platform_escrows_v4(id) ON DELETE CASCADE,
+  milestone_index INT NOT NULL,
+  title           TEXT NOT NULL,
+  amount          NUMERIC(15,2) NOT NULL,
+  status          TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'submitted', 'approved', 'rejected')),
+  evidence_uri    TEXT,
+  submitted_at    TIMESTAMPTZ,
+  due_date        TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_milestones4_escrow ON escrow_milestones_v4(escrow_id);
 `;

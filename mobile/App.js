@@ -13,6 +13,11 @@ import SplashScreen     from './src/screens/SplashScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import LoginScreen      from './src/screens/auth/LoginScreen';
 import RegisterScreen   from './src/screens/auth/RegisterScreen';
+import VerifyOTPScreen  from './src/screens/auth/VerifyOTPScreen';
+import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
+import ResetPasswordScreen from './src/screens/auth/ResetPasswordScreen';
+import WelcomeScreen    from './src/screens/auth/WelcomeScreen';
+import OnboardingWizardScreen from './src/screens/auth/OnboardingWizardScreen';
 import DashboardScreen  from './src/screens/dashboard/DashboardScreen';
 import MatchesScreen    from './src/screens/matches/MatchesScreen';
 import MatchDetailScreen from './src/screens/matches/MatchDetailScreen';
@@ -25,6 +30,11 @@ import MessagesScreen   from './src/screens/messages/MessagesScreen';
 import ChatScreen       from './src/screens/messages/ChatScreen';
 import ProfileScreen    from './src/screens/profile/ProfileScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
+import FounderOSScreen  from './src/screens/dashboard/FounderOSScreen';
+import MatchScreen      from './src/screens/opportunities/MatchScreen';
+import AssistantScreen  from './src/screens/chat/AssistantScreen';
+import PortalWorkspaceScreen from './src/screens/investor/PortalWorkspaceScreen';
+import EscrowTrackerScreen from './src/screens/opportunities/EscrowTrackerScreen';
 
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
@@ -98,9 +108,28 @@ function MainTabs() {
 function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-      <Stack.Screen name="Login"      component={LoginScreen} />
-      <Stack.Screen name="Register"   component={RegisterScreen} />
+      <Stack.Screen name="Onboarding"     component={OnboardingScreen} />
+      <Stack.Screen name="Login"          component={LoginScreen} />
+      <Stack.Screen name="Register"       component={RegisterScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="ResetPassword"  component={ResetPasswordScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function VerifyStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function OnboardingStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Welcome"          component={WelcomeScreen} />
+      <Stack.Screen name="OnboardingWizard" component={OnboardingWizardScreen} />
     </Stack.Navigator>
   );
 }
@@ -119,6 +148,11 @@ function AppStack() {
       <Stack.Screen name="Chat"         component={ChatScreen}        options={{ title: 'Message' }} />
       <Stack.Screen name="Profile"      component={ProfileScreen}     options={{ title: 'My profile' }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
+      <Stack.Screen name="FounderOS"    component={FounderOSScreen}   options={{ headerShown: false }} />
+      <Stack.Screen name="MatchScreen"  component={MatchScreen}       options={{ headerShown: false }} />
+      <Stack.Screen name="Assistant"    component={AssistantScreen}   options={{ headerShown: false }} />
+      <Stack.Screen name="PortalWorkspace" component={PortalWorkspaceScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="EscrowTracker"   component={EscrowTrackerScreen}   options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
@@ -126,7 +160,18 @@ function AppStack() {
 function RootNavigator() {
   const { user, loading } = useAuth();
   if (loading) return <SplashScreen />;
-  return user ? <AppStack /> : <AuthStack />;
+  
+  if (!user) {
+    return <AuthStack />;
+  }
+  if (!user.is_verified) {
+    return <VerifyStack />;
+  }
+  if (!user.onboarding_completed) {
+    return <OnboardingStack />;
+  }
+  
+  return <AppStack />;
 }
 
 export default function App() {

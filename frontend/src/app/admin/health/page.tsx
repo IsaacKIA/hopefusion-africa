@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { API as apiClient } from '../../../lib/api';
 
 interface HealthData {
   status: string;
@@ -52,15 +51,14 @@ export default function AdminHealth() {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('hfa_token') || '' : '';
-
   async function fetchHealth() {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/v1/health`);
-      const d = await r.json();
+      const d = await apiClient.get('/health');
       setData(d);
       setLastRefresh(new Date());
+    } catch (err) {
+      console.error('Health check failed:', err);
     } finally { setLoading(false); }
   }
 
@@ -113,7 +111,7 @@ export default function AdminHealth() {
           <StatusCard icon="🤖" label="AI Engine"
             status="degraded" detail="Anthropic credits exhausted" />
         </>}
-        {loading && !data && [1,2,3,4].map(i => (
+        {loading && !data && [1,2,3,4].map((i: number) => (
           <div key={i} className="health-card health-skeleton" />
         ))}
       </div>
