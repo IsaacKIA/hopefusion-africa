@@ -59,6 +59,11 @@ function LoginFormContent() {
         padding: '40px',
         boxShadow: 'var(--shadow-lg)'
       }}>
+        <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+          <Link href="/" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            ← Back to Home
+          </Link>
+        </div>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.5rem', fontWeight: 800 }}>

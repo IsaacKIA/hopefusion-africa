@@ -210,7 +210,7 @@ describe('Auth Integration Tests', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.message).toContain('reset code was sent');
+      expect(res.body.message).toContain('reset code has been sent');
     });
 
     it('should send reset code for a valid phone number', async () => {
@@ -226,7 +226,7 @@ describe('Auth Integration Tests', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.message).toContain('reset code was sent');
+      expect(res.body.message).toContain('reset code has been sent');
     });
 
     it('should reset password and revoke old tokens', async () => {

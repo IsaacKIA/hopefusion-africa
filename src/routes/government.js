@@ -67,12 +67,14 @@ const disburseEscrowSchema = z.object({
 // GET /government/analytics - SME national dashboard aggregations
 router.get('/analytics', authenticate, authorizeGov, async (req, res) => {
   try {
-    const totalStartupsRes = await db.query('SELECT COUNT(*) AS count FROM startups');
-    const totalCorpRes = await db.query('SELECT COUNT(*) AS count FROM startup_profiles_v4 WHERE is_registered_incorporation = true');
-    const avgHeadcountRes = await db.query('SELECT AVG(headcount) AS avg FROM startup_profiles_v4');
-    const avgFemaleRes = await db.query('SELECT AVG(female_representation_percentage) AS avg FROM startup_profiles_v4');
-    const avgYouthRes = await db.query('SELECT AVG(youth_representation_percentage) AS avg FROM startup_profiles_v4');
-    const sectorsRes = await db.query('SELECT sector, COUNT(*) AS count FROM startups GROUP BY sector');
+    const [totalStartupsRes, totalCorpRes, avgHeadcountRes, avgFemaleRes, avgYouthRes, sectorsRes] = await Promise.all([
+      db.query('SELECT COUNT(*) AS count FROM startups'),
+      db.query('SELECT COUNT(*) AS count FROM startup_profiles_v4 WHERE is_registered_incorporation = true'),
+      db.query('SELECT AVG(headcount) AS avg FROM startup_profiles_v4'),
+      db.query('SELECT AVG(female_representation_percentage) AS avg FROM startup_profiles_v4'),
+      db.query('SELECT AVG(youth_representation_percentage) AS avg FROM startup_profiles_v4'),
+      db.query('SELECT sector, COUNT(*) AS count FROM startups GROUP BY sector')
+    ]);
 
     return res.json({
       success: true,

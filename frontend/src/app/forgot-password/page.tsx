@@ -30,6 +30,11 @@ export default function ForgotPasswordPage() {
       
       if (res.ok) {
         setMessage('If that email exists, a password reset code has been sent.');
+        if (data.debug_otp) {
+          localStorage.setItem('hfa_debug_otp', data.debug_otp);
+        } else {
+          localStorage.removeItem('hfa_debug_otp');
+        }
       } else {
         setError(data.error || 'Request failed. Please try again.');
       }
@@ -55,6 +60,11 @@ export default function ForgotPasswordPage() {
         padding: '40px',
         boxShadow: 'var(--shadow-lg)'
       }}>
+        <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+          <Link href="/" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            ← Back to Home
+          </Link>
+        </div>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.5rem', fontWeight: 800 }}>

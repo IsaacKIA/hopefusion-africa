@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { HFAApi } from '../../lib/api';
+import { useMounted } from '../../hooks/useMounted';
 
 export default function WelcomePage() {
   const { user } = useAuth();
   const router = useRouter();
+  const mounted = useMounted();
   // Use data directly from AuthContext — no extra API call needed
   const passport = user;
 
@@ -43,7 +45,7 @@ export default function WelcomePage() {
         </span>
         
         <h1 style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: '8px', color: 'white', fontFamily: 'Outfit, sans-serif' }}>
-          Welcome, {user?.first_name}!
+          Welcome, {mounted ? (user?.first_name ?? '') : ''}!
         </h1>
         
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '40px', lineHeight: '24px' }}>

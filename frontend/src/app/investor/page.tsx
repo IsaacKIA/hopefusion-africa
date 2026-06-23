@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { API, HFAApi } from '../../lib/api';
 import RouteGuard from '../../components/RouteGuard';
 import Link from 'next/link';
+import { useMounted } from '../../hooks/useMounted';
 
 interface Startup {
   id: string;
@@ -58,6 +59,7 @@ interface SMEAnalytics {
 
 export default function PortalsDashboard() {
   const { user, logout, refreshProfile } = useAuth();
+  const mounted = useMounted();
   
   // Tab switcher: 'thesis' | 'government' | 'corporate'
   const [activeTab, setActiveTab] = useState<'thesis' | 'government' | 'corporate'>('thesis');
@@ -375,7 +377,7 @@ export default function PortalsDashboard() {
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Welcome, {user?.first_name} {user?.last_name}
+              Welcome, {mounted ? `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() : ''}
             </span>
             <button onClick={logout} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
               Logout
@@ -389,7 +391,7 @@ export default function PortalsDashboard() {
           <div className="glass-panel glow-green" style={{ padding: '32px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
             <div>
               <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>
-                {user?.investor_profile?.firm_name || `${user?.first_name}'s Workspace`}
+                {mounted ? (user?.investor_profile?.firm_name || `${user?.first_name ?? ''}'s Workspace`) : ''}
               </h1>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                 Manage investments, audit registered startups, and release milestone-locked contract payouts.

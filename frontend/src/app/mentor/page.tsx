@@ -6,10 +6,12 @@ import { HFAApi } from '../../lib/api';
 import RouteGuard from '../../components/RouteGuard';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useMounted } from '../../hooks/useMounted';
 
 function MentorDashboardContent() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const mounted = useMounted();
   
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +92,7 @@ function MentorDashboardContent() {
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Dr. {user?.last_name || 'Advisor'}
+            Dr. {mounted ? (user?.last_name || 'Advisor') : ''}
           </span>
           <button onClick={logout} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
             Logout
@@ -105,7 +107,7 @@ function MentorDashboardContent() {
         <div className="glass-panel glow-green" style={{ padding: '32px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
           <div>
             <h1 style={{ fontSize: '2.0rem', marginBottom: '8px', fontFamily: 'Outfit' }}>
-              Welcome, Dr. {user?.first_name} {user?.last_name}
+              Welcome, Dr. {mounted ? `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() : ''}
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
               Agricultural economist & strategic business mentor. Managing West Africa’s next scale startups.

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { API } from '../../lib/api';
+import Link from 'next/link';
 
 export default function OnboardPage() {
   const { user, refreshProfile } = useAuth();
@@ -170,6 +171,11 @@ export default function OnboardPage() {
         padding: '40px',
         boxShadow: 'var(--shadow-lg)'
       }}>
+        <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+          <Link href="/" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            ← Back to Home
+          </Link>
+        </div>
         {/* Progress Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
           <span>Step {step} of 6</span>

@@ -27,7 +27,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     return null;
   });
-  const [loading, setLoading] = useState(false); // Never block initial render
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('hfa_user');
+      if (saved) return false;
+    }
+    return true;
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -65,6 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {
         // Backend offline — keep showing cached user, don't log out
         console.warn('[Auth] Could not reach server — using cached session');
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, [router]);
 
@@ -90,6 +99,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (res?.success) {
       localStorage.setItem('hfa_user', JSON.stringify(res.user));
       setUser(res.user);
+      if (res.debug_otp) {
+        localStorage.setItem('hfa_debug_otp', res.debug_otp);
+      } else {
+        localStorage.removeItem('hfa_debug_otp');
+      }
       subscribeToPush().catch(() => {});
       
       // Registration goes straight to verify

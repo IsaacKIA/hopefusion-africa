@@ -5,9 +5,11 @@ import { useAuth } from '../../context/AuthContext';
 import { HFAApi } from '../../lib/api';
 import RouteGuard from '../../components/RouteGuard';
 import Link from 'next/link';
+import { useMounted } from '../../hooks/useMounted';
 
 function StartupDashboardContent() {
   const { user, logout, refreshProfile } = useAuth();
+  const mounted = useMounted();
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -75,7 +77,7 @@ function StartupDashboardContent() {
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Welcome, {user?.first_name} {user?.last_name}
+            Welcome, {mounted ? `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() : ''}
           </span>
           <button onClick={logout} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
             Logout
@@ -90,10 +92,10 @@ function StartupDashboardContent() {
         <div className="glass-panel glow-green" style={{ padding: '32px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
           <div>
             <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>
-              {user?.startup_profile?.name || `${user?.first_name}'s Startup`}
+              {mounted ? (user?.startup_profile?.name || `${user?.first_name ?? ''}'s Startup`) : ''}
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              {user?.startup_profile?.tagline || 'Define your tagline to match with investors.'}
+              {mounted ? (user?.startup_profile?.tagline || 'Define your tagline to match with investors.') : ''}
             </p>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -211,18 +213,18 @@ function StartupDashboardContent() {
                 <div>
                   <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Description</h4>
                   <p style={{ fontSize: '0.95rem', lineHeight: 1.6 }}>
-                    {user?.startup_profile?.description || 'No description provided yet.'}
+                    {mounted ? (user?.startup_profile?.description || 'No description provided yet.') : ''}
                   </p>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
                   <div>
                     <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Sector</h4>
-                    <p style={{ fontWeight: 600 }}>{user?.startup_profile?.sector || 'General'}</p>
+                    <p style={{ fontWeight: 600 }}>{mounted ? (user?.startup_profile?.sector || 'General') : ''}</p>
                   </div>
                   <div>
                     <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Funding Goal</h4>
                     <p style={{ fontWeight: 600, color: 'var(--brand-amber)' }}>
-                      ${(user?.startup_profile?.funding_goal || 0).toLocaleString()} USD
+                      ${mounted ? (user?.startup_profile?.funding_goal || 0).toLocaleString() : '0'} USD
                     </p>
                   </div>
                 </div>

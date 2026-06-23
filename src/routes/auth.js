@@ -77,18 +77,27 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
     const hash = await hashPassword(password);
     const code = generateVerifyCode();
     const normalizedPhone = normalizePhoneNumber(phone, country);
-    const website_url = role === 'startup' ? startup_website : (role === 'investor' ? firm_website : null);
+
+    // Map government and corporate roles to investor
+    let dbRole = role;
+    let mappedInvestorType = null;
+    if (role === 'government' || role === 'corporate') {
+      dbRole = 'investor';
+      mappedInvestorType = role;
+    }
+
+    const website_url = dbRole === 'startup' ? startup_website : (dbRole === 'investor' ? firm_website : null);
 
     await client.query('BEGIN');
 
     const { rows: [user] } = await client.query(
       `INSERT INTO users (email, password_hash, role, roles, first_name, last_name, phone, country, linkedin_url, website_url, bio)
        VALUES ($1, $2, $3, ARRAY[$3]::TEXT[], $4, $5, $6, $7, $8, $9, $10) RETURNING id, email, role, first_name, last_name`,
-      [email, hash, role, first_name, last_name, normalizedPhone, country || null, linkedin_url || null, website_url || null, role === 'mentor' ? mentor_bio || null : null]
+      [email, hash, dbRole, first_name, last_name, normalizedPhone, country || null, linkedin_url || null, website_url || null, dbRole === 'mentor' ? mentor_bio || null : null]
     );
 
     // Create role-specific profile (create base profiles so updating works later during onboarding)
-    if (role === 'startup') {
+    if (dbRole === 'startup') {
       await client.query(
         `INSERT INTO startups (founder_id, name, tagline, sector, stage, country, team_size, funding_goal, funding_type, sdgs, is_women_led, website_url)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
@@ -107,14 +116,14 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
           startup_website || null
         ]
       );
-    } else if (role === 'investor') {
+    } else if (dbRole === 'investor') {
       await client.query(
         `INSERT INTO investors (user_id, firm_name, investor_type, sectors, stages, countries, instruments, ticket_min, ticket_max)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [
           user.id,
           firm_name || null,
-          investor_type || null,
+          mappedInvestorType || investor_type || 'angel',
           sectors || null,
           stages || null,
           countries || null,
@@ -123,7 +132,7 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
           ticket_max !== undefined ? ticket_max : null
         ]
       );
-    } else if (role === 'mentor') {
+    } else if (dbRole === 'mentor') {
       await client.query(
         `INSERT INTO mentors (user_id, expertise, session_types, languages, experience_years, max_mentees, hourly_rate, "current_role", bio_extended)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
@@ -379,12 +388,25 @@ router.post('/forgot-password', rateLimit(3, 300), validate(forgotPasswordSchema
     const code = generateVerifyCode();
     await cacheSet(`reset:${rows[0].id}`, code, 1800);
     
-    await sendEmail(
-      rows[0].email,
-      'Your HopeFusion Africa password reset code',
-      buildOTPEmail(rows[0].first_name, code, 'reset')
-    ).catch(err => console.error('[Auth] Password reset email error:', err.message));
-    return res.json({ success: true, message: 'If that email exists, a reset code was sent.' });
+    let emailResult = { provider: 'unknown' };
+    try {
+      emailResult = await sendEmail(
+        rows[0].email,
+        'Your HopeFusion Africa password reset code',
+        buildOTPEmail(rows[0].first_name, code, 'reset')
+      );
+    } catch (err) {
+      console.error('[Auth] Password reset email error:', err.message);
+    }
+
+    const emailDelivered = emailResult.provider === 'resend' || emailResult.provider === 'smtp';
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    return res.json({
+      success: true,
+      message: 'If that email exists, a password reset code has been sent.',
+      ...((!emailDelivered && isDev) && { debug_otp: code })
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -455,13 +477,27 @@ router.post(['/resend', '/resend-verify'], authenticate, async (req, res) => {
     
     await cacheSet(`verify:${userId}`, code, 600);
     
-    await sendEmail(
-      email,
-      'Your HopeFusion Africa verification code',
-      buildOTPEmail(first_name, code, 'verify')
-    ).catch(err => console.error('[Auth] Resend OTP email error:', err.message));
+    let emailResult = { provider: 'unknown' };
+    try {
+      emailResult = await sendEmail(
+        email,
+        'Your HopeFusion Africa verification code',
+        buildOTPEmail(first_name, code, 'verify')
+      );
+    } catch (err) {
+      console.error('[Auth] Resend OTP email error:', err.message);
+    }
     
-    return res.json({ success: true, message: 'Verification code resent successfully' });
+    const emailDelivered = emailResult.provider === 'resend' || emailResult.provider === 'smtp';
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    return res.json({
+      success: true,
+      message: emailDelivered
+        ? 'Verification code resent successfully'
+        : 'Verification code generated. Email delivery failed — use the code below.',
+      ...((!emailDelivered && isDev) && { debug_otp: code })
+    });
   } catch (err) {
     console.error('Resend OTP error:', err);
     return res.status(500).json({ error: 'Failed to resend verification code' });
@@ -473,7 +509,10 @@ router.get('/status', authenticate, async (req, res) => {
   try {
     const { rows } = await db.query(
       `SELECT u.id, u.email, u.role, u.roles, u.first_name, u.last_name, u.is_verified, u.onboarding_completed,
-              p.profile_completion, p.hope_score, p.verification_status, p.funding_readiness, p.opportunity_readiness
+              p.profile_completion, p.hope_score, p.verification_status, p.funding_readiness, p.opportunity_readiness,
+              (CASE WHEN u.role='startup' THEN (SELECT row_to_json(s) FROM startups s WHERE s.founder_id=u.id LIMIT 1) END) as startup_profile,
+              (CASE WHEN u.role='investor' THEN (SELECT row_to_json(i) FROM investors i WHERE i.user_id=u.id LIMIT 1) END) as investor_profile,
+              (CASE WHEN u.role='mentor' THEN (SELECT row_to_json(m) FROM mentors m WHERE m.user_id=u.id LIMIT 1) END) as mentor_profile
        FROM users u
        LEFT JOIN startup_passports p ON p.user_id = u.id
        WHERE u.id = $1`,
@@ -504,17 +543,21 @@ router.post('/onboard', authenticate, validate(onboardingSchema), async (req, re
 
     await client.query('BEGIN');
 
+    // Map government/corporate roles to investor
+    const mappedRoles = roles.map(r => (r === 'government' || r === 'corporate') ? 'investor' : r);
+    const uniqueRoles = [...new Set(mappedRoles)];
+    const primaryRole = uniqueRoles[0];
+
     // Update users core fields
-    const primaryRole = roles[0];
     await client.query(
       `UPDATE users
        SET goals = $1, country = $2, role = $3, roles = $4, onboarding_completed = TRUE, updated_at = NOW()
        WHERE id = $5`,
-      [goals, country, primaryRole, roles, req.user.userId]
+      [goals, country, primaryRole, uniqueRoles, req.user.userId]
     );
 
     // Create / update profiles for each role
-    for (const r of roles) {
+    for (const r of uniqueRoles) {
       if (r === 'startup') {
         const startupName = startup_name || `${req.user.first_name}'s Startup`;
         const existing = await client.query('SELECT id FROM startups WHERE founder_id = $1', [req.user.userId]);
@@ -547,6 +590,10 @@ router.post('/onboard', authenticate, validate(onboardingSchema), async (req, re
           );
         }
       } else if (r === 'investor') {
+        let onboardingInvestorType = investor_type;
+        if (roles.includes('government')) onboardingInvestorType = 'government';
+        else if (roles.includes('corporate')) onboardingInvestorType = 'corporate';
+
         const existing = await client.query('SELECT id FROM investors WHERE user_id = $1', [req.user.userId]);
         if (existing.rows.length) {
           await client.query(
@@ -557,7 +604,7 @@ router.post('/onboard', authenticate, validate(onboardingSchema), async (req, re
              WHERE user_id = $9`,
             [
               firm_name || null,
-              investor_type || null,
+              onboardingInvestorType || null,
               ticket_min !== undefined ? ticket_min : null,
               ticket_max !== undefined ? ticket_max : null,
               sectors || null,
@@ -571,7 +618,7 @@ router.post('/onboard', authenticate, validate(onboardingSchema), async (req, re
           await client.query(
             `INSERT INTO investors (user_id, firm_name, investor_type, sectors, stages, countries, instruments, ticket_min, ticket_max)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-            [req.user.userId, firm_name || null, investor_type || null, sectors || null, stages || null, countries || null, instruments || null, ticket_min || null, ticket_max || null]
+            [req.user.userId, firm_name || null, onboardingInvestorType || null, sectors || null, stages || null, countries || null, instruments || null, ticket_min || null, ticket_max || null]
           );
         }
       } else if (r === 'mentor') {

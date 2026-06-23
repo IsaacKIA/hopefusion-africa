@@ -15,6 +15,16 @@ function ResetPasswordFormContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [debugOtp, setDebugOtp] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('hfa_debug_otp');
+      if (cached) {
+        setDebugOtp(cached);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const emailParam = searchParams.get('email');
@@ -57,6 +67,9 @@ function ResetPasswordFormContent() {
       const data = await res.json();
 
       if (res.ok) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('hfa_debug_otp');
+        }
         router.push('/login?reset=success');
       } else {
         setError(data.error || 'Failed to reset password. Check details.');
@@ -83,6 +96,11 @@ function ResetPasswordFormContent() {
         padding: '40px',
         boxShadow: 'var(--shadow-lg)'
       }}>
+        <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+          <Link href="/" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            ← Back to Home
+          </Link>
+        </div>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.5rem', fontWeight: 800, display: 'inline-flex', gap: '8px', marginBottom: '16px' }}>
             <span style={{ color: 'var(--brand-green)' }}>Hope</span>Fusion
@@ -92,6 +110,21 @@ function ResetPasswordFormContent() {
             Enter your recovery code and specify a new secure password
           </p>
         </div>
+
+        {debugOtp && (
+          <div style={{
+            backgroundColor: 'rgba(245, 158, 11, 0.08)',
+            border: '1px solid rgba(245, 158, 11, 0.2)',
+            color: '#f59e0b',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '24px',
+            textAlign: 'left'
+          }}>
+            <strong>Development Mode:</strong> Your password reset OTP is <strong style={{ color: 'white', fontFamily: 'monospace', fontSize: '1rem' }}>{debugOtp}</strong>
+          </div>
+        )}
 
         {error && (
           <div style={{

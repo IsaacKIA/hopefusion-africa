@@ -12,11 +12,22 @@ export default function VerifyPage() {
   const { user, refreshProfile } = useAuth();
   const router = useRouter();
   
+  const [mounted, setMounted] = useState(false);
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(60);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
+  const [debugOtp, setDebugOtp] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('hfa_debug_otp');
+      if (cached) {
+        setDebugOtp(cached);
+      }
+    }
+  }, []);
 
   const inputRefs = [
     useRef<HTMLInputElement>(null),
@@ -26,6 +37,8 @@ export default function VerifyPage() {
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null)
   ];
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     // Redirect if not logged in or already verified
@@ -88,6 +101,9 @@ export default function VerifyPage() {
     try {
       const res = await HFAApi.verifyEmail(verificationCode);
       if (res?.success) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('hfa_debug_otp');
+        }
         await refreshProfile();
         router.replace('/welcome');
       } else {
@@ -105,9 +121,16 @@ export default function VerifyPage() {
     setError(null);
     setResendStatus('Sending code...');
     try {
-      await API.post('/auth/resend');
+      const res = await API.post('/auth/resend');
       setResendTimer(60);
       setResendStatus('A new verification code has been sent.');
+      if (res?.debug_otp) {
+        localStorage.setItem('hfa_debug_otp', res.debug_otp);
+        setDebugOtp(res.debug_otp);
+      } else {
+        localStorage.removeItem('hfa_debug_otp');
+        setDebugOtp(null);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to resend code. Please try again.');
       setResendStatus(null);
@@ -130,15 +153,39 @@ export default function VerifyPage() {
         boxShadow: 'var(--shadow-lg)',
         textAlign: 'center'
       }}>
+        <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+          <Link href="/" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            ← Back to Home
+          </Link>
+        </div>
         <div style={{ marginBottom: '32px' }}>
           <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.5rem', fontWeight: 800, display: 'inline-flex', gap: '8px', marginBottom: '24px' }}>
             <span style={{ color: 'var(--brand-green)' }}>Hope</span>Fusion
           </span>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 700 }}>Security Verification</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '8px', lineHeight: '20px' }}>
-            We sent a 6-digit OTP code to <strong style={{ color: 'white' }}>{user?.email}</strong>. Enter it below to secure and verify your account.
+            We sent a 6-digit OTP code to{' '}
+            <strong style={{ color: 'white' }}>
+              {mounted ? (user?.email ?? '') : ''}
+            </strong>
+            . Enter it below to secure and verify your account.
           </p>
         </div>
+
+        {debugOtp && (
+          <div style={{
+            backgroundColor: 'rgba(245, 158, 11, 0.08)',
+            border: '1px solid rgba(245, 158, 11, 0.2)',
+            color: '#f59e0b',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '24px',
+            textAlign: 'left'
+          }} id="dev-otp-banner">
+            <strong>Development Mode:</strong> Your verification OTP is <strong style={{ color: 'white', fontFamily: 'monospace', fontSize: '1rem' }}>{debugOtp}</strong>
+          </div>
+        )}
 
         {error && (
           <div style={{

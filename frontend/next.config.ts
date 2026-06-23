@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   // Required for Docker standalone deployment
   output: "standalone",
 
+  // Fix Turbopack workspace root warning (monorepo: root lockfile vs frontend lockfile)
+  turbopack: {
+    root: __dirname,
+  },
+
   // Security headers
   async headers() {
     return [

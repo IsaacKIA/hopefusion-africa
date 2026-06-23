@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 export default function Home() {
   const { user, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [counters, setCounters] = useState({ startups: 0, funding: 0, jobs: 0, market: 0 });
 
@@ -14,6 +15,8 @@ export default function Home() {
   const [liveCollab, setLiveCollab] = useState(87);
 
   // Counter animations on load
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
     const duration = 2000;
     const startTime = performance.now();
@@ -103,7 +106,18 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {user ? (
+          {/* Defer auth-dependent nav until after hydration to prevent SSR mismatch */}
+          {!mounted ? (
+            // Placeholder with same dimensions shown on server & first client paint
+            <>
+              <Link href="/login" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem', visibility: 'hidden' }}>
+                Sign In
+              </Link>
+              <Link href="/register" className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', visibility: 'hidden' }}>
+                Get Started
+              </Link>
+            </>
+          ) : user ? (
             <>
               <Link href="/dashboard" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
                 Dashboard

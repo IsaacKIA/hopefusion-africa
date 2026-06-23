@@ -77,6 +77,11 @@ export default function RegisterPage() {
       justifyContent: 'center', backgroundColor: 'var(--bg-primary)', padding: '40px 24px',
     }}>
       <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '40px', boxShadow: 'var(--shadow-lg)' }}>
+        <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+          <Link href="/" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            ← Back to Home
+          </Link>
+        </div>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
