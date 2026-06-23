@@ -32,7 +32,7 @@ async function runSeed() {
     await client.query('BEGIN');
     
     // Clear in order of dependencies
-    await client.query('TRUNCATE audit_log, notifications, compliance_items, enrollments, courses, messages, mentor_sessions, grant_applications, matches, mentors, investors, startup_team, startups, users, api_keys, webhooks CASCADE');
+    await client.query('TRUNCATE audit_log, notifications, compliance_items, enrollments, courses, messages, mentor_sessions, grant_applications, matches, mentors, investors, startup_team, startups, users CASCADE');
     console.log('✅ Stale records cleared.');
 
     // ─── INSERT USERS ──────────────────────────────────────────

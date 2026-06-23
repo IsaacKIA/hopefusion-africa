@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 // Non-blocking font loading — Next.js handles preload & self-hosting
 const inter = Inter({
@@ -48,6 +49,7 @@ export default function RootLayout({
           {/* Global custom PWA installation banner */}
           <PWAInstallPrompt />
           {children}
+          <SpeedInsights />
         </AuthProvider>
       </body>
     </html>

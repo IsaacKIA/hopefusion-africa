@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../context/AuthContext';
-import { API, HFAApi } from '../../../lib/api';
-import RouteGuard from '../../../components/RouteGuard';
+import { useAuth } from '../../../../context/AuthContext';
+import { API, HFAApi } from '../../../../lib/api';
+import RouteGuard from '../../../../components/RouteGuard';
 import Link from 'next/link';
 
 function DocumentsContent() {

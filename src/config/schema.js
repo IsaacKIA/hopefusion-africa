@@ -4,6 +4,24 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE EXTENSION IF NOT EXISTS "vector";
 
+-- Mock/Fallback Auth Schema & auth.uid() function for non-Supabase local Postgres compatibility
+DO $$
+BEGIN
+  -- Create auth schema if it does not exist
+  IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'auth') THEN
+    CREATE SCHEMA auth;
+  END IF;
+  
+  -- Create auth.uid() function if it does not exist
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p 
+    JOIN pg_namespace n ON p.pronamespace = n.oid 
+    WHERE n.nspname = 'auth' AND p.proname = 'uid'
+  ) THEN
+    EXECUTE 'CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $fn$ SELECT COALESCE(NULLIF(current_setting(''request.jwt.claim.sub'', true), ''''), NULL)::uuid; $fn$';
+  END IF;
+END $$;
+
 -- ─── USERS ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -531,4 +549,27 @@ CREATE TABLE IF NOT EXISTS escrow_milestones_v4 (
   due_date        TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS idx_milestones4_escrow ON escrow_milestones_v4(escrow_id);
+
+-- Enable Row Level Security (RLS) on startups table
+ALTER TABLE startups ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read access to startups
+CREATE POLICY "Allow public read access" ON startups
+  FOR SELECT TO public USING (true);
+
+-- Allow authenticated founders to insert their startups
+CREATE POLICY "Allow founders to insert their startup" ON startups
+  FOR INSERT TO authenticated
+  WITH CHECK ((SELECT auth.uid()) = founder_id);
+
+-- Allow authenticated founders to update their startups
+CREATE POLICY "Allow founders to update their startup" ON startups
+  FOR UPDATE TO authenticated
+  USING ((SELECT auth.uid()) = founder_id)
+  WITH CHECK ((SELECT auth.uid()) = founder_id);
+
+-- Allow authenticated founders to delete their startups
+CREATE POLICY "Allow founders to delete their startup" ON startups
+  FOR DELETE TO authenticated
+  USING ((SELECT auth.uid()) = founder_id);
 `;

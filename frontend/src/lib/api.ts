@@ -129,6 +129,12 @@ export interface UserProfile {
   twitter_url?: string;
   website_url?: string;
   is_verified?: boolean;
+  onboarding_completed?: boolean;
+  verification_status?: string;
+  hope_score?: number;
+  profile_completion?: number;
+  funding_readiness?: string;
+  opportunity_readiness?: string;
   startup_profile?: any;
   investor_profile?: any;
   mentor_profile?: any;
