@@ -173,7 +173,7 @@ function MatchingDashboardContent() {
 
 export default function MatchingDashboardPage() {
   return (
-    <RouteGuard allowedRoles={['startup', 'investor']}>
+    <RouteGuard allowedRoles={['startup', 'investor', 'government', 'corporate']}>
       <MatchingDashboardContent />
     </RouteGuard>
   );

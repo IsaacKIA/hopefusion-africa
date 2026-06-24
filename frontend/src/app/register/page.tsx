@@ -41,7 +41,15 @@ export default function RegisterPage() {
   }, []);
 
   useEffect(() => {
-    if (user) router.replace('/dashboard');
+    if (user) {
+      if (!user.is_verified) {
+        router.replace('/verify');
+      } else if (!user.onboarding_completed) {
+        router.replace('/welcome');
+      } else {
+        router.replace('/dashboard');
+      }
+    }
   }, [user, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

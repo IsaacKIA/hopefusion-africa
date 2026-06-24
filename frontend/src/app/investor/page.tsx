@@ -357,7 +357,7 @@ export default function PortalsDashboard() {
   const investorType = user?.investor_profile?.investor_type;
 
   return (
-    <RouteGuard allowedRoles={['investor', 'admin']}>
+    <RouteGuard allowedRoles={['investor', 'admin', 'government', 'corporate']}>
       <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}>
         
         {/* Header */}

@@ -55,7 +55,11 @@ const allowedOrigins = [
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || origin === process.env.FRONTEND_URL) {
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      origin === process.env.FRONTEND_URL ||
+                      origin.endsWith('.vercel.app') ||
+                      /^https:\/\/hopefusion-africa.*\.vercel\.app$/.test(origin);
+    if (isAllowed) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

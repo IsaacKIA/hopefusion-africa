@@ -81,6 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await API.post('/auth/login', { email, password });
     if (res?.success) {
       localStorage.setItem('hfa_user', JSON.stringify(res.user));
+      localStorage.setItem('hfa_token', res.token);
+      localStorage.setItem('hfa_refresh_token', res.refreshToken);
       setUser(res.user);
       subscribeToPush().catch(() => {});
       
@@ -98,6 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await API.post('/auth/register', payload);
     if (res?.success) {
       localStorage.setItem('hfa_user', JSON.stringify(res.user));
+      localStorage.setItem('hfa_token', res.token);
+      localStorage.setItem('hfa_refresh_token', res.refreshToken);
       setUser(res.user);
       if (res.debug_otp) {
         localStorage.setItem('hfa_debug_otp', res.debug_otp);
@@ -118,6 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await API.post('/auth/logout', {});
     } catch (e) {}
     localStorage.removeItem('hfa_user');
+    localStorage.removeItem('hfa_token');
+    localStorage.removeItem('hfa_refresh_token');
     localStorage.removeItem('pushEnabled');
     setUser(null);
     router.push('/');

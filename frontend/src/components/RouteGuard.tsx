@@ -21,6 +21,10 @@ export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
     if (mounted && !loading) {
       if (!user) {
         router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+      } else if (!user.is_verified) {
+        router.replace('/verify');
+      } else if (!user.onboarding_completed && !pathname.includes('/welcome') && !pathname.includes('/onboard')) {
+        router.replace('/welcome');
       } else if (allowedRoles && !allowedRoles.includes(user.role)) {
         router.replace('/dashboard?access=denied');
       }
@@ -28,15 +32,15 @@ export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
   }, [user, loading, pathname, router, allowedRoles, mounted]);
 
   useEffect(() => {
-    if (!mounted || loading || !user) {
+    if (!mounted || loading || !user || !user.is_verified || (!user.onboarding_completed && !pathname.includes('/welcome') && !pathname.includes('/onboard'))) {
       const timer = setTimeout(() => setShowRetry(true), 3000);
       return () => clearTimeout(timer);
     } else {
       setShowRetry(false);
     }
-  }, [mounted, loading, user]);
+  }, [mounted, loading, user, pathname]);
 
-  if (!mounted || loading || !user || (allowedRoles && !allowedRoles.includes(user.role))) {
+  if (!mounted || loading || !user || !user.is_verified || (!user.onboarding_completed && !pathname.includes('/welcome') && !pathname.includes('/onboard')) || (allowedRoles && !allowedRoles.includes(user.role))) {
     return (
       <div style={{
         display: 'flex',

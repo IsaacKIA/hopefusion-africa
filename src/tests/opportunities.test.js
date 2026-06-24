@@ -199,7 +199,7 @@ describe('Opportunities Route Integration Tests', () => {
       }]);
 
       // 2. Mock match opportunities function results
-      mockDbExpectQuery('SELECT', [{
+      mockDbExpectQuery('match_opportunities', [{
         id: 'opp-matched-1111',
         title: 'East Africa Food Security Grant',
         raw_similarity: 0.82,

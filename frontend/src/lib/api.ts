@@ -19,6 +19,7 @@ async function attemptTokenRefresh(): Promise<boolean> {
     if (res.ok) {
       const data = await res.json();
       if (data.success) {
+        localStorage.setItem('hfa_token', data.token);
         isRefreshing = false;
         return true;
       }
@@ -31,8 +32,10 @@ async function attemptTokenRefresh(): Promise<boolean> {
 }
 
 async function apiFetch(path: string, options: RequestInit = {}, timeoutMs = 5000) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('hfa_token') : null;
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
@@ -61,12 +64,17 @@ async function apiFetch(path: string, options: RequestInit = {}, timeoutMs = 500
     if (!path.includes('/auth/login') && !path.includes('/auth/refresh') && !path.includes('/auth/logout')) {
       const refreshed = await attemptTokenRefresh();
       if (refreshed) {
+        const newToken = localStorage.getItem('hfa_token');
+        const updatedHeaders = {
+          ...headers,
+          ...(newToken ? { 'Authorization': `Bearer ${newToken}` } : {}),
+        };
         const ctrl2 = new AbortController();
         const timer2 = setTimeout(() => ctrl2.abort(), timeoutMs);
         try {
           res = await fetch(`${API_BASE_URL}${path}`, {
             ...options,
-            headers,
+            headers: updatedHeaders,
             credentials: 'include',
             signal: ctrl2.signal,
           });

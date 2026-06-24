@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { HFAApi } from '../../lib/api';
+import { HFAApi, API } from '../../lib/api';
 import { useMounted } from '../../hooks/useMounted';
 
 export default function WelcomePage() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const router = useRouter();
   const mounted = useMounted();
-  // Use data directly from AuthContext — no extra API call needed
+  const [skipping, setSkipping] = useState(false);
   const passport = user;
 
   useEffect(() => {
@@ -21,6 +21,30 @@ export default function WelcomePage() {
 
   const handleStartOnboarding = () => {
     router.push('/onboard');
+  };
+
+  const handleSkip = async () => {
+    if (skipping) return;
+    setSkipping(true);
+    try {
+      const res = await API.post('/auth/onboard', {
+        goals: ['Explore Dashboard'],
+        country: user?.country || 'Ghana',
+        roles: [user?.role || 'startup'],
+        sectors: [],
+      });
+      if (res?.success) {
+        await refreshProfile();
+        router.replace('/dashboard');
+      } else {
+        router.replace('/dashboard');
+      }
+    } catch (err) {
+      console.error('Onboarding skip failed:', err);
+      router.replace('/dashboard');
+    } finally {
+      setSkipping(false);
+    }
   };
 
   return (
@@ -111,7 +135,8 @@ export default function WelcomePage() {
         </button>
 
         <button
-          onClick={() => router.push('/dashboard')}
+          onClick={handleSkip}
+          disabled={skipping}
           style={{
             background: 'none',
             border: 'none',
@@ -119,10 +144,11 @@ export default function WelcomePage() {
             fontSize: '0.85rem',
             marginTop: '16px',
             cursor: 'pointer',
-            textDecoration: 'underline'
+            textDecoration: 'underline',
+            opacity: skipping ? 0.5 : 1
           }}
         >
-          Skip and explore dashboard
+          {skipping ? 'Skipping...' : 'Skip and explore dashboard'}
         </button>
       </div>
     </div>

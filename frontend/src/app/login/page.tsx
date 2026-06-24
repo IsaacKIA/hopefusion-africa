@@ -19,9 +19,15 @@ function LoginFormContent() {
   const redirectPath = searchParams.get('redirect') || '/dashboard';
 
   useEffect(() => {
-    // If user is already logged in, redirect them
+    // If user is already logged in, redirect them based on verification and onboarding status
     if (user) {
-      router.replace(redirectPath);
+      if (!user.is_verified) {
+        router.replace('/verify');
+      } else if (!user.onboarding_completed) {
+        router.replace('/welcome');
+      } else {
+        router.replace(redirectPath);
+      }
     }
   }, [user, router, redirectPath]);
 
