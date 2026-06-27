@@ -4,9 +4,14 @@
   "outputDirectory": "frontend/.next",
   "installCommand": "cd frontend && npm ci",
   "framework": "nextjs",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
-  ],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://hopefusion-africa-api.onrender.com/api/v1"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_API_URL": "https://hopefusion-africa-api.onrender.com/api/v1"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
