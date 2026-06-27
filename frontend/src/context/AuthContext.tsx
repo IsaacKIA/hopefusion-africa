@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await API.post('/auth/login', { email, password });
+    const res = await API.postAuth('/auth/login', { email, password });
     if (res?.success) {
       localStorage.setItem('hfa_user', JSON.stringify(res.user));
       localStorage.setItem('hfa_token', res.token);
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (payload: any) => {
-    const res = await API.post('/auth/register', payload);
+    const res = await API.postAuth('/auth/register', payload);
     if (res?.success) {
       localStorage.setItem('hfa_user', JSON.stringify(res.user));
       localStorage.setItem('hfa_token', res.token);

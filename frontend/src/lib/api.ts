@@ -31,7 +31,7 @@ async function attemptTokenRefresh(): Promise<boolean> {
   return false;
 }
 
-async function apiFetch(path: string, options: RequestInit = {}, timeoutMs = 5000) {
+async function apiFetch(path: string, options: RequestInit = {}, timeoutMs = 10000) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('hfa_token') : null;
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -111,12 +111,17 @@ async function apiFetch(path: string, options: RequestInit = {}, timeoutMs = 500
 }
 
 export const API = {
-  get: (path: string, opts?: RequestInit) => apiFetch(path, { method: 'GET', ...opts }),
+  get: (path: string, opts?: RequestInit) =>
+    apiFetch(path, { method: 'GET', ...opts }),
   post: (path: string, body?: any, opts?: RequestInit) =>
     apiFetch(path, { method: 'POST', body: JSON.stringify(body), ...opts }),
+  postAuth: (path: string, body?: any, opts?: RequestInit) =>
+    // Auth endpoints do bcrypt + remote DB — needs longer timeout
+    apiFetch(path, { method: 'POST', body: JSON.stringify(body), ...opts }, 20000),
   patch: (path: string, body?: any, opts?: RequestInit) =>
     apiFetch(path, { method: 'PATCH', body: JSON.stringify(body), ...opts }),
-  delete: (path: string, opts?: RequestInit) => apiFetch(path, { method: 'DELETE', ...opts }),
+  delete: (path: string, opts?: RequestInit) =>
+    apiFetch(path, { method: 'DELETE', ...opts }),
 };
 
 /* ============================================================

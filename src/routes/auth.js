@@ -26,7 +26,7 @@ const router = express.Router();
 const generateToken = (userId, role, expiresIn = '7d') =>
   jwt.sign({ userId, role }, process.env.JWT_SECRET, { expiresIn });
 
-const hashPassword = (pwd) => bcrypt.hash(pwd, 12);
+const hashPassword = (pwd) => bcrypt.hash(pwd, 10);
 const verifyPassword = (pwd, hash) => bcrypt.compare(pwd, hash);
 
 const generateVerifyCode = () => crypto.randomInt(100000, 1000000).toString();
