@@ -6,7 +6,9 @@ import { useAuth } from '../../context/AuthContext';
 import { API } from '../../lib/api';
 import Link from 'next/link';
 
-export default function OnboardPage() {
+import RouteGuard from '../../components/RouteGuard';
+
+function OnboardPageContent() {
   const { user, refreshProfile } = useAuth();
   const router = useRouter();
 
@@ -36,12 +38,6 @@ export default function OnboardPage() {
   const [mentorBio, setMentorBio] = useState('');
 
   const [sectors, setSectors] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (!user) {
-      router.replace('/login');
-    }
-  }, [user, router]);
 
   const toggleGoal = (goal: string) => {
     if (goals.includes(goal)) {
@@ -253,177 +249,35 @@ export default function OnboardPage() {
           </div>
         )}
 
-        {/* STEP 3: ROLE SELECTION (MULTI-ROLE) */}
+        {/* STEP 3: ROLE EXPANSION SELECTION */}
         {step === 3 && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Select your ecosystem roles</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>Select all roles that apply. You can combine multiple roles (e.g. Founder + Mentor).</p>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Select profile types</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>Confirm your capabilities. You can select multiple roles to unlock different dashboard modules.</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', marginBottom: '32px' }}>
               {roleOptions.map((opt) => {
                 const selected = roles.includes(opt.value);
                 return (
-                  <div
+                  <button
                     key={opt.value}
                     onClick={() => toggleRole(opt.value)}
                     style={{
-                      padding: '16px',
+                      padding: '14px 20px',
                       borderRadius: '8px',
-                      border: `1px solid ${selected ? 'var(--brand-green)' : 'rgba(255,255,255,0.08)'}`,
+                      border: `1px solid ${selected ? 'var(--brand-green)' : 'rgba(255,255,255,0.06)'}`,
                       backgroundColor: selected ? 'rgba(45,181,98,0.08)' : 'var(--bg-secondary)',
+                      color: selected ? 'white' : 'var(--text-secondary)',
+                      textAlign: 'left',
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      cursor: 'pointer',
                       transition: 'all 0.2s',
                     }}
                   >
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: selected ? 'white' : 'var(--text-secondary)' }}>{opt.label}</span>
-                    <input
-                      type="checkbox"
-                      checked={selected}
-                      onChange={() => {}} // Swallowed: div handles click
-                      style={{ accentColor: 'var(--brand-green)', cursor: 'pointer' }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* STEP 4: CONDITIONAL ROLE PROFILES */}
-        {step === 4 && (
-          <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Define Profile Details</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>Fill in particulars for your selected roles.</p>
-            
-            {roles.includes('startup') && (
-              <div style={{ borderBottom: roles.length > 1 ? '1px solid rgba(255,255,255,0.08)' : 'none', paddingBottom: '20px', marginBottom: '24px' }}>
-                <h3 style={{ color: 'var(--brand-green)', fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}>Startup Founder Details</h3>
-                <div className="form-group">
-                  <label className="form-label">Startup Name</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="My Company Ltd"
-                    value={startupName}
-                    onChange={(e) => setStartupName(e.target.value)}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Industry Sector</label>
-                    <select
-                      value={startupSector}
-                      onChange={(e) => setStartupSector(e.target.value)}
-                      className="form-input"
-                      style={{ color: 'white', backgroundColor: 'var(--bg-secondary)' }}
-                    >
-                      {sectorOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Company Stage</label>
-                    <select
-                      value={startupStage}
-                      onChange={(e) => setStartupStage(e.target.value)}
-                      className="form-input"
-                      style={{ color: 'white', backgroundColor: 'var(--bg-secondary)' }}
-                    >
-                      <option value="idea">Idea</option>
-                      <option value="mvp">MVP</option>
-                      <option value="early_traction">Early Traction</option>
-                      <option value="growth">Growth</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {roles.includes('investor') && (
-              <div style={{ borderBottom: roles.includes('mentor') ? '1px solid rgba(255,255,255,0.08)' : 'none', paddingBottom: '20px', marginBottom: '24px' }}>
-                <h3 style={{ color: 'var(--brand-green)', fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}>Investor Details</h3>
-                <div className="form-group">
-                  <label className="form-label">Firm Name</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Ecosystem Capital"
-                    value={firmName}
-                    onChange={(e) => setFirmName(e.target.value)}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Ticket Min (USD)</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={ticketMin}
-                      onChange={(e) => setTicketMin(parseInt(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Ticket Max (USD)</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={ticketMax}
-                      onChange={(e) => setTicketMax(parseInt(e.target.value) || 0)}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {roles.includes('mentor') && (
-              <div>
-                <h3 style={{ color: 'var(--brand-green)', fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}>Mentor Profile Details</h3>
-                <div className="form-group">
-                  <label className="form-label">Biography Overview</label>
-                  <textarea
-                    className="form-input"
-                    style={{ height: '80px', fontFamily: 'inherit', resize: 'vertical' }}
-                    placeholder="Short summary of advisor experience..."
-                    value={mentorBio}
-                    onChange={(e) => setMentorBio(e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
-            
-            {!roles.includes('startup') && !roles.includes('investor') && !roles.includes('mentor') && (
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No dynamic profile fields required for selected roles. Proceed to next step.</p>
-            )}
-          </div>
-        )}
-
-        {/* STEP 5: INTERESTS & SECTORS */}
-        {step === 5 && (
-          <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Select Areas of Interest</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>Choose the startup sectors you are interested in tracking.</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
-              {sectorOptions.map((s) => {
-                const selected = sectors.includes(s);
-                return (
-                  <button
-                    key={s}
-                    onClick={() => toggleSector(s)}
-                    style={{
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      border: `1px solid ${selected ? 'var(--brand-green)' : 'rgba(255,255,255,0.08)'}`,
-                      backgroundColor: selected ? 'rgba(45,181,98,0.08)' : 'var(--bg-secondary)',
-                      color: selected ? 'white' : 'var(--text-secondary)',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      textTransform: 'capitalize'
-                    }}
-                  >
-                    {s}
+                    <span>{opt.label}</span>
+                    {selected && <span style={{ color: 'var(--brand-green)', fontWeight: 'bold' }}>✓</span>}
                   </button>
                 );
               })}
@@ -431,21 +285,154 @@ export default function OnboardPage() {
           </div>
         )}
 
-        {/* STEP 6: DASHBOARD ACTIVATION */}
-        {step === 6 && (
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '12px' }}>Onboarding Complete! 🎉</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '32px', lineHeight: '20px' }}>
-              We've updated your HopeScore and personalized recommendations. You are now ready to access the continent's opportunities operating system!
-            </p>
+        {/* STEP 4: DETAILED PROFILE QUESTIONS */}
+        {step === 4 && (
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '24px' }}>Complete Profile Details</h2>
+            
+            {/* Startup form items */}
+            {roles.includes('startup') && (
+              <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '24px', marginBottom: '24px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--brand-green)', marginBottom: '16px' }}>Founder details</h3>
+                <div className="form-group">
+                  <label className="form-label">Startup/Company Name</label>
+                  <input type="text" className="form-input" placeholder="e.g. HopePay" value={startupName} onChange={e => setStartupName(e.target.value)} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Sector</label>
+                    <select value={startupSector} onChange={e => setStartupSector(e.target.value)} className="form-input" style={{ color: 'white', backgroundColor: 'var(--bg-secondary)' }}>
+                      {sectorOptions.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Funding Stage</label>
+                    <select value={startupStage} onChange={e => setStartupStage(e.target.value)} className="form-input" style={{ color: 'white', backgroundColor: 'var(--bg-secondary)' }}>
+                      <option value="idea">Idea/Pre-seed</option>
+                      <option value="mvp">MVP/Pre-revenue</option>
+                      <option value="early_traction">Early Traction</option>
+                      <option value="growth">Growth/Series A+</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Team headcount</label>
+                  <input type="number" min={1} className="form-input" value={teamSize} onChange={e => setTeamSize(parseInt(e.target.value) || 1)} />
+                </div>
+              </div>
+            )}
 
+            {/* Investor form items */}
+            {roles.includes('investor') && (
+              <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '24px', marginBottom: '24px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--brand-green)', marginBottom: '16px' }}>Investor profile</h3>
+                <div className="form-group">
+                  <label className="form-label">Firm/Syndicate Name</label>
+                  <input type="text" className="form-input" placeholder="e.g. Savannah Ventures" value={firmName} onChange={e => setFirmName(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Investor category</label>
+                  <select value={investorType} onChange={e => setInvestorType(e.target.value)} className="form-input" style={{ color: 'white', backgroundColor: 'var(--bg-secondary)' }}>
+                    <option value="angel">Angel Investor</option>
+                    <option value="vc">Venture Capital Fund</option>
+                    <option value="accelerator">Incubator / Accelerator</option>
+                    <option value="government">Government Agency</option>
+                    <option value="corporate">Corporate Venture arm</option>
+                  </select>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Min Ticket (USD)</label>
+                    <input type="number" step={1000} className="form-input" value={ticketMin} onChange={e => setTicketMin(parseInt(e.target.value) || 0)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Max Ticket (USD)</label>
+                    <input type="number" step={5000} className="form-input" value={ticketMax} onChange={e => setTicketMax(parseInt(e.target.value) || 0)} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Mentor form items */}
+            {roles.includes('mentor') && (
+              <div style={{ paddingBottom: '12px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--brand-green)', marginBottom: '16px' }}>Mentor credentials</h3>
+                <div className="form-group">
+                  <label className="form-label">Mentor bio summary</label>
+                  <textarea className="form-input" placeholder="Experienced engineering manager specializing in scaling cloud platforms..." value={mentorBio} onChange={e => setMentorBio(e.target.value)} style={{ minHeight: '80px', fontFamily: 'inherit', padding: '10px' }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Experience (years)</label>
+                    <input type="number" className="form-input" value={experienceYears} onChange={e => setExperienceYears(parseInt(e.target.value) || 1)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Expertise (e.g. Sales, Scaling)</label>
+                    <input type="text" className="form-input" placeholder="comma separated" onChange={e => setExpertise(e.target.value.split(',').map(s => s.trim()))} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Default role fallbacks placeholder */}
+            {!roles.includes('startup') && !roles.includes('investor') && !roles.includes('mentor') && (
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Ecosystem Students, Corporates, Government and Service Providers can click next to finalize general info.</p>
+            )}
+          </div>
+        )}
+
+        {/* STEP 5: SECTOR INTEREST SELECTION */}
+        {step === 5 && (
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Select interest sectors</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>We match custom deals and alerts aligned with these industries.</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
+              {sectorOptions.map((sec) => {
+                const selected = sectors.includes(sec);
+                return (
+                  <button
+                    key={sec}
+                    onClick={() => toggleSector(sec)}
+                    style={{
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: `1px solid ${selected ? 'var(--brand-green)' : 'rgba(255,255,255,0.06)'}`,
+                      backgroundColor: selected ? 'rgba(45,181,98,0.08)' : 'var(--bg-secondary)',
+                      color: selected ? 'white' : 'var(--text-secondary)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    {sec.toUpperCase()}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 6: FINALIZE ONBOARDING */}
+        {step === 6 && (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '12px' }}>Ready to Launch!</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '40px', lineHeight: '22px' }}>
+              Your HopeScore™ Trust profile is complete. Click finish to open your dashboard.
+            </p>
             <button
               onClick={handleFinish}
-              className="btn-primary"
               disabled={loading}
-              style={{ width: '100%', justifyContent: 'center', padding: '16px', marginBottom: '16px' }}
+              className="btn-primary"
+              style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}
             >
-              {loading ? <div className="spinner" style={{ width: '20px', height: '20px' }} /> : 'Activate Dashboard'}
+              {loading ? <div className="spinner" style={{ width: '24px', height: '24px' }} /> : 'Finish & Open Dashboard'}
+            </button>
+            <button
+              onClick={prevStep}
+              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              Go back and edit
             </button>
           </div>
         )}
@@ -496,5 +483,13 @@ export default function OnboardPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OnboardPage() {
+  return (
+    <RouteGuard>
+      <OnboardPageContent />
+    </RouteGuard>
   );
 }

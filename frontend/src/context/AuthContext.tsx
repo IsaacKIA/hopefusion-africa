@@ -45,23 +45,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (res?.success && res.user) {
           setUser(res.user);
           localStorage.setItem('hfa_user', JSON.stringify(res.user));
-
-          const path = window.location.pathname;
-          const authPages = ['/login', '/register', '/forgot-password', '/reset-password'];
-          const isOnAuthPage = authPages.some(p => path.includes(p));
-
-          if (!res.user.is_verified && !path.includes('/verify')) {
-            router.replace('/verify');
-          } else if (
-            res.user.is_verified &&
-            !res.user.onboarding_completed &&
-            !path.includes('/onboard') &&
-            !path.includes('/welcome')
-          ) {
-            router.replace('/welcome');
-          } else if (res.user.is_verified && res.user.onboarding_completed && isOnAuthPage) {
-            router.replace('/dashboard');
-          }
         } else {
           // Server says no session — clear stale cache
           setUser(null);
@@ -75,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => {
         setLoading(false);
       });
-  }, [router]);
+  }, []);
 
   const login = async (email: string, password: string) => {
     const res = await API.post('/auth/login', { email, password });
@@ -85,13 +68,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('hfa_refresh_token', res.refreshToken);
       setUser(res.user);
       subscribeToPush().catch(() => {});
-      
-      // Verification checking
-      if (!res.user.is_verified) {
-        router.replace('/verify');
-      } else if (!res.user.onboarding_completed) {
-        router.replace('/welcome');
-      }
     }
     return res;
   };
@@ -109,9 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('hfa_debug_otp');
       }
       subscribeToPush().catch(() => {});
-      
-      // Registration goes straight to verify
-      router.replace('/verify');
     }
     return res;
   };

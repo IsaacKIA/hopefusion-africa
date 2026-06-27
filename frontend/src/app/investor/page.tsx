@@ -140,6 +140,10 @@ export default function PortalsDashboard() {
       } else {
         setActiveTab('thesis');
       }
+    } else if (user?.role === 'government') {
+      setActiveTab('government');
+    } else if (user?.role === 'corporate') {
+      setActiveTab('corporate');
     } else if (user?.role === 'admin') {
       setActiveTab('government');
     }

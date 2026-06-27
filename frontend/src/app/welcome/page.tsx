@@ -6,18 +6,14 @@ import { useRouter } from 'next/navigation';
 import { HFAApi, API } from '../../lib/api';
 import { useMounted } from '../../hooks/useMounted';
 
-export default function WelcomePage() {
+import RouteGuard from '../../components/RouteGuard';
+
+function WelcomePageContent() {
   const { user, refreshProfile } = useAuth();
   const router = useRouter();
   const mounted = useMounted();
   const [skipping, setSkipping] = useState(false);
   const passport = user;
-
-  useEffect(() => {
-    if (!user) {
-      router.replace('/login');
-    }
-  }, [user, router]);
 
   const handleStartOnboarding = () => {
     router.push('/onboard');
@@ -152,5 +148,13 @@ export default function WelcomePage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function WelcomePage() {
+  return (
+    <RouteGuard>
+      <WelcomePageContent />
+    </RouteGuard>
   );
 }

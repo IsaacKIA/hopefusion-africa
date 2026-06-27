@@ -126,7 +126,7 @@ export const API = {
 export interface UserProfile {
   id: string;
   email: string;
-  role: 'startup' | 'investor' | 'mentor' | 'admin';
+  role: 'startup' | 'investor' | 'mentor' | 'admin' | 'government' | 'corporate' | 'student' | 'service_provider';
   first_name: string;
   last_name: string;
   phone?: string;

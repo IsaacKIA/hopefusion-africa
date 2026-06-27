@@ -13,16 +13,28 @@ function DashboardRouterContent() {
 
   useEffect(() => {
     if (user) {
-      const roleRedirectMap = {
-        startup: '/startup',
-        investor: '/investor',
-        mentor: '/mentor',
-        admin: '/admin',
-        government: '/investor',
-        corporate: '/investor'
-      };
-      
-      const targetPath = roleRedirectMap[user.role as keyof typeof roleRedirectMap] || '/';
+      let targetPath = '/';
+      if (user.role === 'investor') {
+        const type = user.investor_profile?.investor_type;
+        if (type === 'government') {
+          targetPath = '/government';
+        } else if (type === 'corporate') {
+          targetPath = '/corporate';
+        } else {
+          targetPath = '/investor';
+        }
+      } else {
+        const roleRedirectMap = {
+          startup: '/startup',
+          mentor: '/mentor',
+          admin: '/admin',
+          government: '/government',
+          corporate: '/corporate',
+          student: '/student',
+          service_provider: '/service-provider'
+        };
+        targetPath = roleRedirectMap[user.role as keyof typeof roleRedirectMap] || '/';
+      }
       router.replace(targetPath);
     }
   }, [user, router]);

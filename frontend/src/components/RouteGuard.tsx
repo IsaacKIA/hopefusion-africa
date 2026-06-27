@@ -7,7 +7,7 @@ import { useMounted } from '../hooks/useMounted';
 
 interface RouteGuardProps {
   children: React.ReactNode;
-  allowedRoles?: ('startup' | 'investor' | 'mentor' | 'admin' | 'government' | 'corporate')[];
+  allowedRoles?: ('startup' | 'investor' | 'mentor' | 'admin' | 'government' | 'corporate' | 'student' | 'service_provider')[];
 }
 
 export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
