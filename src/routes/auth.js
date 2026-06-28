@@ -57,8 +57,9 @@ const normalizePhoneNumber = (phone, country) => {
 
 // POST /register
 router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req, res) => {
-  const client = await db.connect();
+  let client;
   try {
+    client = await db.connect();
     const {
       email, password, role, first_name, last_name, phone, country, linkedin_url,
       // Startup role specific fields
@@ -203,11 +204,14 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
     });
 
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (client) await client.query('ROLLBACK').catch(() => {});
     console.error('Register error:', err);
+    if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.message?.includes('connect')) {
+      return res.status(503).json({ error: 'Database unavailable. Please try again shortly.' });
+    }
     return res.status(500).json({ error: 'Registration failed. Please try again.' });
   } finally {
-    client.release();
+    if (client) client.release();
   }
 });
 
@@ -529,8 +533,9 @@ router.get('/status', authenticate, async (req, res) => {
 
 // POST /onboard — progressive onboarding details save
 router.post('/onboard', authenticate, validate(onboardingSchema), async (req, res) => {
-  const client = await db.connect();
+  let client;
   try {
+    client = await db.connect();
     const {
       goals, country, roles,
       // Startup fields
@@ -665,11 +670,11 @@ router.post('/onboard', authenticate, validate(onboardingSchema), async (req, re
 
     return res.json({ success: true, message: 'Onboarding completed successfully' });
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
+    if (client) await client.query('ROLLBACK').catch(() => {});
     console.error('Onboarding error:', err);
     return res.status(500).json({ error: 'Onboarding update failed' });
   } finally {
-    client.release();
+    if (client) client.release();
   }
 });
 
