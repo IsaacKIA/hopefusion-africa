@@ -5,11 +5,11 @@
   "installCommand": "cd frontend && npm ci",
   "framework": "nextjs",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://hopefusion-africa-api.onrender.com/api/v1"
+    "NEXT_PUBLIC_API_URL": "https://hopefusion-africa.onrender.com/api/v1"
   },
   "build": {
     "env": {
-      "NEXT_PUBLIC_API_URL": "https://hopefusion-africa-api.onrender.com/api/v1"
+      "NEXT_PUBLIC_API_URL": "https://hopefusion-africa.onrender.com/api/v1"
     }
   },
   "headers": [
