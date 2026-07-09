@@ -41,7 +41,7 @@ jobs:
         continue-on-error: true
       
       - name: Run backend tests
-        run: npm test -- --testPathPattern='tests/'
+        run: npm test -- --testPathPattern='tests/' --forceExit
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hopefusion_test
