@@ -554,22 +554,27 @@ CREATE INDEX IF NOT EXISTS idx_milestones4_escrow ON escrow_milestones_v4(escrow
 ALTER TABLE startups ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to startups
+DROP POLICY IF EXISTS "Allow public read access" ON startups;
 CREATE POLICY "Allow public read access" ON startups
   FOR SELECT TO public USING (true);
 
 -- Allow authenticated founders to insert their startups
+DROP POLICY IF EXISTS "Allow founders to insert their startup" ON startups;
 CREATE POLICY "Allow founders to insert their startup" ON startups
   FOR INSERT TO authenticated
   WITH CHECK ((SELECT auth.uid()) = founder_id);
 
 -- Allow authenticated founders to update their startups
+DROP POLICY IF EXISTS "Allow founders to update their startup" ON startups;
 CREATE POLICY "Allow founders to update their startup" ON startups
   FOR UPDATE TO authenticated
   USING ((SELECT auth.uid()) = founder_id)
   WITH CHECK ((SELECT auth.uid()) = founder_id);
 
 -- Allow authenticated founders to delete their startups
+DROP POLICY IF EXISTS "Allow founders to delete their startup" ON startups;
 CREATE POLICY "Allow founders to delete their startup" ON startups
   FOR DELETE TO authenticated
   USING ((SELECT auth.uid()) = founder_id);
 `;
+

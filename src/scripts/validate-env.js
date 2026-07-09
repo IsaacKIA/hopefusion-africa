@@ -1,8 +1,12 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 /**
  * HopeFusion Africa — Environment Variable Validator
  * Run: node src/scripts/validate-env.js
  * Called automatically on server start if NODE_ENV=production
  */
+
 
 const REQUIRED = [
   'DATABASE_URL',
