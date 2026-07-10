@@ -43,7 +43,7 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       
       - name: Run ESLint
         run: npm run lint -- src/
@@ -76,7 +76,7 @@ jobs:
           cache: 'npm'
       
       - name: Install frontend dependencies
-        run: cd frontend && npm ci
+        run: cd frontend && npm install
       
       - name: TypeScript type check
         run: cd frontend && npx tsc --noEmit
@@ -113,7 +113,7 @@ jobs:
           cache: 'npm'
       
       - name: Install mobile dependencies
-        run: cd mobile && npm ci
+        run: cd mobile && npm install
       
       - name: Run ESLint
         run: cd mobile && npx eslint src/ --ext .js,.jsx,.ts,.tsx
@@ -132,7 +132,7 @@ jobs:
           cache: 'npm'
       
       - name: Install contract dependencies
-        run: cd contracts && npm ci
+        run: cd contracts && npm install
       
       - name: Compile Solidity
         run: cd contracts && npm run compile
