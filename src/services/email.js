@@ -115,46 +115,42 @@ export async function sendEmail(to, subject, html) {
     return { provider: 'mock' };
   }
 
-  // Execute email sending in the background to avoid blocking the HTTP response
-  (async () => {
-    /* 1 ─ Resend API */
-    if (process.env.RESEND_API_KEY) {
-      try {
-        const resend = await getResend();
-        const { data, error } = await resend.emails.send({ from, to, subject, html });
-        if (error) throw new Error(error.message);
-        console.log(`[Email] Sent via Resend → ${to} (id: ${data?.id})`);
-        return;
-      } catch (err) {
-        console.error('[Email] Resend failed, trying SMTP fallback:', err.message);
-      }
+  /* 1 ─ Resend API */
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const resend = await getResend();
+      const { data, error } = await resend.emails.send({ from, to, subject, html });
+      if (error) throw new Error(error.message);
+      console.log(`[Email] Sent via Resend → ${to} (id: ${data?.id})`);
+      return { provider: 'resend', id: data?.id };
+    } catch (err) {
+      console.error('[Email] Resend failed, trying SMTP fallback:', err.message);
     }
+  }
 
-    /* 2 ─ SMTP / nodemailer */
-    if (isSmtpConfigured()) {
-      try {
-        const transport = createSmtpTransport();
-        const info = await transport.sendMail({ from, to, subject, html });
-        console.log(`[Email] Sent via SMTP → ${to} (msgId: ${info.messageId})`);
-        return;
-      } catch (err) {
-        console.error('[Email] SMTP failed:', err.message);
-      }
+  /* 2 ─ SMTP / nodemailer */
+  if (isSmtpConfigured()) {
+    try {
+      const transport = createSmtpTransport();
+      const info = await transport.sendMail({ from, to, subject, html });
+      console.log(`[Email] Sent via SMTP → ${to} (msgId: ${info.messageId})`);
+      return { provider: 'smtp', id: info.messageId };
+    } catch (err) {
+      console.error('[Email] SMTP failed:', err.message);
     }
+  }
 
-    /* 3 ─ Console fallback (development / no credentials configured) */
-    const otp = html.match(/\b(\d{6})\b/)?.[1] || '(see HTML)';
-    console.log('\n' + '═'.repeat(60));
-    console.log('📧  EMAIL NOT SENT — DEV CONSOLE FALLBACK');
-    console.log('═'.repeat(60));
-    console.log(`  To      : ${to}`);
-    console.log(`  Subject : ${subject}`);
-    console.log(`  OTP Code: ${otp}`);
-    console.log('  Fix: Set RESEND_API_KEY in .env (https://resend.com)');
-    console.log('═'.repeat(60) + '\n');
-  })();
+  /* 3 ─ Console fallback (development / no credentials configured) */
+  const otp = html.match(/\b(\d{6})\b/)?.[1] || '(see HTML)';
+  console.log('\n' + '═'.repeat(60));
+  console.log('📧  EMAIL NOT SENT — DEV CONSOLE FALLBACK');
+  console.log('═'.repeat(60));
+  console.log(`  To      : ${to}`);
+  console.log(`  Subject : ${subject}`);
+  console.log(`  OTP Code: ${otp}`);
+  console.log('  Fix: Set RESEND_API_KEY in .env (https://resend.com)');
+  console.log('═'.repeat(60) + '\n');
 
-  // Return immediately to indicate asynchronous sending
-  return { provider: 'async' };
+  return { provider: 'console', otp };
 }
 

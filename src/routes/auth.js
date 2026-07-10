@@ -156,14 +156,16 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
     // Store verify code in Redis (10 min)
     await cacheSet(`verify:${user.id}`, code, 600);
 
-    // Send verification email in the background (non-blocking — prevents timeout on slow SMTP/Resend)
-    sendEmail(
-      email,
-      'Your HopeFusion Africa verification code',
-      buildOTPEmail(first_name, code, 'verify')
-    ).catch(emailErr => {
+    // Send verification email
+    try {
+      await sendEmail(
+        email,
+        'Your HopeFusion Africa verification code',
+        buildOTPEmail(first_name, code, 'verify')
+      );
+    } catch (emailErr) {
       console.error('[Auth] Verification email error:', emailErr.message);
-    });
+    }
 
     const isDev = process.env.NODE_ENV !== 'production';
 
@@ -384,14 +386,16 @@ router.post('/forgot-password', rateLimit(3, 300), validate(forgotPasswordSchema
     const code = generateVerifyCode();
     await cacheSet(`reset:${rows[0].id}`, code, 1800);
 
-    // Send password reset email in the background (non-blocking)
-    sendEmail(
-      rows[0].email,
-      'Your HopeFusion Africa password reset code',
-      buildOTPEmail(rows[0].first_name, code, 'reset')
-    ).catch(err => {
+    // Send password reset email
+    try {
+      await sendEmail(
+        rows[0].email,
+        'Your HopeFusion Africa password reset code',
+        buildOTPEmail(rows[0].first_name, code, 'reset')
+      );
+    } catch (err) {
       console.error('[Auth] Password reset email error:', err.message);
-    });
+    }
 
     const isDev = process.env.NODE_ENV !== 'production';
 
@@ -470,14 +474,16 @@ router.post(['/resend', '/resend-verify'], authenticate, async (req, res) => {
 
     await cacheSet(`verify:${userId}`, code, 600);
 
-    // Send verification email in the background (non-blocking)
-    sendEmail(
-      email,
-      'Your HopeFusion Africa verification code',
-      buildOTPEmail(first_name, code, 'verify')
-    ).catch(err => {
+    // Send verification email
+    try {
+      await sendEmail(
+        email,
+        'Your HopeFusion Africa verification code',
+        buildOTPEmail(first_name, code, 'verify')
+      );
+    } catch (err) {
       console.error('[Auth] Resend OTP email error:', err.message);
-    });
+    }
 
     const isDev = process.env.NODE_ENV !== 'production';
 
