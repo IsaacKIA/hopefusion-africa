@@ -1,10 +1,10 @@
 /**
- * HopeFusion Africa — Service Worker v3
+ * HopeFusion Africa — Service Worker v4
  * In development: self-unregisters to prevent stale JS cache issues.
  * In production: handles offline caching and push notifications.
  */
 
-const CACHE_NAME = 'hopefusion-cache-v3';
+const CACHE_NAME = 'hopefusion-cache-v4';
 const OFFLINE_URL = '/offline';
 const APP_ICON = '/icons/icon-192x192.png';
 
