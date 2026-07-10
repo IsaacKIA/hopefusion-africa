@@ -15,8 +15,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  API_IMAGE: ghcr.io/${{ github.repository_owner }}/hopefusion-api
-  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/hopefusion-frontend
+  API_IMAGE: ghcr.io/isaackia/hopefusion-api
+  FRONTEND_IMAGE: ghcr.io/isaackia/hopefusion-frontend
 
 jobs:
 
