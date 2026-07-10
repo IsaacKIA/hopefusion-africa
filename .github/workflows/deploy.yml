@@ -125,6 +125,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: build
+    if: ${{ secrets.DEPLOY_HOST != '' }}
     environment: production
 
     steps:
