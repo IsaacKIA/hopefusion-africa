@@ -156,21 +156,15 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
     // Store verify code in Redis (10 min)
     await cacheSet(`verify:${user.id}`, code, 600);
 
-    // Send verification email — capture result to detect delivery failures
-    let emailResult = { provider: 'unknown' };
-    try {
-      emailResult = await sendEmail(
-        email,
-        'Your HopeFusion Africa verification code',
-        buildOTPEmail(first_name, code, 'verify')
-      );
-    } catch (emailErr) {
+    // Send verification email in the background (non-blocking — prevents timeout on slow SMTP/Resend)
+    sendEmail(
+      email,
+      'Your HopeFusion Africa verification code',
+      buildOTPEmail(first_name, code, 'verify')
+    ).catch(emailErr => {
       console.error('[Auth] Verification email error:', emailErr.message);
-    }
+    });
 
-    // If email couldn't be delivered (domain not verified / no config),
-    // include the OTP in the response so dev/staging can still test
-    const emailDelivered = emailResult.provider === 'resend' || emailResult.provider === 'smtp';
     const isDev = process.env.NODE_ENV !== 'production';
 
     const token = generateToken(user.id, user.role);
@@ -193,14 +187,12 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
 
     return res.status(201).json({
       success: true,
-      message: emailDelivered
-        ? 'Account created. Check your email for verification code.'
-        : 'Account created. Email delivery not configured — use the code below to verify.',
+      message: 'Account created! Check your email for a verification code.',
       token,
       refreshToken,
       user: { id: user.id, email: user.email, role: user.role, first_name: user.first_name, last_name: user.last_name },
-      // Only expose OTP in response when email is not delivered AND not in production
-      ...((!emailDelivered && isDev) && { debug_otp: code, debug_note: 'Verify your domain at resend.com/domains to enable real email delivery' }),
+      // Always expose OTP in dev so developers can test without a live email domain
+      ...(isDev && { debug_otp: code, debug_note: 'Verify your domain at resend.com/domains to enable real email delivery' }),
     });
 
   } catch (err) {
@@ -391,25 +383,22 @@ router.post('/forgot-password', rateLimit(3, 300), validate(forgotPasswordSchema
 
     const code = generateVerifyCode();
     await cacheSet(`reset:${rows[0].id}`, code, 1800);
-    
-    let emailResult = { provider: 'unknown' };
-    try {
-      emailResult = await sendEmail(
-        rows[0].email,
-        'Your HopeFusion Africa password reset code',
-        buildOTPEmail(rows[0].first_name, code, 'reset')
-      );
-    } catch (err) {
-      console.error('[Auth] Password reset email error:', err.message);
-    }
 
-    const emailDelivered = emailResult.provider === 'resend' || emailResult.provider === 'smtp';
+    // Send password reset email in the background (non-blocking)
+    sendEmail(
+      rows[0].email,
+      'Your HopeFusion Africa password reset code',
+      buildOTPEmail(rows[0].first_name, code, 'reset')
+    ).catch(err => {
+      console.error('[Auth] Password reset email error:', err.message);
+    });
+
     const isDev = process.env.NODE_ENV !== 'production';
 
     return res.json({
       success: true,
       message: 'If that email exists, a password reset code has been sent.',
-      ...((!emailDelivered && isDev) && { debug_otp: code })
+      ...(isDev && { debug_otp: code })
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -478,29 +467,24 @@ router.post(['/resend', '/resend-verify'], authenticate, async (req, res) => {
     }
     const { email, first_name } = rows[0];
     const code = generateVerifyCode();
-    
+
     await cacheSet(`verify:${userId}`, code, 600);
-    
-    let emailResult = { provider: 'unknown' };
-    try {
-      emailResult = await sendEmail(
-        email,
-        'Your HopeFusion Africa verification code',
-        buildOTPEmail(first_name, code, 'verify')
-      );
-    } catch (err) {
+
+    // Send verification email in the background (non-blocking)
+    sendEmail(
+      email,
+      'Your HopeFusion Africa verification code',
+      buildOTPEmail(first_name, code, 'verify')
+    ).catch(err => {
       console.error('[Auth] Resend OTP email error:', err.message);
-    }
-    
-    const emailDelivered = emailResult.provider === 'resend' || emailResult.provider === 'smtp';
+    });
+
     const isDev = process.env.NODE_ENV !== 'production';
 
     return res.json({
       success: true,
-      message: emailDelivered
-        ? 'Verification code resent successfully'
-        : 'Verification code generated. Email delivery failed — use the code below.',
-      ...((!emailDelivered && isDev) && { debug_otp: code })
+      message: 'Verification code sent! Check your email.',
+      ...(isDev && { debug_otp: code })
     });
   } catch (err) {
     console.error('Resend OTP error:', err);

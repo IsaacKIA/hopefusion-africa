@@ -28,6 +28,7 @@ export default function RegisterPage() {
   });
 
   const [loading, setLoading]     = useState(false);
+  const [loadingStep, setLoadingStep] = useState('');
   const [error, setError]         = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -70,12 +71,29 @@ export default function RegisterPage() {
       return;
     }
     setLoading(true);
+    setLoadingStep('Creating your account...');
     setError(null);
+
+    // Show progressive feedback for slow connections
+    const t1 = setTimeout(() => setLoadingStep('Securing your password...'), 3000);
+    const t2 = setTimeout(() => setLoadingStep('Setting up your profile...'), 8000);
+    const t3 = setTimeout(() => setLoadingStep('Almost there — finalizing...'), 15000);
+
     try {
       await register(formData);
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+      const msg = err.message || '';
+      if (msg.includes('timed out') || msg.includes('timeout')) {
+        setError('This is taking longer than usual — the server may be warming up. Please try again in a moment.');
+      } else {
+        setError(msg || 'Registration failed. Please try again.');
+      }
       setLoading(false);
+      setLoadingStep('');
+    } finally {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
     }
   };
 
@@ -189,8 +207,15 @@ export default function RegisterPage() {
           )}
 
           <button type="submit" className="btn-primary" disabled={loading}
-            style={{ width: '100%', justifyContent: 'center', marginTop: '8px' }}>
-            {loading ? <div className="spinner" style={{ width: '20px', height: '20px' }} /> : 'Create Account'}
+            style={{ width: '100%', justifyContent: 'center', marginTop: '8px', flexDirection: 'column', gap: '4px' }}>
+            {loading ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="spinner" style={{ width: '18px', height: '18px' }} />
+                  <span>{loadingStep || 'Creating your account...'}</span>
+                </div>
+              </>
+            ) : 'Create Account'}
           </button>
         </form>
 

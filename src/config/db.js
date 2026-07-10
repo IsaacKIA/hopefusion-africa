@@ -91,7 +91,7 @@ if (process.env.NODE_ENV === 'test') {
     ssl: (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1')) ? false : { rejectUnauthorized: false },
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000,
+    connectionTimeoutMillis: 10000,
   });
 
   // Real Redis client (supports Upstash rediss:// TLS URLs)

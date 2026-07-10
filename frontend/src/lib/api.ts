@@ -116,8 +116,8 @@ export const API = {
   post: (path: string, body?: any, opts?: RequestInit) =>
     apiFetch(path, { method: 'POST', body: JSON.stringify(body), ...opts }),
   postAuth: (path: string, body?: any, opts?: RequestInit) =>
-    // Auth endpoints do bcrypt + remote DB — needs longer timeout
-    apiFetch(path, { method: 'POST', body: JSON.stringify(body), ...opts }, 20000),
+    // Auth endpoints do bcrypt + remote DB (Supabase pooler) — needs generous timeout
+    apiFetch(path, { method: 'POST', body: JSON.stringify(body), ...opts }, 35000),
   patch: (path: string, body?: any, opts?: RequestInit) =>
     apiFetch(path, { method: 'PATCH', body: JSON.stringify(body), ...opts }),
   delete: (path: string, opts?: RequestInit) =>

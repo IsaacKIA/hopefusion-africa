@@ -13,6 +13,7 @@ function LoginFormContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -39,14 +40,27 @@ function LoginFormContent() {
     }
 
     setLoading(true);
+    setLoadingStep('Signing in...');
     setError(null);
+
+    const t1 = setTimeout(() => setLoadingStep('Verifying credentials...'), 4000);
+    const t2 = setTimeout(() => setLoadingStep('Almost there...'), 12000);
 
     try {
       await login(email, password);
       router.push(redirectPath);
     } catch (err: any) {
-      setError(err.message || 'Invalid email or password. Please try again.');
+      const msg = err.message || '';
+      if (msg.includes('timed out') || msg.includes('timeout')) {
+        setError('Connection timed out. Please try again.');
+      } else {
+        setError(msg || 'Invalid email or password. Please try again.');
+      }
       setLoading(false);
+      setLoadingStep('');
+    } finally {
+      clearTimeout(t1);
+      clearTimeout(t2);
     }
   };
 
@@ -153,7 +167,10 @@ function LoginFormContent() {
             style={{ width: '100%', justifyContent: 'center', marginTop: '20px' }}
           >
             {loading ? (
-              <div className="spinner" style={{ width: '20px', height: '20px' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="spinner" style={{ width: '18px', height: '18px' }} />
+                <span>{loadingStep || 'Signing in...'}</span>
+              </div>
             ) : (
               'Sign In'
             )}
