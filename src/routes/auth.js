@@ -235,14 +235,16 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
     });
 
     res.cookie('hfa_refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: '/'
     });
 
     await writeAuditLog(user.id, 'registration_completed', { email: user.email, role: user.role }, req.ip);
@@ -312,14 +314,16 @@ router.post('/login', rateLimit(10, 60), validate(loginSchema), async (req, res)
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
     });
 
     res.cookie('hfa_refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: '/'
     });
 
     return res.json({
@@ -456,7 +460,8 @@ router.post('/refresh', async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
     });
     return res.json({ success: true, token });
   } catch {
@@ -482,8 +487,14 @@ router.post('/logout', authenticate, async (req, res) => {
     await cacheDel(`refresh:${req.user.userId}`);
     await db.query('INSERT INTO audit_log (user_id, action, ip_address) VALUES ($1, $2, $3)',
       [req.user.userId, 'logout', req.ip]);
-    res.clearCookie('hfa_token');
-    res.clearCookie('hfa_refresh_token');
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/'
+    };
+    res.clearCookie('hfa_token', cookieOptions);
+    res.clearCookie('hfa_refresh_token', cookieOptions);
     return res.json({ success: true, message: 'Logged out successfully' });
   } catch (err) {
     return res.status(500).json({ error: err.message });

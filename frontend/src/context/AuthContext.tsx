@@ -90,15 +90,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    try {
-      await unsubscribeFromPush().catch(() => {});
-      await API.post('/auth/logout', {});
-    } catch (e) {}
+    const token = typeof window !== 'undefined' ? localStorage.getItem('hfa_token') : null;
+
     localStorage.removeItem('hfa_user');
     localStorage.removeItem('hfa_token');
     localStorage.removeItem('hfa_refresh_token');
     localStorage.removeItem('pushEnabled');
     setUser(null);
+
+    try {
+      await unsubscribeFromPush().catch(() => {});
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+      await fetch(`${apiBase}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        credentials: 'include'
+      }).catch(() => {});
+    } catch (e) {
+      console.warn('[Auth] Server-side logout background task failed:', e);
+    }
+
     router.push('/');
   };
 

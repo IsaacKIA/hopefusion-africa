@@ -336,5 +336,30 @@ describe('Auth Integration Tests', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toContain('completed successfully');
     });
+
+    it('should successfully log out and invalidate/blacklist the token', async () => {
+      const userId = '11111111-2222-3333-4444-555555555555';
+      const payload = { userId, role: 'startup' };
+      const token = jwt.sign(payload, process.env.JWT_SECRET);
+      
+      mockDbExpectQuery('INSERT INTO audit_log', []);
+
+      const res = await request(app)
+        .post('/api/v1/auth/logout')
+        .set('Authorization', `Bearer ${token}`)
+        .send({});
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toContain('Logged out successfully');
+
+      // Verify token blacklist in Redis
+      expect(redisMockStore[`blacklist:${token}`]).toBe('1');
+
+      // Verify cookies are cleared in response headers
+      const cookies = res.headers['set-cookie'] || [];
+      expect(cookies.some(c => c.includes('hfa_token=;'))).toBe(true);
+      expect(cookies.some(c => c.includes('hfa_refresh_token=;'))).toBe(true);
+    });
   });
 });

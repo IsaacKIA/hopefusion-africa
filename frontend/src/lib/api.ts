@@ -89,6 +89,8 @@ async function apiFetch(path: string, options: RequestInit = {}, timeoutMs = 100
 
   if (res.status === 401 && typeof window !== 'undefined') {
     localStorage.removeItem('hfa_user');
+    localStorage.removeItem('hfa_token');
+    localStorage.removeItem('hfa_refresh_token');
     const path = window.location.pathname;
     const isPublic = path === '/' || 
                      path.startsWith('/login') || 
