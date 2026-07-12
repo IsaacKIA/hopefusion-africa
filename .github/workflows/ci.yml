@@ -53,14 +53,17 @@ jobs:
         run: npm test -- --testPathPattern='tests/' --forceExit
         env:
           NODE_ENV: test
+          NO_LISTEN: 'true'
+          JWT_SECRET: testsecretkey12345678901234567890123456789012
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hopefusion_test
           REDIS_URL: redis://localhost:6379
       
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage/lcov.info
           flags: backend
+          token: ${{ secrets.CODECOV_TOKEN }}
         continue-on-error: true
 
   frontend-test:
@@ -94,10 +97,11 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
       
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./frontend/coverage/lcov.info
           flags: frontend
+          token: ${{ secrets.CODECOV_TOKEN }}
         continue-on-error: true
 
   mobile-lint:
