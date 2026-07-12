@@ -330,6 +330,21 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE INDEX IF NOT EXISTS idx_audit_user   ON audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action);
 
+-- ─── VERIFICATION CODES ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS verification_codes (
+  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  code_hash           TEXT NOT NULL,
+  attempts            INTEGER DEFAULT 0,
+  max_attempts        INTEGER DEFAULT 5,
+  resend_count        INTEGER DEFAULT 0,
+  resend_window_start TIMESTAMPTZ DEFAULT NOW(),
+  last_sent_at        TIMESTAMPTZ DEFAULT NOW(),
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  expires_at          TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_user ON verification_codes(user_id);
+
 -- ─── ESCROWS ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS escrows (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

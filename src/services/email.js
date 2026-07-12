@@ -8,6 +8,9 @@
  */
 
 import nodemailer from 'nodemailer';
+import { logger } from '../utils/logger.js';
+
+const sleep = (ms) => new Promise((resolve) => resolve && setTimeout(resolve, ms));
 
 /* ─── Resend (lazy-loaded only if key exists) ───────────────────────────── */
 let _resend = null;
@@ -98,17 +101,16 @@ export function buildOTPEmail(firstName, code, type = 'verify') {
   </table>
 </body>
 </html>`.trim();
-}
-
-/* ─── Core send function ────────────────────────────────────────────────── */
+}/* ─── Core send function ────────────────────────────────────────────────── */
 /**
- * Send a transactional email.
+ * Send a transactional email with exponential backoff retries.
  * @param {string} to      - recipient email
  * @param {string} subject - email subject
  * @param {string} html    - HTML body
- * @returns {Promise<{provider: string, id?: string}>}
+ * @param {string} [correlationId] - Optional correlation ID for tracing
+ * @returns {Promise<{provider: string, id?: string, otp?: string}>}
  */
-export async function sendEmail(to, subject, html) {
+export async function sendEmail(to, subject, html, correlationId = null) {
   const from = process.env.RESEND_FROM || process.env.SMTP_FROM || 'HopeFusion Africa <info@hopefusionafrica.com>';
 
   if (process.env.NODE_ENV === 'test') {
@@ -117,27 +119,43 @@ export async function sendEmail(to, subject, html) {
 
   /* 1 ─ Resend API */
   if (process.env.RESEND_API_KEY) {
-    try {
-      const resend = await getResend();
-      const { data, error } = await resend.emails.send({ from, to, subject, html });
-      if (error) throw new Error(error.message);
-      console.log(`[Email] Sent via Resend → ${to} (id: ${data?.id})`);
-      return { provider: 'resend', id: data?.id };
-    } catch (err) {
-      console.error('[Email] Resend failed, trying SMTP fallback:', err.message);
+    let delay = 200;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        logger.info('email_sending_attempt', { provider: 'resend', to, attempt }, correlationId);
+        const resend = await getResend();
+        const { data, error } = await resend.emails.send({ from, to, subject, html });
+        if (error) throw new Error(error.message);
+        logger.info('email_sent_successfully', { provider: 'resend', to, id: data?.id }, correlationId);
+        return { provider: 'resend', id: data?.id };
+      } catch (err) {
+        logger.warn('email_sending_failed', { provider: 'resend', to, attempt, error: err.message }, correlationId);
+        if (attempt === 3) break;
+        await sleep(delay);
+        delay *= 2;
+      }
     }
+    logger.error('email_provider_exhausted', { provider: 'resend', to }, correlationId);
   }
 
   /* 2 ─ SMTP / nodemailer */
   if (isSmtpConfigured()) {
-    try {
-      const transport = createSmtpTransport();
-      const info = await transport.sendMail({ from, to, subject, html });
-      console.log(`[Email] Sent via SMTP → ${to} (msgId: ${info.messageId})`);
-      return { provider: 'smtp', id: info.messageId };
-    } catch (err) {
-      console.error('[Email] SMTP failed:', err.message);
+    let delay = 200;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        logger.info('email_sending_attempt', { provider: 'smtp', to, attempt }, correlationId);
+        const transport = createSmtpTransport();
+        const info = await transport.sendMail({ from, to, subject, html });
+        logger.info('email_sent_successfully', { provider: 'smtp', to, id: info.messageId }, correlationId);
+        return { provider: 'smtp', id: info.messageId };
+      } catch (err) {
+        logger.warn('email_sending_failed', { provider: 'smtp', to, attempt, error: err.message }, correlationId);
+        if (attempt === 3) break;
+        await sleep(delay);
+        delay *= 2;
+      }
     }
+    logger.error('email_provider_exhausted', { provider: 'smtp', to }, correlationId);
   }
 
   /* 3 ─ Console fallback (development / no credentials configured) */
@@ -151,6 +169,7 @@ export async function sendEmail(to, subject, html) {
   console.log('  Fix: Set RESEND_API_KEY in .env (https://resend.com)');
   console.log('═'.repeat(60) + '\n');
 
+  logger.info('email_console_fallback', { to, otp }, correlationId);
+
   return { provider: 'console', otp };
 }
-

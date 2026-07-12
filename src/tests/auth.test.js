@@ -4,9 +4,11 @@ import { mockDbReset, mockDbExpectQuery, redisMockStore } from '../config/db.js'
 import bcrypt from 'bcryptjs';
 import { jest } from '@jest/globals';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 // Setup basic environment variables for the test run
 process.env.JWT_SECRET = 'supersecretjwtdevelopmentkeyforetestingruns';
+const hashOTP = (otp) => crypto.createHash('sha256').update(otp + process.env.JWT_SECRET).digest('hex');
 process.env.NO_LISTEN = 'true';
 
 describe('Auth Integration Tests', () => {
@@ -30,7 +32,9 @@ describe('Auth Integration Tests', () => {
   describe('POST /api/v1/auth/register', () => {
     it('should successfully register a new startup user and create startup profile', async () => {
       // 1. Mock SELECT check for duplicate email -> empty (no conflicts)
-      mockDbExpectQuery('SELECT id FROM users WHERE email', []);
+      mockDbExpectQuery('SELECT id, is_verified FROM users WHERE email', []);
+      mockDbExpectQuery('INSERT INTO audit_log', []);
+      mockDbExpectQuery('INSERT INTO verification_codes', []);
 
       // 2. Mock INSERT into users
       mockDbExpectQuery('INSERT INTO users', [{
@@ -97,7 +101,7 @@ describe('Auth Integration Tests', () => {
 
     it('should reject registration if email is already registered', async () => {
       // Mock SELECT duplicate query returning existing row
-      mockDbExpectQuery('SELECT id FROM users WHERE email', [{ id: '11111111-2222-3333-4444-555555555555' }]);
+      mockDbExpectQuery('SELECT id, is_verified FROM users WHERE email', [{ id: '11111111-2222-3333-4444-555555555555', is_verified: true }]);
 
       const res = await request(app)
         .post('/api/v1/auth/register')
@@ -287,8 +291,16 @@ describe('Auth Integration Tests', () => {
       
       redisMockStore['verify:11111111-2222-3333-4444-555555555555'] = '"123456"';
       
+      mockDbExpectQuery('SELECT code_hash, attempts, max_attempts, expires_at FROM verification_codes', [{
+        code_hash: hashOTP('123456'),
+        attempts: 0,
+        max_attempts: 5,
+        expires_at: new Date(Date.now() + 600000).toISOString()
+      }]);
       mockDbExpectQuery('UPDATE users SET is_verified', []);
       mockDbExpectQuery('INSERT INTO startup_passports', [{ id: '88888888-8888-8888-8888-888888888888' }]);
+      mockDbExpectQuery('DELETE FROM verification_codes', []);
+      mockDbExpectQuery('INSERT INTO audit_log', []);
 
       const res = await request(app)
         .post('/api/v1/auth/verify')

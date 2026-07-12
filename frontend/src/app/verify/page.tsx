@@ -15,6 +15,7 @@ export default function VerifyPage() {
   const [mounted, setMounted] = useState(false);
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(60);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
@@ -64,7 +65,7 @@ export default function VerifyPage() {
       e.preventDefault();
       const digits = pastedData.split('');
       setCode(digits);
-      handleSubmit(pastedData);
+      handleSubmit(digits.join(''));
     }
   };
 
@@ -96,6 +97,7 @@ export default function VerifyPage() {
   };
 
   const handleSubmit = async (verificationCode: string) => {
+    if (loading) return;
     setLoading(true);
     setError(null);
     try {
@@ -117,9 +119,10 @@ export default function VerifyPage() {
   };
 
   const handleResend = async () => {
-    if (resendTimer > 0) return;
+    if (resending || resendTimer > 0) return;
     setError(null);
-    setResendStatus('Sending code...');
+    setResendStatus('Sending verification code...');
+    setResending(true);
     try {
       const res = await API.post('/auth/resend');
       setResendTimer(60);
@@ -134,6 +137,8 @@ export default function VerifyPage() {
     } catch (err: any) {
       setError(err.message || 'Failed to resend code. Please try again.');
       setResendStatus(null);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -229,7 +234,7 @@ export default function VerifyPage() {
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
               onPaste={handlePaste}
-              disabled={loading}
+              disabled={loading || resending}
               style={{
                 width: '48px',
                 height: '56px',
@@ -252,16 +257,18 @@ export default function VerifyPage() {
         <button
           onClick={() => handleSubmit(code.join(''))}
           className="btn-primary"
-          disabled={loading || code.some(num => num === '')}
+          disabled={loading || resending || code.some(num => num === '')}
           style={{ width: '100%', justifyContent: 'center', marginBottom: '20px' }}
         >
-          {loading ? <div className="spinner" style={{ width: '20px', height: '20px' }} /> : 'Verify Code'}
+          {loading ? <div className="spinner" style={{ width: '20px', height: '20px', margin: '0 auto' }} /> : 'Verify Code'}
         </button>
 
         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
           Didn't receive a code?{' '}
           {resendTimer > 0 ? (
             <span>Resend in {resendTimer}s</span>
+          ) : resending ? (
+            <span>Sending code...</span>
           ) : (
             <button
               onClick={handleResend}

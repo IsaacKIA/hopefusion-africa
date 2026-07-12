@@ -4,9 +4,12 @@ import bcrypt from 'bcryptjs';
 import passport from 'passport';
 import crypto from 'crypto';
 import { db, redis, cacheGet, cacheSet, cacheDel } from '../config/db.js';
+import { logger, writeAuditLog } from '../utils/logger.js';
 import { authenticate } from '../middleware/auth.js';
 import { rateLimit } from '../middleware/rate-limiter.js';
 import { validate } from '../middleware/validation.js';
+
+const hashOTP = (otp) => crypto.createHash('sha256').update(otp + (process.env.JWT_SECRET || '')).digest('hex');
 import { sendEmail, buildOTPEmail } from '../services/email.js';
 import {
   registerSchema,
@@ -56,10 +59,12 @@ const normalizePhoneNumber = (phone, country) => {
    ============================================================ */
 
 // POST /register
+// POST /register
 router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req, res) => {
+  const correlationId = crypto.randomUUID();
   let client;
+  
   try {
-    client = await db.connect();
     const {
       email, password, role, first_name, last_name, phone, country, linkedin_url,
       // Startup role specific fields
@@ -70,9 +75,24 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
       expertise, session_types, languages, experience_years, max_mentees, hourly_rate, current_role, mentor_bio
     } = req.body;
 
-    const existing = await client.query('SELECT id FROM users WHERE email = $1', [email]);
+    logger.info('registration_started', { email, role }, correlationId);
+
+    client = await db.connect();
+    
+    // Check if user already exists
+    const existing = await client.query('SELECT id, is_verified FROM users WHERE email = $1', [email.toLowerCase()]);
+    let userId = null;
+    let isOverwrite = false;
+
     if (existing.rows.length) {
-      return res.status(409).json({ error: 'Email already registered' });
+      const existingUser = existing.rows[0];
+      if (existingUser.is_verified) {
+        logger.warn('registration_failed_email_taken', { email }, correlationId);
+        return res.status(409).json({ error: 'Email already registered' });
+      }
+      userId = existingUser.id;
+      isOverwrite = true;
+      logger.info('registration_unverified_overwrite', { email, userId }, correlationId);
     }
 
     const hash = await hashPassword(password);
@@ -91,11 +111,31 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
 
     await client.query('BEGIN');
 
-    const { rows: [user] } = await client.query(
-      `INSERT INTO users (email, password_hash, role, roles, first_name, last_name, phone, country, linkedin_url, website_url, bio)
-       VALUES ($1, $2, $3, ARRAY[$3]::TEXT[], $4, $5, $6, $7, $8, $9, $10) RETURNING id, email, role, first_name, last_name`,
-      [email, hash, dbRole, first_name, last_name, normalizedPhone, country || null, linkedin_url || null, website_url || null, dbRole === 'mentor' ? mentor_bio || null : null]
-    );
+    let user;
+    if (isOverwrite) {
+      // Clean up old role profiles
+      await client.query('DELETE FROM startups WHERE founder_id = $1', [userId]);
+      await client.query('DELETE FROM investors WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM mentors WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM startup_passports WHERE user_id = $1', [userId]);
+
+      const { rows: [updatedUser] } = await client.query(
+        `UPDATE users
+         SET password_hash = $2, role = $3, roles = ARRAY[$3]::TEXT[], first_name = $4, last_name = $5, phone = $6, country = $7, website_url = $8, updated_at = NOW()
+         WHERE id = $1
+         RETURNING id, email, role, first_name, last_name`,
+        [userId, hash, dbRole, first_name, last_name, normalizedPhone, country || null, website_url || null]
+      );
+      user = updatedUser;
+    } else {
+      const { rows: [newUser] } = await client.query(
+        `INSERT INTO users (email, password_hash, role, roles, first_name, last_name, phone, country, linkedin_url, website_url, bio)
+         VALUES ($1, $2, $3, ARRAY[$3]::TEXT[], $4, $5, $6, $7, $8, $9, $10)
+         RETURNING id, email, role, first_name, last_name`,
+        [email.toLowerCase(), hash, dbRole, first_name, last_name, normalizedPhone, country || null, linkedin_url || null, website_url || null, dbRole === 'mentor' ? mentor_bio || null : null]
+      );
+      user = newUser;
+    }
 
     // Create role-specific profile (create base profiles so updating works later during onboarding)
     if (dbRole === 'startup') {
@@ -152,19 +192,37 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
     }
 
     await client.query('COMMIT');
+    logger.info('registration_db_transaction_committed', { userId: user.id }, correlationId);
 
-    // Store verify code in Redis (10 min)
+    // Save verification OTP hash in PostgreSQL verification_codes table (ON CONFLICT DO UPDATE)
+    const codeHash = hashOTP(code);
+    await db.query(
+      `INSERT INTO verification_codes (user_id, code_hash, attempts, max_attempts, expires_at, last_sent_at)
+       VALUES ($1, $2, 0, 5, NOW() + INTERVAL '10 minutes', NOW())
+       ON CONFLICT (user_id)
+       DO UPDATE SET
+         code_hash = EXCLUDED.code_hash,
+         attempts = 0,
+         expires_at = EXCLUDED.expires_at,
+         last_sent_at = NOW(),
+         created_at = NOW()`,
+      [user.id, codeHash]
+    );
+
+    // Store verify code in Redis (10 min) for legacy cache compatibility
     await cacheSet(`verify:${user.id}`, code, 600);
+    logger.info('registration_otp_stored', { userId: user.id }, correlationId);
 
     // Send verification email
     try {
       await sendEmail(
         email,
         'Your HopeFusion Africa verification code',
-        buildOTPEmail(first_name, code, 'verify')
+        buildOTPEmail(first_name, code, 'verify'),
+        correlationId
       );
     } catch (emailErr) {
-      console.error('[Auth] Verification email error:', emailErr.message);
+      logger.error('registration_email_delivery_failed', { userId: user.id, error: emailErr.message }, correlationId);
     }
 
     const isDev = process.env.NODE_ENV !== 'production';
@@ -187,6 +245,9 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
       maxAge: 30 * 24 * 60 * 60 * 1000
     });
 
+    await writeAuditLog(user.id, 'registration_completed', { email: user.email, role: user.role }, req.ip);
+    logger.info('registration_completed_successfully', { userId: user.id }, correlationId);
+
     return res.status(201).json({
       success: true,
       message: 'Account created! Check your email for a verification code.',
@@ -199,7 +260,10 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
 
   } catch (err) {
     if (client) await client.query('ROLLBACK').catch(() => {});
-    console.error('Register error:', err);
+    logger.error('registration_failed', { error: err.message, stack: err.stack }, correlationId);
+    if (err.code === '23505') { // Handle unique constraint race condition explicitly
+      return res.status(409).json({ error: 'Email already registered' });
+    }
     if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.message?.includes('connect')) {
       return res.status(503).json({ error: 'Database unavailable. Please try again shortly.' });
     }
@@ -280,27 +344,93 @@ router.post('/login', rateLimit(10, 60), validate(loginSchema), async (req, res)
 
 // POST /verify
 router.post('/verify', rateLimit(5, 60), authenticate, validate(verifySchema), async (req, res) => {
+  const correlationId = crypto.randomUUID();
+  const userId = req.user.userId;
+  const { code } = req.body;
+  
+  logger.info('verification_attempt_started', { userId }, correlationId);
+
   try {
-    const { code } = req.body;
-    const stored = await cacheGet(`verify:${req.user.userId}`);
-    if (!stored || stored !== code) {
+    // Check if user is locked out due to brute-force protection
+    const isBlocked = await redis.get(`verify:blocked:${userId}`);
+    if (isBlocked) {
+      logger.warn('verification_failed_blocked', { userId }, correlationId);
+      return res.status(429).json({ error: 'Too many failed verification attempts. Please try again in 15 minutes.' });
+    }
+
+    // Query verification code from PostgreSQL
+    const { rows } = await db.query(
+      'SELECT code_hash, attempts, max_attempts, expires_at FROM verification_codes WHERE user_id = $1',
+      [userId]
+    );
+
+    if (!rows.length) {
+      logger.warn('verification_failed_no_code', { userId }, correlationId);
       return res.status(400).json({ error: 'Invalid or expired verification code' });
     }
-    await db.query('UPDATE users SET is_verified = TRUE WHERE id = $1', [req.user.userId]);
+
+    const { code_hash, attempts, max_attempts, expires_at } = rows[0];
+
+    // Check if expired
+    if (new Date() > new Date(expires_at)) {
+      logger.warn('verification_failed_expired', { userId }, correlationId);
+      // Delete expired code
+      await db.query('DELETE FROM verification_codes WHERE user_id = $1', [userId]);
+      await cacheDel(`verify:${userId}`);
+      return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+    }
+
+    // Verify code hash
+    const hashedInput = hashOTP(code);
+    if (code_hash !== hashedInput) {
+      const newAttempts = attempts + 1;
+      
+      if (newAttempts >= max_attempts) {
+        // Brute force threshold reached: delete code and block user for 15 minutes
+        await db.query('DELETE FROM verification_codes WHERE user_id = $1', [userId]);
+        await cacheDel(`verify:${userId}`);
+        
+        // Set block key in Redis for 15 minutes (900 seconds)
+        await redis.setEx(`verify:blocked:${userId}`, 900, '1');
+        
+        await writeAuditLog(userId, 'verification_blocked', { reason: 'max_attempts_exceeded', attempts: newAttempts }, req.ip);
+        logger.error('verification_user_blocked', { userId, attempts: newAttempts }, correlationId);
+        
+        return res.status(429).json({ error: 'Too many failed attempts. This verification code has been invalidated. Please try again in 15 minutes.' });
+      }
+
+      // Update attempt counter
+      await db.query('UPDATE verification_codes SET attempts = $1 WHERE user_id = $2', [newAttempts, userId]);
+      
+      await writeAuditLog(userId, 'verification_failed_attempt', { attempts: newAttempts }, req.ip);
+      logger.warn('verification_failed_wrong_code', { userId, attempts: newAttempts }, correlationId);
+      
+      return res.status(400).json({ error: `Invalid verification code. ${max_attempts - newAttempts} attempts remaining.` });
+    }
+
+    // Verification success!
+    await db.query('UPDATE users SET is_verified = TRUE WHERE id = $1', [userId]);
     
     // Automatically create Startup Passport post-verification
     await db.query(
       `INSERT INTO startup_passports (user_id, profile_completion, verification_status, hope_score, funding_readiness, opportunity_readiness)
        VALUES ($1, 10, 'Verified', 300, 'Low', 'Low')
        ON CONFLICT (user_id) DO NOTHING`,
-      [req.user.userId]
+      [userId]
     );
 
-    await cacheDel(`verify:${req.user.userId}`);
-    await cacheDel(`user:${req.user.userId}`);
-    await redis.del(`user:verified:${req.user.userId}`);
+    // Clean up verification code records
+    await db.query('DELETE FROM verification_codes WHERE user_id = $1', [userId]);
+    await cacheDel(`verify:${userId}`);
+    await cacheDel(`user:${userId}`);
+    await redis.del(`user:verified:${userId}`);
+    
+    await writeAuditLog(userId, 'verification_success', {}, req.ip);
+    logger.info('verification_completed_successfully', { userId }, correlationId);
+
     return res.json({ success: true, message: 'Email verified successfully' });
   } catch (err) {
+    logger.error('verification_error', { userId, error: err.message }, correlationId);
     return res.status(500).json({ error: err.message });
   }
 });
@@ -463,29 +593,101 @@ router.get('/google/callback', passport.authenticate('google', { session: false,
 
 // POST /auth/resend and /auth/resend-verify
 router.post(['/resend', '/resend-verify'], authenticate, async (req, res) => {
+  const correlationId = crypto.randomUUID();
+  const userId = req.user.userId;
+  
+  logger.info('resend_started', { userId }, correlationId);
+
   try {
-    const userId = req.user.userId;
+    // Check if blocked by brute-force protection
+    const isBlocked = await redis.get(`verify:blocked:${userId}`);
+    if (isBlocked) {
+      logger.warn('resend_failed_blocked', { userId }, correlationId);
+      return res.status(429).json({ error: 'Too many failed verification attempts. Please try again in 15 minutes.' });
+    }
+
     const { rows } = await db.query('SELECT email, first_name FROM users WHERE id = $1', [userId]);
     if (!rows.length) {
+      logger.warn('resend_failed_user_not_found', { userId }, correlationId);
       return res.status(404).json({ error: 'User not found' });
     }
     const { email, first_name } = rows[0];
-    const code = generateVerifyCode();
 
+    // Check resend limits in DB
+    const { rows: codeRows } = await db.query(
+      'SELECT last_sent_at, resend_count, resend_window_start FROM verification_codes WHERE user_id = $1',
+      [userId]
+    );
+
+    let nextResendCount = 1;
+    let nextResendWindowStart = new Date();
+
+    if (codeRows.length) {
+      const { last_sent_at, resend_count, resend_window_start } = codeRows[0];
+      const timeSinceLastSent = Date.now() - new Date(last_sent_at).getTime();
+      
+      // 60-second cooldown
+      if (timeSinceLastSent < 60000) {
+        const waitSecs = Math.ceil((60000 - timeSinceLastSent) / 1000);
+        logger.warn('resend_failed_cooldown', { userId, waitSecs }, correlationId);
+        return res.status(429).json({ error: `Please wait ${waitSecs} seconds before requesting a new code.` });
+      }
+
+      // Max 5 resends per hour
+      const timeSinceWindowStart = Date.now() - new Date(resend_window_start).getTime();
+      if (timeSinceWindowStart < 3600000) {
+        if (resend_count >= 5) {
+          const minsLeft = Math.ceil((3600000 - timeSinceWindowStart) / 60000);
+          logger.warn('resend_failed_hourly_limit', { userId, minsLeft }, correlationId);
+          return res.status(429).json({ error: `Maximum resend limit reached. Please try again in ${minsLeft} minutes.` });
+        }
+        nextResendCount = resend_count + 1;
+        nextResendWindowStart = new Date(resend_window_start);
+      } else {
+        nextResendCount = 1;
+        nextResendWindowStart = new Date();
+      }
+    }
+
+    const code = generateVerifyCode();
+    const codeHash = hashOTP(code);
+
+    // Upsert code into database
+    await db.query(
+      `INSERT INTO verification_codes (user_id, code_hash, attempts, max_attempts, resend_count, resend_window_start, expires_at, last_sent_at)
+       VALUES ($1, $2, 0, 5, $3, $4, NOW() + INTERVAL '10 minutes', NOW())
+       ON CONFLICT (user_id)
+       DO UPDATE SET
+         code_hash = EXCLUDED.code_hash,
+         attempts = 0,
+         resend_count = EXCLUDED.resend_count,
+         resend_window_start = EXCLUDED.resend_window_start,
+         expires_at = EXCLUDED.expires_at,
+         last_sent_at = EXCLUDED.last_sent_at,
+         created_at = NOW()`,
+      [userId, codeHash, nextResendCount, nextResendWindowStart]
+    );
+
+    // Update Redis cache for compatibility
     await cacheSet(`verify:${userId}`, code, 600);
+    logger.info('resend_otp_stored', { userId }, correlationId);
 
     // Send verification email
     try {
       await sendEmail(
         email,
         'Your HopeFusion Africa verification code',
-        buildOTPEmail(first_name, code, 'verify')
+        buildOTPEmail(first_name, code, 'verify'),
+        correlationId
       );
     } catch (err) {
-      console.error('[Auth] Resend OTP email error:', err.message);
+      logger.error('resend_email_delivery_failed', { userId, error: err.message }, correlationId);
     }
 
     const isDev = process.env.NODE_ENV !== 'production';
+
+    await writeAuditLog(userId, 'resend_completed', { email, resend_count: nextResendCount }, req.ip);
+    logger.info('resend_completed_successfully', { userId }, correlationId);
 
     return res.json({
       success: true,
@@ -493,7 +695,7 @@ router.post(['/resend', '/resend-verify'], authenticate, async (req, res) => {
       ...(isDev && { debug_otp: code })
     });
   } catch (err) {
-    console.error('Resend OTP error:', err);
+    logger.error('resend_failed', { userId, error: err.message }, correlationId);
     return res.status(500).json({ error: 'Failed to resend verification code' });
   }
 });
