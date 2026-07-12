@@ -5,7 +5,7 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: npm ci --only=production
+    buildCommand: npm ci --omit=dev
     startCommand: node --experimental-specifier-resolution=node src/server.js
     healthCheckPath: /api/v1/health
     envVars:
