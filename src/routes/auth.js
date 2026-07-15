@@ -570,19 +570,53 @@ router.post('/reset-password', rateLimit(5, 300), validate(resetPasswordSchema),
     if (!rows.length) {
       return res.status(400).json({ error: 'Invalid request' });
     }
-    // Verify using hashed code (H-3: plaintext comparison removed)
-    const storedHash = await cacheGet(`reset:${rows[0].id}`);
-    const inputHash = storedHash ? hashOTP(code) : null;
-    if (!storedHash || storedHash !== inputHash) {
-      return res.status(400).json({ error: 'Invalid or expired reset code' });
+
+    const userId = rows[0].id;
+
+    // M-10: Check if user is blocked due to too many failed reset attempts
+    const isBlocked = await redis.get(`reset_blocked:${userId}`);
+    if (isBlocked) {
+      return res.status(429).json({ error: 'Too many failed attempts. Please request a new reset code in 15 minutes.' });
     }
+
+    // Verify using hashed code (H-3: plaintext comparison removed)
+    const storedHash = await cacheGet(`reset:${userId}`);
+    const inputHash = storedHash ? hashOTP(code) : null;
+
+    if (!storedHash || storedHash !== inputHash) {
+      // M-10: Track failed attempts in Redis (expires with the reset code TTL: 15 min)
+      const MAX_RESET_ATTEMPTS = 5;
+      const attemptsKey = `reset_attempts:${userId}`;
+      const attempts = await redis.incr(attemptsKey);
+
+      // Set expiry on first attempt (align with reset code TTL of 15 minutes)
+      if (attempts === 1) await redis.expire(attemptsKey, 900);
+
+      if (attempts >= MAX_RESET_ATTEMPTS) {
+        // Invalidate the reset code and impose 15-minute block
+        await cacheDel(`reset:${userId}`);
+        await cacheDel(`reset_code:${userId}`);
+        await cacheDel(attemptsKey);
+        await redis.setEx(`reset_blocked:${userId}`, 900, '1');
+        logger.error('reset_password_user_blocked', { userId, attempts }, undefined);
+        return res.status(429).json({ error: 'Too many failed attempts. This reset code has been invalidated. Please request a new one in 15 minutes.' });
+      }
+
+      const remaining = MAX_RESET_ATTEMPTS - attempts;
+      return res.status(400).json({ error: `Invalid or expired reset code. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.` });
+    }
+
+    // Success — clear attempt counter, block, and reset code
+    await cacheDel(`reset_attempts:${userId}`);
+    await cacheDel(`reset_blocked:${userId}`);
+
     const hash = await hashPassword(newPassword);
-    await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, rows[0].id]);
-    await cacheDel(`reset:${rows[0].id}`);
-    await cacheDel(`reset_code:${rows[0].id}`);
+    await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, userId]);
+    await cacheDel(`reset:${userId}`);
+    await cacheDel(`reset_code:${userId}`);
     
     // Revoke all existing tokens
-    await redis.setEx(`revoked_before:${rows[0].id}`, 7 * 24 * 3600, Math.floor(Date.now() / 1000).toString());
+    await redis.setEx(`revoked_before:${userId}`, 7 * 24 * 3600, Math.floor(Date.now() / 1000).toString());
     
     return res.json({ success: true, message: 'Password reset successfully. Please log in.' });
   } catch (err) {
@@ -590,6 +624,7 @@ router.post('/reset-password', rateLimit(5, 300), validate(resetPasswordSchema),
     return res.status(500).json({ error: 'Password reset failed. Please try again.' });
   }
 });
+
 
 // GET /auth/google
 router.get('/google', (req, res, next) => {
