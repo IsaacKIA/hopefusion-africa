@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import RouteGuard from '../../../components/RouteGuard';
 import DashboardLayout from '../../../components/DashboardLayout';
 import { useAuth } from '../../../context/AuthContext';
+import { HFAApi } from '../../../lib/api';
 
 interface Notification {
   id: string;
@@ -81,12 +82,9 @@ function NotificationsContent() {
 
   const markAllRead = async () => {
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-    if (token) {
-      try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-        await fetch(`${apiBase}/notifications/read`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
-      } catch { /* silent */ }
-    }
+    try {
+      await HFAApi.markAllNotificationsRead();
+    } catch { /* silent */ }
   };
 
   const markRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));

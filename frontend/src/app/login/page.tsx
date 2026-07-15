@@ -18,6 +18,7 @@ function LoginFormContent() {
   const [showPassword, setShowPassword] = useState(false);
 
   const redirectPath = searchParams.get('redirect') || '/dashboard';
+  const sessionExpired = searchParams.get('session') === 'expired';
 
   useEffect(() => {
     // If user is already logged in, redirect them based on verification and onboarding status
@@ -51,7 +52,7 @@ function LoginFormContent() {
       if (res?.success) {
         router.push(redirectPath);
       } else {
-        setError(res?.message || 'Invalid email or password. Please try again.');
+        setError(res?.error || res?.message || 'Invalid email or password. Please try again.');
         setLoading(false);
         setLoadingStep('');
       }
@@ -101,6 +102,20 @@ function LoginFormContent() {
             Sign in to access your ecosystem portal
           </p>
         </div>
+
+        {sessionExpired && !error && (
+          <div style={{
+            backgroundColor: 'rgba(232, 160, 32, 0.08)',
+            border: '1px solid rgba(232, 160, 32, 0.25)',
+            color: 'var(--brand-amber)',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '24px',
+          }}>
+            ⏱ Your session expired. Please sign in again.
+          </div>
+        )}
 
         {error && (
           <div style={{

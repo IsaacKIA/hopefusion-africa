@@ -1,114 +1,97 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
-import { useRouter } from 'next/navigation';
-import RouteGuard from '../../components/RouteGuard';
+import { Suspense } from 'react';
 
-function DashboardRouterContent() {
-  const { user } = useAuth();
+const ROLE_PATHS: Record<string, string> = {
+  startup: '/startup',
+  investor: '/investor',
+  mentor: '/mentor',
+  admin: '/admin',
+  government: '/government',
+  corporate: '/corporate',
+  student: '/student',
+  service_provider: '/service-provider',
+};
+
+function DashboardRedirect() {
+  const { user, loading, refreshProfile } = useAuth();
   const router = useRouter();
-  const [statusText, setStatusText] = useState('Checking Account...');
-  const [showRetry, setShowRetry] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (user) {
-      let targetPath = '/';
-      if (user.role === 'investor') {
-        const type = user.investor_profile?.investor_type;
-        if (type === 'government') {
-          targetPath = '/government';
-        } else if (type === 'corporate') {
-          targetPath = '/corporate';
-        } else {
-          targetPath = '/investor';
+    // Handle Google OAuth token from redirect (C-3 fix)
+    const oauthToken = searchParams.get('token');
+    const oauthRole = searchParams.get('role');
+    const oauthStatus = searchParams.get('oauth');
+
+    if (oauthStatus === 'success' && oauthToken) {
+      // Store token from OAuth redirect
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hfa_token', oauthToken);
+        if (oauthRole) {
+          // Refresh profile to get full user object
+          refreshProfile().then(() => {
+            const dest = ROLE_PATHS[oauthRole] || '/startup';
+            router.replace(dest);
+          }).catch(() => router.replace('/startup'));
         }
-      } else {
-        const roleRedirectMap = {
-          startup: '/startup',
-          mentor: '/mentor',
-          admin: '/admin',
-          government: '/government',
-          corporate: '/corporate',
-          student: '/student',
-          service_provider: '/service-provider'
-        };
-        targetPath = roleRedirectMap[user.role as keyof typeof roleRedirectMap] || '/';
       }
-      router.replace(targetPath);
+      return;
     }
-  }, [user, router]);
 
-  useEffect(() => {
-    const timer1 = setTimeout(() => setStatusText('Loading Workspace...'), 800);
-    const timer2 = setTimeout(() => setStatusText('Preparing Dashboard...'), 1600);
-    const timer3 = setTimeout(() => setStatusText('Almost Ready...'), 2400);
-    const timer4 = setTimeout(() => setShowRetry(true), 3200);
+    if (oauthStatus === 'failure') {
+      router.replace('/login?oauth=failure');
+      return;
+    }
 
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
-    };
-  }, []);
+    if (loading) return;
+
+    if (!user) {
+      router.replace('/login?redirect=/dashboard');
+      return;
+    }
+    if (!user.is_verified) {
+      router.replace('/verify');
+      return;
+    }
+    if (!user.onboarding_completed) {
+      router.replace('/welcome');
+      return;
+    }
+
+    const dest = ROLE_PATHS[user.role] || '/startup';
+    router.replace(dest);
+  }, [user, loading, router, searchParams, refreshProfile]);
 
   return (
     <div style={{
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '100vh',
       backgroundColor: 'var(--bg-primary)',
-      gap: '16px'
+      gap: '16px',
     }}>
       <div className="spinner" />
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontFamily: 'var(--font-sans)' }}>
-        {statusText}
+      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+        Loading your dashboard…
       </p>
-      {showRetry && (
-        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-          <button 
-            onClick={() => window.location.reload()} 
-            style={{
-              padding: '8px 16px',
-              fontSize: '0.8rem',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: 600
-            }}
-          >
-            🔄 Retry
-          </button>
-          <button 
-            onClick={() => router.push('/')} 
-            style={{
-              padding: '8px 16px',
-              fontSize: '0.8rem',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: 600
-            }}
-          >
-            🏠 Go Home
-          </button>
-        </div>
-      )}
     </div>
   );
 }
 
-export default function DashboardRouterPage() {
+export default function DashboardRedirectPage() {
   return (
-    <RouteGuard>
-      <DashboardRouterContent />
-    </RouteGuard>
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-primary)' }}>
+        <div className="spinner" />
+      </div>
+    }>
+      <DashboardRedirect />
+    </Suspense>
   );
 }

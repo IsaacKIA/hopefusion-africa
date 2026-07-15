@@ -457,10 +457,55 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* Inner Content Area */}
-        <div style={{ flex: 1, padding: '40px' }} className="inner-dashboard-content">
+        <div style={{ flex: 1, padding: '40px', paddingBottom: '80px' }} className="inner-dashboard-content">
           {children}
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav" style={{
+        display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0,
+        backgroundColor: 'rgba(18, 18, 18, 0.96)', backdropFilter: 'blur(16px)',
+        borderTop: '1px solid var(--border-color)', zIndex: 50,
+        padding: '8px 0', paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+          {[
+            { icon: '🏠', label: 'Home', path: homePath },
+            { icon: '💬', label: 'Chat', path: '/dashboard/messages' },
+            { icon: '🔔', label: 'Alerts', path: '/dashboard/notifications', badge: unreadCount },
+            { icon: '🛒', label: 'Market', path: '/marketplace' },
+            { icon: '⚙️', label: 'Settings', path: '/dashboard/settings' },
+          ].map(item => {
+            const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+            return (
+              <Link
+                key={item.path}
+                href={item.path}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
+                  padding: '6px 12px', borderRadius: '8px', position: 'relative',
+                  color: isActive ? 'var(--brand-green)' : 'var(--text-muted)',
+                  transition: 'color 0.2s', textDecoration: 'none', minWidth: '52px',
+                }}
+              >
+                <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{item.icon}</span>
+                <span style={{ fontSize: '0.6rem', fontWeight: isActive ? 700 : 400, letterSpacing: '0.02em' }}>
+                  {item.label}
+                </span>
+                {(item.badge ?? 0) > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '2px', right: '8px',
+                    backgroundColor: '#ef4444', color: 'white',
+                    borderRadius: '99px', fontSize: '0.55rem', padding: '1px 4px',
+                    fontWeight: 700, lineHeight: 1.4,
+                  }}>{item.badge}</span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
 
       <style jsx global>{`
         .nav-link-hover:hover {
@@ -492,9 +537,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         @media (max-width: 640px) {
           .inner-dashboard-content {
             padding: 20px !important;
+            padding-bottom: 88px !important;
           }
           .dashboard-header-top {
             padding: 0 20px !important;
+          }
+        }
+        @media (max-width: 1024px) {
+          .mobile-bottom-nav {
+            display: block !important;
           }
         }
       `}</style>

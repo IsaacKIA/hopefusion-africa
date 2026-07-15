@@ -81,8 +81,30 @@ app.set('io', io);
    MIDDLEWARE & ROUTING
    ============================================================ */
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://vercel.live"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", ...allowedOrigins.filter(Boolean)],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Allow cross-origin resources (fonts, images)
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}));
 app.use(cors(corsOptions));
+
+// Warn on startup if debug mode is active in production
+if (process.env.NODE_ENV === 'production' && process.env.DISABLE_DEBUG_OTP !== 'true') {
+  console.warn('⚠️  [SECURITY] DISABLE_DEBUG_OTP is not set — debug OTPs may be exposed in API responses. Set DISABLE_DEBUG_OTP=true in production env vars.');
+}
 
 // Raw parser for webhooks BEFORE express.json()
 app.use('/api/v1/payments/paystack/webhook', express.raw({ type: 'application/json' }));

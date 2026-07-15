@@ -51,7 +51,7 @@ function SettingsContent() {
     setProfileSuccess(null);
     setProfileError(null);
     try {
-      const res = await API.patch('/users/profile', profileForm);
+      const res = await API.patch('/users/me', profileForm);
       if (res?.success) {
         await refreshProfile();
         setProfileSuccess('Profile updated successfully!');

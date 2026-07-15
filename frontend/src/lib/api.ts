@@ -169,7 +169,7 @@ export const HFAApi = {
     return API.patch('/users/me', updates);
   },
 
-  async verifyEmail(code: string): Promise<{ success: boolean; message: string }> {
+  async verifyEmail(code: string): Promise<{ success: boolean; message?: string; error?: string }> {
     return API.post('/auth/verify', { code });
   },
 

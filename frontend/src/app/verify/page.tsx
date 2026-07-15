@@ -109,7 +109,7 @@ export default function VerifyPage() {
         await refreshProfile();
         router.replace('/welcome');
       } else {
-        setError(res?.message || 'Verification failed. Try again.');
+        setError(res?.error || res?.message || 'Verification failed. Try again.');
         setLoading(false);
       }
     } catch (err: any) {
@@ -228,6 +228,7 @@ export default function VerifyPage() {
               key={i}
               ref={inputRefs[i]}
               type="text"
+              inputMode="numeric"
               pattern="\d*"
               maxLength={1}
               value={num}

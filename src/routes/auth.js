@@ -225,11 +225,16 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
       logger.error('registration_email_delivery_failed', { userId: user.id, error: emailErr.message }, correlationId);
     }
 
-    const isDev = process.env.NODE_ENV !== 'production';
+    const isDev = process.env.NODE_ENV !== 'production' && process.env.DISABLE_DEBUG_OTP !== 'true';
 
     const token = generateToken(user.id, user.role);
     const refreshToken = generateToken(user.id, user.role, '30d');
     await cacheSet(`refresh:${user.id}`, refreshToken, 30 * 24 * 3600);
+
+    // Warn loudly if debug OTP would be sent in production
+    if (isDev && process.env.NODE_ENV === 'production') {
+      logger.error('SECURITY_WARNING_DEBUG_OTP_IN_PRODUCTION', { userId: user.id }, correlationId);
+    }
 
     res.cookie('hfa_token', token, {
       httpOnly: true,
@@ -263,11 +268,11 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
   } catch (err) {
     if (client) await client.query('ROLLBACK').catch(() => {});
     logger.error('registration_failed', { error: err.message, stack: err.stack }, correlationId);
-    if (err.code === '23505') { // Handle unique constraint race condition explicitly
+    if (err.code === '23505') {
       return res.status(409).json({ error: 'Email already registered' });
     }
     if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.message?.includes('connect')) {
-      return res.status(503).json({ error: 'Database unavailable. Please try again shortly.' });
+      return res.status(503).json({ error: 'Service temporarily unavailable. Please try again shortly.' });
     }
     return res.status(500).json({ error: 'Registration failed. Please try again.' });
   } finally {
@@ -341,8 +346,8 @@ router.post('/login', rateLimit(10, 60), validate(loginSchema), async (req, res)
     });
 
   } catch (err) {
-    console.error('Login error:', err);
-    return res.status(500).json({ error: 'Login failed' });
+    logger.error('login_failed', { error: err.message });
+    return res.status(500).json({ error: 'Login failed. Please try again.' });
   }
 });
 
@@ -435,7 +440,7 @@ router.post('/verify', rateLimit(5, 60), authenticate, validate(verifySchema), a
     return res.json({ success: true, message: 'Email verified successfully' });
   } catch (err) {
     logger.error('verification_error', { userId, error: err.message }, correlationId);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Verification failed. Please try again.' });
   }
 });
 
@@ -525,7 +530,10 @@ router.post('/forgot-password', rateLimit(3, 300), validate(forgotPasswordSchema
     }
 
     const code = generateVerifyCode();
-    await cacheSet(`reset:${rows[0].id}`, code, 1800);
+    const codeHash = hashOTP(code);
+    await cacheSet(`reset:${rows[0].id}`, codeHash, 1800);
+    // Also cache raw code for attempt verification
+    await cacheSet(`reset_code:${rows[0].id}`, code, 1800);
 
     // Send password reset email
     try {
@@ -562,20 +570,24 @@ router.post('/reset-password', rateLimit(5, 300), validate(resetPasswordSchema),
     if (!rows.length) {
       return res.status(400).json({ error: 'Invalid request' });
     }
-    const stored = await cacheGet(`reset:${rows[0].id}`);
-    if (!stored || stored !== code) {
+    // Verify using hashed code (H-3: plaintext comparison removed)
+    const storedHash = await cacheGet(`reset:${rows[0].id}`);
+    const inputHash = storedHash ? hashOTP(code) : null;
+    if (!storedHash || storedHash !== inputHash) {
       return res.status(400).json({ error: 'Invalid or expired reset code' });
     }
     const hash = await hashPassword(newPassword);
     await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, rows[0].id]);
     await cacheDel(`reset:${rows[0].id}`);
+    await cacheDel(`reset_code:${rows[0].id}`);
     
-    // Revoke all existing tokens by setting revocation timestamp in Redis (expires in 7 days)
+    // Revoke all existing tokens
     await redis.setEx(`revoked_before:${rows[0].id}`, 7 * 24 * 3600, Math.floor(Date.now() / 1000).toString());
     
     return res.json({ success: true, message: 'Password reset successfully. Please log in.' });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    logger.error('reset_password_failed', { error: err.message });
+    return res.status(500).json({ error: 'Password reset failed. Please try again.' });
   }
 });
 
@@ -590,15 +602,16 @@ router.get('/google', (req, res, next) => {
 });
 
 // GET /auth/google/callback
-router.get('/google/callback', passport.authenticate('google', { session: false, failureRedirect: '/hopefusion-register.html?oauth=failure' }), async (req, res) => {
+router.get('/google/callback', passport.authenticate('google', { session: false, failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/login?oauth=failure` }), async (req, res) => {
   try {
     const user = req.user;
     const token = generateToken(user.id, user.role);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5500';
-    res.redirect(`${frontendUrl}/hopefusion-register.html?oauth=success&token=${token}&role=${user.role}`);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    // Redirect to Next.js dashboard with token — frontend will read from query and store
+    res.redirect(`${frontendUrl}/dashboard?oauth=success&token=${token}&role=${user.role}`);
   } catch (err) {
-    console.error('Google OAuth callback error:', err);
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5500'}/hopefusion-register.html?oauth=failure`);
+    logger.error('google_oauth_callback_error', { error: err.message });
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3001'}/login?oauth=failure`);
   }
 });
 
@@ -730,7 +743,8 @@ router.get('/status', authenticate, async (req, res) => {
     }
     return res.json({ success: true, user: rows[0] });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    logger.error('auth_status_error', { error: err.message, userId: req.user?.userId });
+    return res.status(500).json({ error: 'Service temporarily unavailable.' });
   }
 });
 
@@ -874,8 +888,8 @@ router.post('/onboard', authenticate, validate(onboardingSchema), async (req, re
     return res.json({ success: true, message: 'Onboarding completed successfully' });
   } catch (err) {
     if (client) await client.query('ROLLBACK').catch(() => {});
-    console.error('Onboarding error:', err);
-    return res.status(500).json({ error: 'Onboarding update failed' });
+    logger.error('onboarding_failed', { error: err.message, userId: req.user?.userId });
+    return res.status(500).json({ error: 'Onboarding update failed. Please try again.' });
   } finally {
     if (client) client.release();
   }

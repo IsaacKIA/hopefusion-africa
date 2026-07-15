@@ -23,10 +23,16 @@ function WelcomePageContent() {
     if (skipping) return;
     setSkipping(true);
     try {
+      // Use server-side role to avoid client-side null race condition
+      const userRole = user?.role;
+      if (!userRole) {
+        router.replace('/dashboard');
+        return;
+      }
       const res = await API.post('/auth/onboard', {
         goals: ['Explore Dashboard'],
-        country: user?.country || 'Ghana',
-        roles: [user?.role || 'startup'],
+        country: user.country || 'Ghana',
+        roles: [userRole],
         sectors: [],
       });
       if (res?.success) {
