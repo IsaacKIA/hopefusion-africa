@@ -22,6 +22,7 @@ function StartupDashboardContent() {
 
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.startup_profile) {
@@ -46,6 +47,7 @@ function StartupDashboardContent() {
     e.preventDefault();
     setSaving(true);
     setSuccessMsg(null);
+    setSaveError(null);
 
     try {
       await HFAApi.updateStartup(formData);
@@ -53,7 +55,7 @@ function StartupDashboardContent() {
       setSuccessMsg('Startup profile updated successfully!');
       setEditing(false);
     } catch (err: any) {
-      alert(err.message || 'Failed to update profile.');
+      setSaveError(err.message || 'Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -100,6 +102,20 @@ function StartupDashboardContent() {
             marginBottom: '24px'
           }}>
             {successMsg}
+          </div>
+        )}
+
+        {saveError && (
+          <div style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#ef4444',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '24px'
+          }}>
+            {saveError}
           </div>
         )}
 

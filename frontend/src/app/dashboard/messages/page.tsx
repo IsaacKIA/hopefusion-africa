@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import RouteGuard from '../../../components/RouteGuard';
 import DashboardLayout from '../../../components/DashboardLayout';
 import { useAuth } from '../../../context/AuthContext';
+import { HFAApi, API } from '../../../lib/api';
 
 interface Thread {
   id: string;
@@ -61,36 +62,80 @@ function timeAgo(dateStr: string) {
 
 function MessagesContent() {
   const { user } = useAuth();
-  const [threads, setThreads] = useState<Thread[]>(MOCK_THREADS);
+  const [threads, setThreads] = useState<Thread[]>([]);
   const [activeThread, setActiveThread] = useState<Thread | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [loadingThreads, setLoadingThreads] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [threadError, setThreadError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load real threads from API
   useEffect(() => {
-    if (activeThread) {
-      setMessages(MOCK_MESSAGES[activeThread.id] || []);
-      // Mark thread as read
-      setThreads(prev => prev.map(t => t.id === activeThread.id ? { ...t, unread_count: 0 } : t));
-    }
-  }, [activeThread]);
+    setLoadingThreads(true);
+    HFAApi.loadThreads()
+      .then(res => {
+        if (res?.success && Array.isArray(res.data)) {
+          const mapped: Thread[] = res.data.map((t: any) => ({
+            id: t.thread_id || t.id,
+            participant_name: `${t.first_name || ''} ${t.last_name || ''}`.trim() || 'Unknown',
+            participant_role: t.role || '',
+            last_message: t.content || '',
+            last_message_at: t.created_at || new Date().toISOString(),
+            unread_count: parseInt(t.unread) || 0,
+            avatar_initials: `${(t.first_name || 'U')[0]}${(t.last_name || '')[0] || ''}`.toUpperCase(),
+          }));
+          setThreads(mapped);
+        }
+      })
+      .catch(() => setThreadError('Could not load conversations.'))
+      .finally(() => setLoadingThreads(false));
+  }, []);
+
+  // Load messages for selected thread
+  useEffect(() => {
+    if (!activeThread || !user) return;
+    setLoadingMessages(true);
+    API.get(`/messages/thread/${activeThread.id}`)
+      .then((res: any) => {
+        if (res?.data && Array.isArray(res.data)) {
+          setMessages(res.data.map((m: any) => ({
+            id: m.id,
+            sender_id: m.sender_id,
+            body: m.content,
+            created_at: m.created_at,
+            is_mine: m.sender_id === user.id,
+          })));
+        } else {
+          setMessages([]);
+        }
+      })
+      .catch(() => setMessages([]))
+      .finally(() => setLoadingMessages(false));
+    // Mark thread as read
+    setThreads(prev => prev.map(t => t.id === activeThread.id ? { ...t, unread_count: 0 } : t));
+  }, [activeThread, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !activeThread) return;
+    if (!newMessage.trim() || !activeThread || sending) return;
+    const body = newMessage.trim();
     setSending(true);
-    const msg: Message = { id: String(Date.now()), sender_id: 'me', body: newMessage.trim(), created_at: new Date().toISOString(), is_mine: true };
-    setTimeout(() => {
-      setMessages(prev => [...prev, msg]);
-      setThreads(prev => prev.map(t => t.id === activeThread.id ? { ...t, last_message: newMessage.trim(), last_message_at: new Date().toISOString() } : t));
-      setNewMessage('');
-      setSending(false);
-    }, 400);
+    // Optimistic update
+    const optimistic: Message = { id: `tmp-${Date.now()}`, sender_id: user?.id || 'me', body, created_at: new Date().toISOString(), is_mine: true };
+    setMessages(prev => [...prev, optimistic]);
+    setThreads(prev => prev.map(t => t.id === activeThread.id ? { ...t, last_message: body, last_message_at: new Date().toISOString() } : t));
+    setNewMessage('');
+    try {
+      await API.post('/messages', { recipient_id: activeThread.id, content: body, thread_id: activeThread.id });
+    } catch { /* optimistic already applied */ }
+    finally { setSending(false); }
   };
 
   return (
@@ -100,13 +145,30 @@ function MessagesContent() {
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Direct messages with investors, mentors, and partners from across the ecosystem.</p>
       </div>
 
+      {threadError && (
+        <div style={{ padding: '12px 16px', borderRadius: '8px', backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontSize: '0.85rem', marginBottom: '16px' }}>
+          {threadError}
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '0', minHeight: '600px', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border-color)' }} className="messages-grid">
         {/* Thread List */}
         <div style={{ backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-color)', overflowY: 'auto' }}>
           <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
             <input type="text" className="form-input" placeholder="🔍  Search conversations..." style={{ padding: '8px 12px', fontSize: '0.82rem' }} />
           </div>
-          {threads.map(thread => (
+          {loadingThreads ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <div className="spinner" style={{ width: '24px', height: '24px', margin: '0 auto 12px' }} />
+              <p style={{ fontSize: '0.8rem' }}>Loading conversations…</p>
+            </div>
+          ) : threads.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '8px' }}>💬</div>
+              <p style={{ fontSize: '0.82rem' }}>No conversations yet.</p>
+              <p style={{ fontSize: '0.78rem', marginTop: '4px' }}>Connect with investors and mentors to start chatting.</p>
+            </div>
+          ) : threads.map(thread => (
             <div
               key={thread.id}
               onClick={() => setActiveThread(thread)}
@@ -116,6 +178,7 @@ function MessagesContent() {
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
                 borderLeft: activeThread?.id === thread.id ? '3px solid var(--brand-green)' : '3px solid transparent',
                 transition: 'all 0.15s',
+
               }}
             >
               <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(45, 181, 98, 0.15)', border: '1px solid rgba(45, 181, 98, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.78rem', color: 'var(--brand-green)', flexShrink: 0 }}>
@@ -154,7 +217,15 @@ function MessagesContent() {
 
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', minHeight: '400px' }}>
-              {messages.map(msg => (
+              {loadingMessages ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+                  <div className="spinner" style={{ width: '24px', height: '24px' }} />
+                </div>
+              ) : messages.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--text-muted)' }}>
+                  <p style={{ fontSize: '0.85rem' }}>No messages yet. Say hello! 👋</p>
+                </div>
+              ) : messages.map(msg => (
                 <div key={msg.id} style={{ display: 'flex', justifyContent: msg.is_mine ? 'flex-end' : 'flex-start' }}>
                   <div style={{
                     maxWidth: '68%', padding: '12px 16px', borderRadius: msg.is_mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',

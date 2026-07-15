@@ -35,6 +35,9 @@ const dbMockQueryHandler = async (sql, params) => {
   });
 
   if (match) {
+    if (match.resultRows instanceof Error) {
+      throw match.resultRows;
+    }
     return { rows: match.resultRows };
   }
 

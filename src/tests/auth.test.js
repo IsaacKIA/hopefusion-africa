@@ -239,7 +239,7 @@ describe('Auth Integration Tests', () => {
       }]);
       mockDbExpectQuery('UPDATE users SET password_hash', []);
 
-      redisMockStore['reset:11111111-2222-3333-4444-555555555555'] = '"123456"';
+      redisMockStore['reset:11111111-2222-3333-4444-555555555555'] = JSON.stringify(hashOTP('123456'));
 
       const res = await request(app)
         .post('/api/v1/auth/reset-password')
