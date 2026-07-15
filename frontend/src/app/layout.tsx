@@ -22,9 +22,45 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'HopeFusion Africa — Startup Ecosystem Platform',
-  description: 'Connecting startups, investors, mentors, and resources across the African continent.',
+  title: {
+    default: 'HopeFusion Africa — Startup Ecosystem Platform',
+    template: '%s | HopeFusion Africa',
+  },
+  description: 'Connecting African startups, investors, mentors, and resources. Access grants, mentorship, marketplace, and smart matching across the continent.',
+  keywords: [
+    'African startups', 'startup funding Africa', 'African investors', 'startup mentorship Africa',
+    'African innovation', 'tech startups Africa', 'HopeFusion', 'startup ecosystem Africa',
+    'African grants', 'African marketplace',
+  ],
+  authors: [{ name: 'HopeFusion Africa', url: 'https://hopefusion.africa' }],
+  creator: 'HopeFusion Africa',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://hopefusion.africa'),
+  openGraph: {
+    type: 'website',
+    siteName: 'HopeFusion Africa',
+    title: 'HopeFusion Africa — Startup Ecosystem Platform',
+    description: 'Africa\'s leading platform connecting startups, investors, mentors, and opportunities.',
+    url: 'https://hopefusion.africa',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'HopeFusion Africa — Startup Ecosystem Platform',
+    description: 'Africa\'s leading platform connecting startups, investors, mentors, and opportunities.',
+    creator: '@HopeFusionHQ',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
+
 
 export const viewport: Viewport = {
   width: 'device-width',
