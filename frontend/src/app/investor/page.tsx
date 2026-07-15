@@ -6,6 +6,7 @@ import { API, HFAApi } from '../../lib/api';
 import RouteGuard from '../../components/RouteGuard';
 import Link from 'next/link';
 import { useMounted } from '../../hooks/useMounted';
+import DashboardLayout from '../../components/DashboardLayout';
 
 interface Startup {
   id: string;
@@ -362,34 +363,7 @@ export default function PortalsDashboard() {
 
   return (
     <RouteGuard allowedRoles={['investor', 'admin', 'government', 'corporate']}>
-      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}>
-        
-        {/* Header */}
-        <header style={{
-          borderBottom: '1px solid var(--border-color)',
-          padding: '16px 2.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'var(--bg-secondary)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'Outfit' }}>
-              Hope<span style={{ color: 'var(--brand-green)' }}>Fusion</span>
-            </span>
-            <span className="badge badge-amber">Investor Hub v4</span>
-          </div>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Welcome, {mounted ? `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() : ''}
-            </span>
-            <button onClick={logout} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
-              Logout
-            </button>
-          </div>
-        </header>
-
-        <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 2.5rem' }}>
+      <DashboardLayout>
           
           {/* Header Card */}
           <div className="glass-panel glow-green" style={{ padding: '32px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
@@ -1176,9 +1150,6 @@ export default function PortalsDashboard() {
             </div>
           )}
 
-        </main>
-      </div>
-
       <style jsx global>{`
         .tab-btn {
           background: transparent;
@@ -1226,6 +1197,7 @@ export default function PortalsDashboard() {
           .workspace-double-col { grid-template-columns: 1fr !important; }
         }
       `}</style>
+      </DashboardLayout>
     </RouteGuard>
   );
 }

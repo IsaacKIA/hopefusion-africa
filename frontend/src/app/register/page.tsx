@@ -80,7 +80,12 @@ export default function RegisterPage() {
     const t3 = setTimeout(() => setLoadingStep('Almost there — finalizing...'), 15000);
 
     try {
-      await register(formData);
+      const res = await register(formData);
+      if (!res?.success) {
+        setError(res?.message || 'Registration failed. Please try again.');
+        setLoading(false);
+        setLoadingStep('');
+      }
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('timed out') || msg.includes('timeout')) {

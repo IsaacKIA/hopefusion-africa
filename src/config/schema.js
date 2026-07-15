@@ -1,8 +1,12 @@
 export const SCHEMA = `
 -- Extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-CREATE EXTENSION IF NOT EXISTS "vector";
+CREATE SCHEMA IF NOT EXISTS extensions;
+SET search_path TO public, extensions;
+ALTER ROLE current_user SET search_path TO public, extensions;
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS "pg_trgm" SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS "vector" SCHEMA extensions;
 
 -- Mock/Fallback Auth Schema & auth.uid() function for non-Supabase local Postgres compatibility
 DO $$
@@ -489,7 +493,7 @@ BEGIN
   ORDER BY adjusted_score DESC
   LIMIT match_limit;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, extensions;
 
 -- ─── V4 FOUNDER OS WORKSPACE ──────────────────────────────────
 CREATE TABLE IF NOT EXISTS founder_financial_ledgers (
@@ -591,5 +595,223 @@ DROP POLICY IF EXISTS "Allow founders to delete their startup" ON startups;
 CREATE POLICY "Allow founders to delete their startup" ON startups
   FOR DELETE TO authenticated
   USING ((SELECT auth.uid()) = founder_id);
+
+-- Enable RLS and add policies for all other tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to profiles" ON users;
+CREATE POLICY "Allow authenticated read to profiles" ON users
+  FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow users to insert their own profile" ON users;
+CREATE POLICY "Allow users to insert their own profile" ON users
+  FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
+DROP POLICY IF EXISTS "Allow users to update their own profile" ON users;
+CREATE POLICY "Allow users to update their own profile" ON users
+  FOR UPDATE TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+DROP POLICY IF EXISTS "Allow users to delete their own profile" ON users;
+CREATE POLICY "Allow users to delete their own profile" ON users
+  FOR DELETE TO authenticated USING (auth.uid() = id);
+
+ALTER TABLE startup_passports ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to passports" ON startup_passports;
+CREATE POLICY "Allow authenticated read to passports" ON startup_passports
+  FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow users to manage their own passport" ON startup_passports;
+CREATE POLICY "Allow users to manage their own passport" ON startup_passports
+  FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+ALTER TABLE startup_team ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read to team" ON startup_team;
+CREATE POLICY "Allow public read to team" ON startup_team
+  FOR SELECT TO public USING (true);
+DROP POLICY IF EXISTS "Allow founders to manage team" ON startup_team;
+CREATE POLICY "Allow founders to manage team" ON startup_team
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()));
+
+ALTER TABLE investors ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to investors" ON investors;
+CREATE POLICY "Allow authenticated read to investors" ON investors
+  FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow users to manage their investor profile" ON investors;
+CREATE POLICY "Allow users to manage their investor profile" ON investors
+  FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+ALTER TABLE mentors ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to mentors" ON mentors;
+CREATE POLICY "Allow authenticated read to mentors" ON mentors
+  FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow users to manage their mentor profile" ON mentors;
+CREATE POLICY "Allow users to manage their mentor profile" ON mentors
+  FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow matches view" ON matches;
+CREATE POLICY "Allow matches view" ON matches
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()) OR
+    (target_type = 'investor' AND EXISTS (SELECT 1 FROM investors i WHERE i.id = target_id AND i.user_id = auth.uid())) OR
+    (target_type = 'mentor' AND EXISTS (SELECT 1 FROM mentors m WHERE m.id = target_id AND m.user_id = auth.uid()))
+  );
+DROP POLICY IF EXISTS "Allow users to insert matches" ON matches;
+CREATE POLICY "Allow users to insert matches" ON matches
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()) OR
+    (target_type = 'investor' AND EXISTS (SELECT 1 FROM investors i WHERE i.id = target_id AND i.user_id = auth.uid())) OR
+    (target_type = 'mentor' AND EXISTS (SELECT 1 FROM mentors m WHERE m.id = target_id AND m.user_id = auth.uid()))
+  );
+DROP POLICY IF EXISTS "Allow users to update matches" ON matches;
+CREATE POLICY "Allow users to update matches" ON matches
+  FOR UPDATE TO authenticated
+  USING (
+    EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()) OR
+    (target_type = 'investor' AND EXISTS (SELECT 1 FROM investors i WHERE i.id = target_id AND i.user_id = auth.uid())) OR
+    (target_type = 'mentor' AND EXISTS (SELECT 1 FROM mentors m WHERE m.id = target_id AND m.user_id = auth.uid()))
+  );
+DROP POLICY IF EXISTS "Allow users to delete matches" ON matches;
+CREATE POLICY "Allow users to delete matches" ON matches
+  FOR DELETE TO authenticated
+  USING (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()));
+
+ALTER TABLE grant_applications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow founders to manage grant applications" ON grant_applications;
+CREATE POLICY "Allow founders to manage grant applications" ON grant_applications
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()));
+
+ALTER TABLE mentor_sessions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow users to manage mentor sessions" ON mentor_sessions;
+CREATE POLICY "Allow users to manage mentor sessions" ON mentor_sessions
+  FOR ALL TO authenticated
+  USING (
+    mentee_id = auth.uid() OR
+    EXISTS (SELECT 1 FROM mentors m WHERE m.id = mentor_id AND m.user_id = auth.uid())
+  )
+  WITH CHECK (
+    mentee_id = auth.uid() OR
+    EXISTS (SELECT 1 FROM mentors m WHERE m.id = mentor_id AND m.user_id = auth.uid())
+  );
+
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow users to manage their own messages" ON messages;
+CREATE POLICY "Allow users to manage their own messages" ON messages
+  FOR ALL TO authenticated
+  USING (sender_id = auth.uid() OR recipient_id = auth.uid())
+  WITH CHECK (sender_id = auth.uid() OR recipient_id = auth.uid());
+
+ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to courses" ON courses;
+CREATE POLICY "Allow authenticated read to courses" ON courses
+  FOR SELECT TO authenticated USING (is_published = true OR instructor_id = auth.uid());
+DROP POLICY IF EXISTS "Allow instructors to manage courses" ON courses;
+CREATE POLICY "Allow instructors to manage courses" ON courses
+  FOR ALL TO authenticated USING (instructor_id = auth.uid()) WITH CHECK (instructor_id = auth.uid());
+
+ALTER TABLE enrollments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow users to manage their own enrollments" ON enrollments;
+CREATE POLICY "Allow users to manage their own enrollments" ON enrollments
+  FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+ALTER TABLE compliance_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow founders to manage compliance items" ON compliance_items;
+CREATE POLICY "Allow founders to manage compliance items" ON compliance_items
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()));
+
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow users to manage their own notifications" ON notifications;
+CREATE POLICY "Allow users to manage their own notifications" ON notifications
+  FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow users to view their own audit logs" ON audit_log;
+CREATE POLICY "Allow users to view their own audit logs" ON audit_log
+  FOR SELECT TO authenticated USING (user_id = auth.uid());
+
+ALTER TABLE verification_codes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow users to view their own verification codes" ON verification_codes;
+CREATE POLICY "Allow users to view their own verification codes" ON verification_codes
+  FOR SELECT TO authenticated USING (user_id = auth.uid());
+
+ALTER TABLE escrows ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow participants to view escrows" ON escrows;
+CREATE POLICY "Allow participants to view escrows" ON escrows
+  FOR SELECT TO authenticated
+  USING (
+    investor_id = auth.uid() OR
+    EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid())
+  );
+
+ALTER TABLE escrow_milestones ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow participants to view escrow milestones" ON escrow_milestones;
+CREATE POLICY "Allow participants to view escrow milestones" ON escrow_milestones
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM escrows e
+      WHERE e.id = escrow_id AND (
+        e.investor_id = auth.uid() OR
+        EXISTS (SELECT 1 FROM startups s WHERE s.id = e.startup_id AND s.founder_id = auth.uid())
+      )
+    )
+  );
+
+ALTER TABLE call_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow participants to view call logs" ON call_logs;
+CREATE POLICY "Allow participants to view call logs" ON call_logs
+  FOR SELECT TO authenticated USING (caller_id = auth.uid() OR recipient_id = auth.uid());
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow users to manage push subscriptions" ON push_subscriptions;
+CREATE POLICY "Allow users to manage push subscriptions" ON push_subscriptions
+  FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+ALTER TABLE graph_nodes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to graph nodes" ON graph_nodes;
+CREATE POLICY "Allow authenticated read to graph nodes" ON graph_nodes
+  FOR SELECT TO authenticated USING (true);
+
+ALTER TABLE graph_edges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to graph edges" ON graph_edges;
+CREATE POLICY "Allow authenticated read to graph edges" ON graph_edges
+  FOR SELECT TO authenticated USING (true);
+
+ALTER TABLE opportunities ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to opportunities" ON opportunities;
+CREATE POLICY "Allow authenticated read to opportunities" ON opportunities
+  FOR SELECT TO authenticated USING (true);
+
+ALTER TABLE founder_financial_ledgers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow founders to manage financial ledgers" ON founder_financial_ledgers;
+CREATE POLICY "Allow founders to manage financial ledgers" ON founder_financial_ledgers
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()));
+
+ALTER TABLE founder_investor_relations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow founders to manage investor relations" ON founder_investor_relations;
+CREATE POLICY "Allow founders to manage investor relations" ON founder_investor_relations
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM startups s WHERE s.id = startup_id AND s.founder_id = auth.uid()));
+
+ALTER TABLE startup_profiles_v4 ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to startup profiles v4" ON startup_profiles_v4;
+CREATE POLICY "Allow authenticated read to startup profiles v4" ON startup_profiles_v4
+  FOR SELECT TO authenticated USING (true);
+
+ALTER TABLE platform_escrows_v4 ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to platform escrows v4" ON platform_escrows_v4;
+CREATE POLICY "Allow authenticated read to platform escrows v4" ON platform_escrows_v4
+  FOR SELECT TO authenticated USING (true);
+
+ALTER TABLE escrow_milestones_v4 ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read to escrow milestones v4" ON escrow_milestones_v4;
+CREATE POLICY "Allow authenticated read to escrow milestones v4" ON escrow_milestones_v4
+  FOR SELECT TO authenticated USING (true);
 `;
 

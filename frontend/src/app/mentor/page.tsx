@@ -7,6 +7,7 @@ import RouteGuard from '../../components/RouteGuard';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMounted } from '../../hooks/useMounted';
+import DashboardLayout from '../../components/DashboardLayout';
 
 function MentorDashboardContent() {
   const { user, logout } = useAuth();
@@ -74,34 +75,8 @@ function MentorDashboardContent() {
   const pastBookings = sessions.filter(s => s.status === 'completed' || s.status === 'cancelled');
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }} className="fade-in">
-      {/* Header */}
-      <header style={{
-        borderBottom: '1px solid var(--border-color)',
-        padding: '16px 2.5rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        background: 'var(--bg-secondary)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'Outfit' }}>
-            Hope<span style={{ color: 'var(--brand-green)' }}>Fusion</span>
-          </span>
-          <span className="badge badge-amber">Mentor Panel</span>
-        </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Dr. {mounted ? (user?.last_name || 'Advisor') : ''}
-          </span>
-          <button onClick={logout} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
-            Logout
-          </button>
-        </div>
-      </header>
-
-      {/* Main Grid Workspace */}
-      <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 2rem' }}>
+    <DashboardLayout>
+      <div className="fade-in">
         
         {/* Banner Card */}
         <div className="glass-panel glow-green" style={{ padding: '32px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
@@ -247,14 +222,14 @@ function MentorDashboardContent() {
           </div>
 
         </div>
-      </main>
+      </div>
 
       <style jsx global>{`
         @media(max-width: 768px) {
           .mentor-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
-    </div>
+    </DashboardLayout>
   );
 }
 

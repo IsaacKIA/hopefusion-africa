@@ -47,8 +47,14 @@ function LoginFormContent() {
     const t2 = setTimeout(() => setLoadingStep('Almost there...'), 12000);
 
     try {
-      await login(email, password);
-      router.push(redirectPath);
+      const res = await login(email, password);
+      if (res?.success) {
+        router.push(redirectPath);
+      } else {
+        setError(res?.message || 'Invalid email or password. Please try again.');
+        setLoading(false);
+        setLoadingStep('');
+      }
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('timed out') || msg.includes('timeout')) {

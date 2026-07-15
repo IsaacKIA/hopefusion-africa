@@ -6,6 +6,7 @@ import { HFAApi } from '../../lib/api';
 import RouteGuard from '../../components/RouteGuard';
 import Link from 'next/link';
 import { useMounted } from '../../hooks/useMounted';
+import DashboardLayout from '../../components/DashboardLayout';
 
 function StartupDashboardContent() {
   const { user, logout, refreshProfile } = useAuth();
@@ -59,34 +60,8 @@ function StartupDashboardContent() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}>
-      {/* Side / Top Navigation Header */}
-      <header style={{
-        borderBottom: '1px solid var(--border-color)',
-        padding: '16px 2.5rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        background: 'var(--bg-secondary)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'Outfit' }}>
-            Hope<span style={{ color: 'var(--brand-green)' }}>Fusion</span>
-          </span>
-          <span className="badge badge-green">Startup Portal</span>
-        </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Welcome, {mounted ? `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() : ''}
-          </span>
-          <button onClick={logout} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
-            Logout
-          </button>
-        </div>
-      </header>
-
-      {/* Main Grid Workspace */}
-      <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 2rem' }}>
+    <DashboardLayout>
+      <div className="fade-in">
         
         {/* Banner Card */}
         <div className="glass-panel glow-green" style={{ padding: '32px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
@@ -271,14 +246,14 @@ function StartupDashboardContent() {
           </div>
 
         </div>
-      </main>
+      </div>
 
       <style jsx global>{`
         @media(max-width: 768px) {
           .startup-workspace-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
-    </div>
+    </DashboardLayout>
   );
 }
 
