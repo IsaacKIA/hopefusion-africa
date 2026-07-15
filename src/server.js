@@ -3,6 +3,9 @@
  * Refactored modular version.
  */
 
+// ⚠️  Sentry MUST be imported before any other application code
+import { Sentry } from './instrument.js';
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -138,6 +141,10 @@ app.use('/api/v1', servicesRouter);
 /* ============================================================
    ERROR HANDLING
    ============================================================ */
+
+// Sentry error handler — MUST come before custom error handler
+// Captures all errors that reach Express error middleware
+Sentry.setupExpressErrorHandler(app);
 
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);

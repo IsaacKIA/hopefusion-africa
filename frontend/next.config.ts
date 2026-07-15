@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // Required for Docker standalone deployment
@@ -39,7 +40,7 @@ const nextConfig: NextConfig = {
   // Power-by header removal
   poweredByHeader: false,
 
-  // Production source maps off
+  // Production source maps off (Sentry uploads them separately)
   productionBrowserSourceMaps: false,
 
   // Environment variables exposed to browser
@@ -49,4 +50,29 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Sentry organisation & project (set in CI environment)
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Suppress Sentry CLI output in local dev
+  silent: process.env.NODE_ENV !== 'production',
+
+  // Upload source maps only in production CI builds
+  sourcemaps: {
+    disable: process.env.NODE_ENV !== 'production',
+  },
+
+  // Automatically instrument Next.js API routes and server components
+  autoInstrumentServerFunctions: true,
+  autoInstrumentMiddleware: true,
+  autoInstrumentAppDirectory: true,
+
+  // Tree-shake Sentry debug code in production
+  disableLogger: true,
+
+  // Tunnel Sentry requests through /monitoring to bypass ad-blockers
+  tunnelRoute: '/monitoring',
+});
+
