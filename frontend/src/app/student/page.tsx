@@ -5,20 +5,65 @@ import { useAuth } from '../../context/AuthContext';
 import RouteGuard from '../../components/RouteGuard';
 import Link from 'next/link';
 import { useMounted } from '../../hooks/useMounted';
+import { HFAApi } from '../../lib/api';
+
+interface MentorSession {
+  id: string;
+  title?: string;
+  mentor_first_name?: string;
+  mentor_last_name?: string;
+  scheduled_at: string;
+  status: string;
+  duration_minutes?: number;
+}
+
+export default function StudentDashboardPage() {
+  return (
+    <RouteGuard allowedRoles={['student']}>
+      <StudentDashboardContent />
+    </RouteGuard>
+  );
+}
 
 function StudentDashboardContent() {
   const { user, logout } = useAuth();
   const mounted = useMounted();
   
-  const [courses] = useState([
-    { id: 1, title: 'Introduction to Venture Capital', instructor: 'Dr. Kwame Nkrumah', progress: 80, stage: 'Intermediate' },
-    { id: 2, title: 'Ecosystem Pitching & Storytelling', instructor: 'Patricia Adesua', progress: 45, stage: 'Beginner' },
-    { id: 3, title: 'Legal & Intellectual Property in Africa', instructor: 'Nelsie Mandell', progress: 0, stage: 'Advanced' }
-  ]);
+  const [sessions, setSessions] = useState<MentorSession[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
 
-  const [mentorSessions] = useState([
-    { id: 'session-1', mentor: 'Dr. Kwame Nkrumah', date: 'June 29, 2026', time: '14:00 GMT', status: 'scheduled' }
-  ]);
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      setLoadingSessions(true);
+      setSessionsError(null);
+      try {
+        const res = await HFAApi.loadMySessions();
+        if (isMounted && res?.data) {
+          setSessions(res.data);
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          setSessionsError(err.message || 'Could not load sessions.');
+        }
+      } finally {
+        if (isMounted) setLoadingSessions(false);
+      }
+    }
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const upcomingSessions = sessions.filter(
+    (s) => s.status === 'scheduled' || s.status === 'confirmed' || s.status === 'live'
+  );
+
+  const completedHours = sessions
+    .filter((s) => s.status === 'completed')
+    .reduce((acc, s) => acc + (s.duration_minutes || 45) / 60, 0);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }} className="fade-in">
@@ -54,13 +99,16 @@ function StudentDashboardContent() {
         <div className="glass-panel glow-green" style={{ padding: '32px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
           <div>
             <h1 style={{ fontSize: '2rem', marginBottom: '8px', fontFamily: 'Outfit' }}>
-              Welcome, {mounted ? user?.first_name : 'Scholar'}!
+              Welcome, {mounted ? user?.first_name || 'Scholar' : 'Scholar'}!
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
               Access your learning curriculum, book advisor mentoring sessions, and track your startup readiness.
             </p>
           </div>
-          <div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Link href="/elearning" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem', textDecoration: 'none' }}>
+              📚 Course Catalog
+            </Link>
             <Link href="/mentorship" className="btn-primary" style={{ padding: '10px 20px', fontSize: '0.85rem', textDecoration: 'none' }}>
               Book Mentor Session
             </Link>
@@ -74,20 +122,24 @@ function StudentDashboardContent() {
               Hope Score™
             </h3>
             <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--brand-green)', fontFamily: 'Outfit' }}>
-              {mounted ? user?.hope_score || 85 : 85}
+              {mounted ? (user?.hope_score ?? 85) : 85}
             </p>
           </div>
           <div className="glass-panel" style={{ padding: '20px', textAlign: 'center' }}>
             <h3 style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-              Curriculum Progress
+              Upcoming Sessions
             </h3>
-            <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--brand-amber)', fontFamily: 'Outfit' }}>42%</p>
+            <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--brand-amber)', fontFamily: 'Outfit' }}>
+              {loadingSessions ? '—' : upcomingSessions.length}
+            </p>
           </div>
           <div className="glass-panel" style={{ padding: '20px', textAlign: 'center' }}>
             <h3 style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-              Mentorship Hours
+              Mentorship Completed
             </h3>
-            <p style={{ fontSize: '2rem', fontWeight: 800, color: '#3b82f6', fontFamily: 'Outfit' }}>8.5 hrs</p>
+            <p style={{ fontSize: '2rem', fontWeight: 800, color: '#3b82f6', fontFamily: 'Outfit' }}>
+              {loadingSessions ? '—' : `${completedHours.toFixed(1)} hrs`}
+            </p>
           </div>
         </div>
 
@@ -97,28 +149,55 @@ function StudentDashboardContent() {
           {/* Courses List */}
           <div>
             <div className="glass-panel" style={{ padding: '24px', marginBottom: '32px' }}>
-              <h2 style={{ fontSize: '1.2rem', marginBottom: '20px', fontFamily: 'Outfit' }}>My Courses</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {courses.map(course => (
-                  <div key={course.id} style={{ padding: '16px', border: '1px solid var(--border-color)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>{course.title}</h3>
-                      <span className="badge badge-amber" style={{ fontSize: '0.75rem' }}>{course.stage}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ fontSize: '1.2rem', fontFamily: 'Outfit' }}>Recommended Curriculum</h2>
+                <Link href="/elearning" style={{ color: 'var(--brand-green)', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}>
+                  View All Modules →
+                </Link>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ padding: '16px', border: '1px solid var(--border-color)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <span className="badge badge-green" style={{ fontSize: '0.65rem' }}>Intermediate</span>
+                      <span className="badge badge-amber" style={{ fontSize: '0.65rem' }}>Finance</span>
                     </div>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Instructor: {course.instructor}</p>
-                    
-                    {/* Progress Bar */}
-                    <div style={{ marginTop: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                        <span>Progress</span>
-                        <span>{course.progress}%</span>
-                      </div>
-                      <div style={{ width: '100%', height: '6px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div style={{ width: `${course.progress}%`, height: '100%', backgroundColor: 'var(--brand-green)', borderRadius: '3px' }} />
-                      </div>
-                    </div>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Venture Capital & African Fundraising</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '4px' }}>6 hours · 18 lessons · +350 XP</p>
                   </div>
-                ))}
+                  <Link href="/elearning" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.8rem', textDecoration: 'none' }}>
+                    Open Module
+                  </Link>
+                </div>
+
+                <div style={{ padding: '16px', border: '1px solid var(--border-color)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <span className="badge badge-green" style={{ fontSize: '0.65rem' }}>Advanced</span>
+                      <span className="badge badge-amber" style={{ fontSize: '0.65rem' }}>Growth</span>
+                    </div>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Product-Led Growth for African SaaS</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '4px' }}>8 hours · 24 lessons · +500 XP</p>
+                  </div>
+                  <Link href="/elearning" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.8rem', textDecoration: 'none' }}>
+                    Open Module
+                  </Link>
+                </div>
+
+                <div style={{ padding: '16px', border: '1px solid var(--border-color)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <span className="badge badge-green" style={{ fontSize: '0.65rem' }}>Beginner</span>
+                      <span className="badge badge-amber" style={{ fontSize: '0.65rem' }}>Legal</span>
+                    </div>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Legal Foundations for African Founders</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '4px' }}>4 hours · 12 lessons · +200 XP</p>
+                  </div>
+                  <Link href="/elearning" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.8rem', textDecoration: 'none' }}>
+                    Open Module
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -128,18 +207,37 @@ function StudentDashboardContent() {
             
             {/* Scheduled Mentorship */}
             <div className="glass-panel" style={{ padding: '24px' }}>
-              <h2 style={{ fontSize: '1.1rem', marginBottom: '16px', fontFamily: 'Outfit' }}>Upcoming Advisor Call</h2>
-              {mentorSessions.length === 0 ? (
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No sessions booked.</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '1.1rem', fontFamily: 'Outfit' }}>Advisor Sessions</h2>
+                <Link href="/mentorship" style={{ color: 'var(--brand-green)', fontSize: '0.8rem', textDecoration: 'none' }}>
+                  Book +
+                </Link>
+              </div>
+
+              {loadingSessions ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '24px' }}>
+                  <div className="spinner" />
+                </div>
+              ) : sessionsError ? (
+                <p style={{ color: '#ef4444', fontSize: '0.85rem' }}>{sessionsError}</p>
+              ) : upcomingSessions.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '12px' }}>No upcoming sessions booked.</p>
+                  <Link href="/mentorship" className="btn-primary" style={{ display: 'inline-block', padding: '8px 16px', fontSize: '0.8rem', textDecoration: 'none' }}>
+                    Browse Mentors
+                  </Link>
+                </div>
               ) : (
-                mentorSessions.map(session => (
+                upcomingSessions.slice(0, 3).map(session => (
                   <div key={session.id} style={{ borderLeft: '4px solid var(--brand-green)', paddingLeft: '12px', margin: '12px 0' }}>
-                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600 }}>{session.mentor}</h4>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600 }}>
+                      {session.mentor_first_name ? `${session.mentor_first_name} ${session.mentor_last_name || ''}` : session.title || 'Advisor Call'}
+                    </h4>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                      {session.date} at {session.time}
+                      {new Date(session.scheduled_at).toLocaleDateString()} at {new Date(session.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                     <Link href={`/mentorship`} className="btn-secondary" style={{ display: 'inline-block', marginTop: '10px', padding: '4px 8px', fontSize: '0.75rem', textDecoration: 'none' }}>
-                      Open Room
+                      {session.status === 'live' ? '🔴 Enter Room' : 'View Session'}
                     </Link>
                   </div>
                 ))
@@ -148,16 +246,21 @@ function StudentDashboardContent() {
 
             {/* Quick Links */}
             <div className="glass-panel" style={{ padding: '24px' }}>
-              <h2 style={{ fontSize: '1.1rem', marginBottom: '16px', fontFamily: 'Outfit' }}>Resources</h2>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <h2 style={{ fontSize: '1.1rem', marginBottom: '16px', fontFamily: 'Outfit' }}>Ecosystem Resources</h2>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <li>
-                  <Link href="/grants" style={{ color: 'var(--brand-green)', textDecoration: 'none', fontSize: '0.9rem' }}>
-                    🏆 Grant Opportunities
+                  <Link href="/grants" style={{ color: 'var(--brand-green)', textDecoration: 'none', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🏆</span> Grant Opportunities
                   </Link>
                 </li>
                 <li>
-                  <Link href="/matching" style={{ color: 'var(--brand-green)', textDecoration: 'none', fontSize: '0.9rem' }}>
-                    🤝 Ecosystem Search
+                  <Link href="/matching" style={{ color: 'var(--brand-green)', textDecoration: 'none', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🤝</span> Ecosystem Matching
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/elearning" style={{ color: 'var(--brand-green)', textDecoration: 'none', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🎓</span> Full Course Catalog
                   </Link>
                 </li>
               </ul>
@@ -177,13 +280,5 @@ function StudentDashboardContent() {
         }
       `}</style>
     </div>
-  );
-}
-
-export default function StudentDashboardPage() {
-  return (
-    <RouteGuard allowedRoles={['student']}>
-      <StudentDashboardContent />
-    </RouteGuard>
   );
 }

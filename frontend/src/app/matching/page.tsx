@@ -12,14 +12,18 @@ function MatchingDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
   const fetchMatches = async () => {
+    setFetchError(null);
     try {
       const res = await HFAApi.loadMatches({ minScore: 50, limit: 10 });
       if (res?.data) {
         setMatches(res.data);
       }
-    } catch (err) {
-      console.error('Failed to load matches:', err);
+    } catch (err: any) {
+      setFetchError(err.message || 'Failed to load matches.');
     } finally {
       setLoading(false);
     }
@@ -31,11 +35,12 @@ function MatchingDashboardContent() {
 
   const handleUpdateStatus = async (matchId: string, newStatus: string) => {
     setUpdatingId(matchId);
+    setActionError(null);
     try {
       await HFAApi.updateMatchStatus(matchId, newStatus);
-      await fetchMatches(); // reload matches
+      await fetchMatches();
     } catch (err: any) {
-      alert(err.message || 'Failed to update status');
+      setActionError(err.message || 'Failed to update status. Please try again.');
     } finally {
       setUpdatingId(null);
     }
@@ -70,9 +75,38 @@ function MatchingDashboardContent() {
           </p>
         </div>
 
+        {actionError && (
+          <div style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#ef4444',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <span>⚠ {actionError}</span>
+            <button onClick={() => setActionError(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem' }}>✕</button>
+          </div>
+        )}
+
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '64px' }}>
             <div className="spinner" />
+          </div>
+        ) : fetchError ? (
+          <div className="glass-panel" style={{ padding: '64px', textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⚠️</div>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>Could not load matches</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '320px', margin: '0 auto 24px' }}>
+              {fetchError}
+            </p>
+            <button onClick={() => { setLoading(true); fetchMatches(); }} className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
+              🔄 Retry
+            </button>
           </div>
         ) : matches.length === 0 ? (
           <div className="glass-panel" style={{ padding: '64px', textAlign: 'center' }}>
@@ -82,6 +116,7 @@ function MatchingDashboardContent() {
               Ensure your profile name, description, and funding goals are filled in to activate matching triggers.
             </p>
           </div>
+
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {matches.map((match) => {

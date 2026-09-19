@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useMounted } from '../hooks/useMounted';
+import ErrorBoundary from './ErrorBoundary';
 
 interface RouteGuardProps {
   children: React.ReactNode;
@@ -130,6 +131,6 @@ export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
     />;
   }
 
-  return <>{children}</>;
+  return <ErrorBoundary>{children}</ErrorBoundary>;
 }
 export default RouteGuard;

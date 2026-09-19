@@ -38,6 +38,7 @@ function DocumentsContent() {
   // Tab 4: Financial Model state
   const [financialMonths, setFinancialMonths] = useState<number>(18);
   const [financialResult, setFinancialResult] = useState<any | null>(null);
+  const [genError, setGenError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -58,6 +59,7 @@ function DocumentsContent() {
   const handleGenerateOneLiners = async (e: React.FormEvent) => {
     e.preventDefault();
     setGenerating(true);
+    setGenError(null);
     setOneLiners([]);
     try {
       const payload = {
@@ -72,7 +74,7 @@ function DocumentsContent() {
         setOneLiners(res.data.options);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to generate pitches.');
+      setGenError(err.message || 'Failed to generate pitches.');
     } finally {
       setGenerating(false);
     }
@@ -82,6 +84,7 @@ function DocumentsContent() {
     e.preventDefault();
     if (!selectedInvestorId) return;
     setGenerating(true);
+    setGenError(null);
     setOutreachResult(null);
     try {
       const match = matchedInvestors.find(m => m.target_id === selectedInvestorId);
@@ -110,7 +113,7 @@ function DocumentsContent() {
         setOutreachResult(res.data);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to generate outreach.');
+      setGenError(err.message || 'Failed to generate outreach.');
     } finally {
       setGenerating(false);
     }
@@ -119,6 +122,7 @@ function DocumentsContent() {
   const handleGenerateGrantProposal = async (e: React.FormEvent) => {
     e.preventDefault();
     setGenerating(true);
+    setGenError(null);
     setGrantResult(null);
     try {
       const payload = {
@@ -141,7 +145,7 @@ function DocumentsContent() {
         setGrantResult(res.data);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to draft grant proposal.');
+      setGenError(err.message || 'Failed to draft grant proposal.');
     } finally {
       setGenerating(false);
     }
@@ -150,6 +154,7 @@ function DocumentsContent() {
   const handleGenerateFinancialModel = async (e: React.FormEvent) => {
     e.preventDefault();
     setGenerating(true);
+    setGenError(null);
     setFinancialResult(null);
     try {
       const payload = {
@@ -168,7 +173,7 @@ function DocumentsContent() {
         setFinancialResult(res.data);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to project financial model.');
+      setGenError(err.message || 'Failed to project financial model.');
     } finally {
       setGenerating(false);
     }
@@ -232,6 +237,23 @@ function DocumentsContent() {
 
         {/* Tabs Area */}
         <div className="glass-panel" style={{ padding: '32px' }}>
+          {genError && (
+            <div style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              color: '#ef4444',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              marginBottom: '24px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+              <span>⚠ {genError}</span>
+              <button onClick={() => setGenError(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>
+            </div>
+          )}
 
           {/* TAB 1: ONE LINER PITCH GENERATOR */}
           {activeTab === 'oneliner' && (

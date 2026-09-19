@@ -38,6 +38,7 @@ function ElearningContent() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [activeLevel, setActiveLevel] = useState('All');
   const [activeCourse, setActiveCourse] = useState<Course | null>(null);
+  const [completionMsg, setCompletionMsg] = useState<string | null>(null);
   const [totalXP] = useState(1050); // Simulated total XP
 
   const filtered = courses.filter(c => {
@@ -51,9 +52,10 @@ function ElearningContent() {
 
   const handleContinueCourse = (course: Course) => {
     if (course.progress === 100) {
-      alert('You have completed this course! 🎓 Check back for advanced modules.');
+      setCompletionMsg('🎓 You have completed all curriculum modules for this track! Check back soon for advanced modules.');
       return;
     }
+    setCompletionMsg(null);
     // Simulate progress increment
     setCourses(prev => prev.map(c => c.id === course.id ? { ...c, progress: Math.min(100, c.progress + 10) } : c));
     setActiveCourse(null);
@@ -91,6 +93,19 @@ function ElearningContent() {
                   <div style={{ height: '100%', width: `${activeCourse.progress}%`, backgroundColor: activeCourse.progress === 100 ? 'var(--brand-green)' : 'var(--brand-amber)', borderRadius: '99px', transition: 'width 0.5s ease' }} />
                 </div>
               </div>
+              {completionMsg && (
+                <div style={{
+                  marginTop: '16px',
+                  backgroundColor: 'rgba(45, 181, 98, 0.1)',
+                  border: '1px solid rgba(45, 181, 98, 0.3)',
+                  color: 'var(--brand-green)',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                }}>
+                  {completionMsg}
+                </div>
+              )}
               <button onClick={() => handleContinueCourse(activeCourse)} className="btn-primary" style={{ padding: '12px 28px', fontSize: '0.9rem', marginTop: '16px' }}>
                 {activeCourse.progress === 0 ? '▶ Start Course' : activeCourse.progress === 100 ? '✓ Completed' : '▶ Continue Learning'}
               </button>

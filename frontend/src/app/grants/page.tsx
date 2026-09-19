@@ -11,6 +11,8 @@ function GrantsDashboardContent() {
   const [grants, setGrants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     grant_name: '',
@@ -27,13 +29,14 @@ function GrantsDashboardContent() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const fetchGrants = async () => {
+    setFetchError(null);
     try {
       const res = await HFAApi.loadMyGrants();
       if (res?.data) {
         setGrants(res.data);
       }
-    } catch (err) {
-      console.error('Failed to load grants:', err);
+    } catch (err: any) {
+      setFetchError(err.message || 'Failed to load grants.');
     } finally {
       setLoading(false);
     }
@@ -53,12 +56,13 @@ function GrantsDashboardContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.grant_name || !formData.grant_org) {
-      alert('Please fill in required fields.');
+      setFormError('Please fill in the Grant Name and Organization fields.');
       return;
     }
 
     setSubmitting(true);
     setSuccessMsg(null);
+    setFormError(null);
 
     try {
       await HFAApi.submitGrantApplication(formData);
@@ -74,9 +78,9 @@ function GrantsDashboardContent() {
         funding_plan: '',
       });
       setApplying(false);
-      await fetchGrants(); // reload list
+      await fetchGrants();
     } catch (err: any) {
-      alert(err.message || 'Failed to submit application.');
+      setFormError(err.message || 'Failed to submit application. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -137,6 +141,19 @@ function GrantsDashboardContent() {
         {applying ? (
           <div className="glass-panel" style={{ padding: '32px' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '24px' }}>New Grant Application Form</h2>
+            {formError && (
+              <div style={{
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                color: '#ef4444',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontSize: '0.85rem',
+                marginBottom: '20px',
+              }}>
+                ⚠ {formError}
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
@@ -241,6 +258,17 @@ function GrantsDashboardContent() {
         ) : loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '64px' }}>
             <div className="spinner" />
+          </div>
+        ) : fetchError ? (
+          <div className="glass-panel" style={{ padding: '64px', textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⚠️</div>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>Could not load grants</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '320px', margin: '0 auto 24px' }}>
+              {fetchError}
+            </p>
+            <button onClick={() => { setLoading(true); fetchGrants(); }} className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
+              🔄 Retry
+            </button>
           </div>
         ) : grants.length === 0 ? (
           <div className="glass-panel" style={{ padding: '64px', textAlign: 'center' }}>

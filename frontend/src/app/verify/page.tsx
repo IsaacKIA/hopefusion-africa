@@ -264,7 +264,7 @@ export default function VerifyPage() {
           {loading ? <div className="spinner" style={{ width: '20px', height: '20px', margin: '0 auto' }} /> : 'Verify Code'}
         </button>
 
-        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
           Didn't receive a code?{' '}
           {resendTimer > 0 ? (
             <span>Resend in {resendTimer}s</span>
@@ -285,6 +285,29 @@ export default function VerifyPage() {
               Resend Code
             </button>
           )}
+        </div>
+
+        <div style={{
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          paddingTop: '16px',
+          fontSize: '0.75rem',
+          color: 'var(--text-muted)',
+          lineHeight: '1.5',
+          textAlign: 'center'
+        }}>
+          <p style={{ margin: 0, marginBottom: '6px' }}>
+            Tip: Check your spam or promotions folder if the email doesn't appear within 2 minutes.
+          </p>
+          <p style={{ margin: 0 }}>
+            Made a typo in your email?{' '}
+            <Link href="/register" style={{ color: 'var(--brand-green)', textDecoration: 'underline' }}>
+              Sign up again
+            </Link>
+            {' '}or{' '}
+            <Link href="/login" style={{ color: 'var(--brand-green)', textDecoration: 'underline' }}>
+              log into another account
+            </Link>.
+          </p>
         </div>
       </div>
     </div>

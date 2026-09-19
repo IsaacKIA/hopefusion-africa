@@ -94,6 +94,8 @@ function WorkspaceContent() {
 
   const [savingFinancials, setSavingFinancials] = useState(false);
   const [savingCrm, setSavingCrm] = useState(false);
+  const [workspaceStatusMsg, setWorkspaceStatusMsg] = useState<string | null>(null);
+  const [workspaceErrorMsg, setWorkspaceErrorMsg] = useState<string | null>(null);
 
   const fetchData = async () => {
     if (!startupId) return;
@@ -152,10 +154,11 @@ function WorkspaceContent() {
       const res = await API.post('/workspace/financials', payload);
       if (res?.success) {
         setFinancials(res.data);
-        alert('Financial ledger updated successfully!');
+        setWorkspaceStatusMsg('Financial ledger updated successfully!');
+        setWorkspaceErrorMsg(null);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to update financials.');
+      setWorkspaceErrorMsg(err.message || 'Failed to update financials.');
     } finally {
       setSavingFinancials(false);
     }
@@ -173,6 +176,7 @@ function WorkspaceContent() {
 
     const updatedHistory = [...(financials.ledger_history || []), newItem];
     setSavingFinancials(true);
+    setWorkspaceErrorMsg(null);
 
     try {
       const payload = {
@@ -189,9 +193,10 @@ function WorkspaceContent() {
         setLedgerMonth('');
         setLedgerIn(0);
         setLedgerOut(0);
+        setWorkspaceStatusMsg('Ledger entry added successfully.');
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to add ledger item.');
+      setWorkspaceErrorMsg(err.message || 'Failed to add ledger item.');
     } finally {
       setSavingFinancials(false);
     }
@@ -201,6 +206,7 @@ function WorkspaceContent() {
     e.preventDefault();
     if (!startupId || !selectedInvestorId) return;
     setSavingCrm(true);
+    setWorkspaceErrorMsg(null);
 
     try {
       const payload = {
@@ -217,6 +223,7 @@ function WorkspaceContent() {
         setCrmNotes('');
         setCrmEquity(0);
         setCrmStage('lead');
+        setWorkspaceStatusMsg('Investor lead added to pipeline.');
         // reload CRM deals
         const crmRes = await API.get(`/workspace/crm/${startupId}`);
         if (crmRes?.success) {
@@ -224,7 +231,7 @@ function WorkspaceContent() {
         }
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to register CRM deal.');
+      setWorkspaceErrorMsg(err.message || 'Failed to register CRM deal.');
     } finally {
       setSavingCrm(false);
     }
@@ -232,6 +239,7 @@ function WorkspaceContent() {
 
   const handleMoveCrmStage = async (deal: CRMDeal, newStage: typeof crmStage) => {
     if (!startupId) return;
+    setWorkspaceErrorMsg(null);
     try {
       const payload = {
         startup_id: startupId,
@@ -246,18 +254,19 @@ function WorkspaceContent() {
         setCrmDeals(crmRes.data);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to move stage');
+      setWorkspaceErrorMsg(err.message || 'Failed to move stage');
     }
   };
 
   const handleSubmitEvidence = async (escrowId: string, milestoneId: string) => {
     if (!evidenceUrl.trim()) return;
+    setWorkspaceErrorMsg(null);
     try {
       const res = await API.post(`/corporate/escrow/${escrowId}/milestone/${milestoneId}/submit`, {
         evidence_uri: evidenceUrl
       });
       if (res?.success) {
-        alert('Validation evidence URL submitted successfully!');
+        setWorkspaceStatusMsg('Validation evidence URL submitted successfully!');
         setSubmittingEvidenceId(null);
         setEvidenceUrl('');
         // Reload escrows
@@ -267,7 +276,7 @@ function WorkspaceContent() {
         }
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to submit evidence.');
+      setWorkspaceErrorMsg(err.message || 'Failed to submit evidence.');
     }
   };
 
@@ -305,6 +314,40 @@ function WorkspaceContent() {
       </header>
 
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 2.5rem' }} className="fade-in">
+        {workspaceErrorMsg && (
+          <div style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#ef4444',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <span>⚠ {workspaceErrorMsg}</span>
+            <button onClick={() => setWorkspaceErrorMsg(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>
+          </div>
+        )}
+        {workspaceStatusMsg && (
+          <div style={{
+            backgroundColor: 'rgba(45, 181, 98, 0.1)',
+            border: '1px solid rgba(45, 181, 98, 0.2)',
+            color: 'var(--brand-green)',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <span>✓ {workspaceStatusMsg}</span>
+            <button onClick={() => setWorkspaceStatusMsg(null)} style={{ background: 'none', border: 'none', color: 'var(--brand-green)', cursor: 'pointer' }}>✕</button>
+          </div>
+        )}
         
         {/* Dynamic Runway Dashboard Panel */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }} className="startup-workspace-grid">

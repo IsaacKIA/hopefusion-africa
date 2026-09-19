@@ -54,11 +54,25 @@ const normalizePhoneNumber = (phone, country) => {
   return prefix + cleaned;
 };
 
+export async function getUserFullProfile(userId) {
+  const { rows } = await db.query(
+    `SELECT u.id, u.email, u.role, u.roles, u.first_name, u.last_name, u.phone, u.country, u.avatar_url, u.bio, u.is_verified, u.onboarding_completed,
+            p.profile_completion, p.hope_score, p.verification_status, p.funding_readiness, p.opportunity_readiness,
+            (CASE WHEN u.role='startup' OR 'startup' = ANY(u.roles) THEN (SELECT row_to_json(s) FROM startups s WHERE s.founder_id=u.id LIMIT 1) END) as startup_profile,
+            (CASE WHEN u.role='investor' OR 'investor' = ANY(u.roles) OR u.role='government' OR u.role='corporate' THEN (SELECT row_to_json(i) FROM investors i WHERE i.user_id=u.id LIMIT 1) END) as investor_profile,
+            (CASE WHEN u.role='mentor' OR 'mentor' = ANY(u.roles) THEN (SELECT row_to_json(m) FROM mentors m WHERE m.user_id=u.id LIMIT 1) END) as mentor_profile
+     FROM users u
+     LEFT JOIN startup_passports p ON p.user_id = u.id
+     WHERE u.id = $1`,
+    [userId]
+  );
+  return rows[0] || null;
+}
+
 /* ============================================================
    ROUTES
    ============================================================ */
 
-// POST /register
 // POST /register
 router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req, res) => {
   const correlationId = crypto.randomUUID();
@@ -255,12 +269,14 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
     await writeAuditLog(user.id, 'registration_completed', { email: user.email, role: user.role }, req.ip);
     logger.info('registration_completed_successfully', { userId: user.id }, correlationId);
 
+    const fullUser = await getUserFullProfile(user.id);
+
     return res.status(201).json({
       success: true,
       message: 'Account created! Check your email for a verification code.',
       token,
       refreshToken,
-      user: {
+      user: fullUser || {
         id: user.id,
         email: user.email,
         role: user.role,
@@ -339,11 +355,13 @@ router.post('/login', rateLimit(10, 60), validate(loginSchema), async (req, res)
       path: '/'
     });
 
+    const fullUser = await getUserFullProfile(user.id);
+
     return res.json({
       success: true,
       token,
       refreshToken,
-      user: {
+      user: fullUser || {
         id: user.id,
         email: user.email,
         role: user.role,
@@ -774,21 +792,11 @@ router.post(['/resend', '/resend-verify'], authenticate, async (req, res) => {
 // GET /status — check authentication status, verification status, and progressive onboarding completeness
 router.get('/status', authenticate, async (req, res) => {
   try {
-    const { rows } = await db.query(
-      `SELECT u.id, u.email, u.role, u.roles, u.first_name, u.last_name, u.is_verified, u.onboarding_completed,
-              p.profile_completion, p.hope_score, p.verification_status, p.funding_readiness, p.opportunity_readiness,
-              (CASE WHEN u.role='startup' THEN (SELECT row_to_json(s) FROM startups s WHERE s.founder_id=u.id LIMIT 1) END) as startup_profile,
-              (CASE WHEN u.role='investor' THEN (SELECT row_to_json(i) FROM investors i WHERE i.user_id=u.id LIMIT 1) END) as investor_profile,
-              (CASE WHEN u.role='mentor' THEN (SELECT row_to_json(m) FROM mentors m WHERE m.user_id=u.id LIMIT 1) END) as mentor_profile
-       FROM users u
-       LEFT JOIN startup_passports p ON p.user_id = u.id
-       WHERE u.id = $1`,
-      [req.user.userId]
-    );
-    if (!rows.length) {
+    const fullUser = await getUserFullProfile(req.user.userId);
+    if (!fullUser) {
       return res.status(404).json({ error: 'User not found' });
     }
-    return res.json({ success: true, user: rows[0] });
+    return res.json({ success: true, user: fullUser });
   } catch (err) {
     logger.error('auth_status_error', { error: err.message, userId: req.user?.userId });
     return res.status(500).json({ error: 'Service temporarily unavailable.' });

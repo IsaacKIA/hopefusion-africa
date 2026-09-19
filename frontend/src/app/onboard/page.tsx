@@ -20,6 +20,16 @@ function OnboardPageContent() {
   const [goals, setGoals] = useState<string[]>([]);
   const [country, setCountry] = useState('Ghana');
   const [roles, setRoles] = useState<string[]>(['startup']);
+
+  // Pre-populate with registered role and country if available
+  useEffect(() => {
+    if (user?.role) {
+      setRoles([user.role]);
+    }
+    if (user?.country) {
+      setCountry(user.country);
+    }
+  }, [user?.role, user?.country]);
   
   // Role profile fields
   const [startupName, setStartupName] = useState('');

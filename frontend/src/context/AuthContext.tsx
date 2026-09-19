@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('hfa_refresh_token', res.refreshToken);
       setUser(res.user);
       subscribeToPush().catch(() => {});
+      refreshProfile().catch(() => {});
     }
     return res;
   };
@@ -85,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('hfa_debug_otp');
       }
       subscribeToPush().catch(() => {});
+      refreshProfile().catch(() => {});
     }
     return res;
   };

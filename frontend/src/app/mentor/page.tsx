@@ -47,27 +47,32 @@ function MentorDashboardContent() {
     }
   };
 
+  const [sessionActionError, setSessionActionError] = useState<string | null>(null);
+  const [sessionActionSuccess, setSessionActionSuccess] = useState<string | null>(null);
+
   const handleStartCall = async (sessionId: string) => {
+    setSessionActionError(null);
     try {
       const res = await HFAApi.updateSessionStatus(sessionId, 'live');
       if (res?.success) {
         router.push(`/mentorship/room/${sessionId}`);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to initialize call room.');
+      setSessionActionError(err.message || 'Failed to initialize call room.');
     }
   };
 
   const handleCancelSession = async (sessionId: string) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    setSessionActionError(null);
+    setSessionActionSuccess(null);
     try {
       const res = await HFAApi.updateSessionStatus(sessionId, 'cancelled');
       if (res?.success) {
-        alert('Session cancelled.');
+        setSessionActionSuccess('Session has been cancelled.');
         await fetchSessions();
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to cancel session.');
+      setSessionActionError(err.message || 'Failed to cancel session.');
     }
   };
 
@@ -77,6 +82,40 @@ function MentorDashboardContent() {
   return (
     <DashboardLayout>
       <div className="fade-in">
+        {sessionActionError && (
+          <div style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#ef4444',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <span>⚠ {sessionActionError}</span>
+            <button onClick={() => setSessionActionError(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>
+          </div>
+        )}
+        {sessionActionSuccess && (
+          <div style={{
+            backgroundColor: 'rgba(45, 181, 98, 0.1)',
+            border: '1px solid rgba(45, 181, 98, 0.3)',
+            color: 'var(--brand-green)',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <span>✓ {sessionActionSuccess}</span>
+            <button onClick={() => setSessionActionSuccess(null)} style={{ background: 'none', border: 'none', color: 'var(--brand-green)', cursor: 'pointer' }}>✕</button>
+          </div>
+        )}
         
         {/* Banner Card */}
         <div className="glass-panel glow-green" style={{ padding: '32px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>

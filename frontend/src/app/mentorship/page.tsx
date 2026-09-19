@@ -33,6 +33,8 @@ function MentorshipHubContent() {
   
   const [booking, setBooking] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Fetch initial data
   const fetchData = async () => {
@@ -83,6 +85,7 @@ function MentorshipHubContent() {
     
     setBooking(true);
     setSuccessMessage(null);
+    setBookingError(null);
     
     try {
       const payload = {
@@ -105,20 +108,21 @@ function MentorshipHubContent() {
         await fetchData(); // refresh list
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to schedule session.');
+      setBookingError(err.message || 'Failed to schedule session.');
     } finally {
       setBooking(false);
     }
   };
 
   const handleStartSession = async (sessionId: string) => {
+    setActionError(null);
     try {
       const res = await HFAApi.updateSessionStatus(sessionId, 'live');
       if (res?.success) {
         router.push(`/mentorship/room/${sessionId}`);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to start session room.');
+      setActionError(err.message || 'Failed to start session room.');
     }
   };
 
@@ -161,6 +165,23 @@ function MentorshipHubContent() {
           </p>
         </div>
 
+        {actionError && (
+          <div style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#ef4444',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <span>⚠ {actionError}</span>
+            <button onClick={() => setActionError(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>
+          </div>
+        )}
         {successMessage && (
           <div style={{
             backgroundColor: 'rgba(45, 181, 98, 0.1)',
@@ -368,7 +389,19 @@ function MentorshipHubContent() {
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>
                 Scheduling session with <strong>{selectedMentor.first_name} {selectedMentor.last_name}</strong>
-              </p>
+              {bookingError && (
+                <div style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  color: '#ef4444',
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  marginBottom: '16px',
+                }}>
+                  ⚠ {bookingError}
+                </div>
+              )}
 
               <form onSubmit={handleBookSession}>
                 <div className="form-group">

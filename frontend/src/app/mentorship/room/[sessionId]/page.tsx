@@ -30,6 +30,7 @@ function MeetingRoomContent() {
 
   const [session, setSession] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   
   // Real-time states
   const [messages, setMessages] = useState<Message[]>([]);
@@ -69,18 +70,16 @@ function MeetingRoomContent() {
           const matched = res.data.find((s: any) => s.id === sessionId);
           if (matched) {
             setSession(matched);
-            // If session already finished, send back
+            // If session already finished, inform and allow return
             if (matched.status === 'completed' || matched.status === 'cancelled') {
-              alert('This session has already ended.');
-              router.replace(isMentor ? '/mentor' : '/mentorship');
+              setSessionError('This mentorship consultation session has already concluded.');
             }
           } else {
-            alert('Session not found.');
-            router.replace('/');
+            setSessionError('Mentorship session not found or you do not have permission to join.');
           }
         }
-      } catch (err) {
-        console.error('Failed to load session details:', err);
+      } catch (err: any) {
+        setSessionError(err.message || 'Failed to load session details.');
       } finally {
         setLoading(false);
       }
@@ -259,7 +258,7 @@ function MeetingRoomContent() {
       
       router.push(isMentor ? '/mentor' : '/mentorship');
     } catch (err: any) {
-      alert(err.message || 'Error ending session.');
+      console.error('Error ending session:', err);
       router.push(isMentor ? '/mentor' : '/mentorship');
     }
   };
@@ -271,7 +270,31 @@ function MeetingRoomContent() {
     return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  if (loading) return <div style={{ color: '#64748b', padding: '60px', textAlign: 'center', backgroundColor: 'var(--bg-primary)', minHeight: '100vh' }}>Loading Live Consult Screen…</div>;
+  if (loading) {
+    return (
+      <div style={{ color: '#64748b', padding: '60px', textAlign: 'center', backgroundColor: 'var(--bg-primary)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  if (sessionError) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--bg-primary)', padding: '20px' }}>
+        <div className="glass-panel" style={{ maxWidth: '440px', width: '100%', padding: '36px', textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⚠️</div>
+          <h2 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Session Notice</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.5 }}>
+            {sessionError}
+          </p>
+          <button onClick={() => router.replace(isMentor ? '/mentor' : '/mentorship')} className="btn-primary" style={{ padding: '10px 24px', fontSize: '0.85rem' }}>
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!session) return null;
 
   return (

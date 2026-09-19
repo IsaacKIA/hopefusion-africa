@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import ErrorBoundary from './ErrorBoundary';
 
 interface NavItem {
   label: string;
@@ -467,7 +468,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Inner Content Area */}
         <div style={{ flex: 1, padding: '40px', paddingBottom: '80px' }} className="inner-dashboard-content">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </div>
       </div>
 

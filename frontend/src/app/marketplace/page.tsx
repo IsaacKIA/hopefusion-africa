@@ -33,6 +33,9 @@ function MarketplaceContent() {
   const [form, setForm] = useState({
     title: '', description: '', price: '', currency: 'USD', category: 'SaaS Tools', tags: '',
   });
+  const [contactingListing, setContactingListing] = useState<Listing | null>(null);
+  const [inquiryText, setInquiryText] = useState('');
+  const [inquirySent, setInquirySent] = useState(false);
 
   // Seed mock listings since marketplace backend isn't built yet
   const mockListings: Listing[] = [
@@ -227,7 +230,11 @@ function MarketplaceContent() {
                     <button
                       className="btn-primary"
                       style={{ padding: '6px 14px', fontSize: '0.78rem' }}
-                      onClick={() => alert(`Contact ${listing.seller_name} to purchase this service.`)}
+                      onClick={() => {
+                        setContactingListing(listing);
+                        setInquirySent(false);
+                        setInquiryText(`Hi ${listing.seller_name}, I am interested in acquiring "${listing.title}". Could we discuss details?`);
+                      }}
                     >
                       Contact Seller
                     </button>
@@ -237,6 +244,67 @@ function MarketplaceContent() {
             </div>
           )}
         </>
+      )}
+
+      {contactingListing && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+          padding: '20px',
+        }}>
+          <div className="glass-panel" style={{ maxWidth: '480px', width: '100%', padding: '28px', position: 'relative' }}>
+            <button
+              onClick={() => setContactingListing(null)}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '1.25rem', cursor: 'pointer' }}
+            >
+              ✕
+            </button>
+            <h3 style={{ fontSize: '1.2rem', fontFamily: 'Outfit', marginBottom: '8px' }}>
+              Contact {contactingListing.seller_name}
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              Inquiring regarding: <strong>{contactingListing.title}</strong> ({contactingListing.currency} {contactingListing.price})
+            </p>
+
+            {inquirySent ? (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>✅</div>
+                <p style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--brand-green)', marginBottom: '4px' }}>Inquiry Dispatched!</p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+                  The seller will receive your inquiry and you can continue the discussion in your platform messages.
+                </p>
+                <button onClick={() => setContactingListing(null)} className="btn-primary" style={{ padding: '8px 20px', fontSize: '0.85rem' }}>
+                  Done
+                </button>
+              </div>
+            ) : (
+              <div>
+                <textarea
+                  className="form-input"
+                  rows={4}
+                  style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit', marginBottom: '16px', fontSize: '0.85rem' }}
+                  value={inquiryText}
+                  onChange={(e) => setInquiryText(e.target.value)}
+                  placeholder="Type your message or custom requirement..."
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <button onClick={() => setContactingListing(null)} className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => setInquirySent(true)}
+                    className="btn-primary"
+                    disabled={!inquiryText.trim()}
+                    style={{ padding: '8px 18px', fontSize: '0.85rem' }}
+                  >
+                    Send Inquiry
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       <style jsx global>{`

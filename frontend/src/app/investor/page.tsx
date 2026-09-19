@@ -88,6 +88,7 @@ export default function PortalsDashboard() {
   // Corporate Portal states
   const [corpEscrows, setCorpEscrows] = useState<EscrowContract[]>([]);
   const [loadingCorp, setLoadingCorp] = useState(false);
+  const [investorNotice, setInvestorNotice] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
 
   // Opportunity publish states (Grant / Challenge)
   const [publishingOpp, setPublishingOpp] = useState(false);
@@ -202,13 +203,14 @@ export default function PortalsDashboard() {
   const handleSaveThesis = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingThesis(true);
+    setInvestorNotice(null);
     try {
       await HFAApi.updateInvestor(thesisForm);
       await refreshProfile();
-      alert('Thesis details updated successfully!');
+      setInvestorNotice({ type: 'success', message: 'Thesis details updated successfully!' });
       setEditingThesis(false);
     } catch (err: any) {
-      alert(err.message || 'Failed to update thesis.');
+      setInvestorNotice({ type: 'error', message: err.message || 'Failed to update thesis.' });
     } finally {
       setSavingThesis(false);
     }
@@ -216,6 +218,7 @@ export default function PortalsDashboard() {
 
   const handlePublishOpportunity = async (type: 'grant' | 'challenge') => {
     setPublishingOpp(true);
+    setInvestorNotice(null);
     try {
       const countries = oppForm.eligible_countries.split(',').map(s => s.trim().toUpperCase());
       const sectors = oppForm.eligible_sectors.split(',').map(s => s.trim());
@@ -234,7 +237,7 @@ export default function PortalsDashboard() {
           metadata: { agency: oppForm.agency || 'Ministry of Finance' }
         };
         await API.post('/government/grants', payload);
-        alert('Government Grant Program published successfully!');
+        setInvestorNotice({ type: 'success', message: 'Government Grant Program published successfully!' });
         fetchGovData();
       } else {
         const payload = {
@@ -249,7 +252,7 @@ export default function PortalsDashboard() {
           metadata: { host: oppForm.host || 'Enterprise Lab' }
         };
         await API.post('/corporate/challenges', payload);
-        alert('Corporate Challenge Opportunity published successfully!');
+        setInvestorNotice({ type: 'success', message: 'Corporate Challenge Opportunity published successfully!' });
         fetchCorpData();
       }
 
@@ -267,7 +270,7 @@ export default function PortalsDashboard() {
         host: ''
       });
     } catch (err: any) {
-      alert(err.message || 'Failed to publish opportunity.');
+      setInvestorNotice({ type: 'error', message: err.message || 'Failed to publish opportunity.' });
     } finally {
       setPublishingOpp(false);
     }
@@ -295,16 +298,17 @@ export default function PortalsDashboard() {
   const handleDisburseEscrow = async (type: 'government' | 'corporate') => {
     const sum = milestones.reduce((acc, m) => acc + m.amount, 0);
     if (Math.abs(sum - escrowForm.total_amount) > 0.01) {
-      alert(`Milestones sum ($${sum.toLocaleString()}) must exactly match total disburse amount ($${escrowForm.total_amount.toLocaleString()}).`);
+      setInvestorNotice({ type: 'error', message: `Milestones sum ($${sum.toLocaleString()}) must exactly match total disburse amount ($${escrowForm.total_amount.toLocaleString()}).` });
       return;
     }
 
     if (!escrowForm.startup_node_id) {
-      alert('Please select a target startup.');
+      setInvestorNotice({ type: 'error', message: 'Please select a target startup.' });
       return;
     }
 
     setCreatingEscrow(true);
+    setInvestorNotice(null);
     try {
       const endpoint = type === 'government' ? '/government/disburse' : '/corporate/escrow/create';
       const payload = {
@@ -319,7 +323,7 @@ export default function PortalsDashboard() {
       };
 
       await API.post(endpoint, payload);
-      alert('Escrow deal payout disbursed successfully!');
+      setInvestorNotice({ type: 'success', message: 'Escrow deal payout disbursed successfully!' });
       
       // Reset forms
       setEscrowForm({
@@ -339,22 +343,23 @@ export default function PortalsDashboard() {
       if (type === 'government') fetchGovData();
       else fetchCorpData();
     } catch (err: any) {
-      alert(err.message || 'Failed to create escrow contract.');
+      setInvestorNotice({ type: 'error', message: err.message || 'Failed to create escrow contract.' });
     } finally {
       setCreatingEscrow(false);
     }
   };
 
   const handleMilestoneAction = async (escrowId: string, milestoneId: string, action: 'approve' | 'reject') => {
+    setInvestorNotice(null);
     try {
       const res = await API.post(`/corporate/escrow/${escrowId}/milestone/${milestoneId}/${action}`);
       if (res?.success) {
-        alert(`Milestone successfully ${action === 'approve' ? 'approved & payout released' : 'rejected'}.`);
+        setInvestorNotice({ type: 'success', message: `Milestone successfully ${action === 'approve' ? 'approved & payout released' : 'rejected'}.` });
         if (activeTab === 'government') fetchGovData();
         else fetchCorpData();
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to execute milestone status change.');
+      setInvestorNotice({ type: 'error', message: err.message || 'Failed to execute milestone status change.' });
     }
   };
 
@@ -364,6 +369,32 @@ export default function PortalsDashboard() {
   return (
     <RouteGuard allowedRoles={['investor', 'admin', 'government', 'corporate']}>
       <DashboardLayout>
+        {investorNotice && (
+          <div style={{
+            backgroundColor: investorNotice.type === 'error' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(45, 181, 98, 0.1)',
+            border: `1px solid ${investorNotice.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(45, 181, 98, 0.3)'}`,
+            color: investorNotice.type === 'error' ? '#ef4444' : 'var(--brand-green)',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <span>{investorNotice.type === 'error' ? '⚠ ' : '✓ '}{investorNotice.message}</span>
+            <button
+              onClick={() => setInvestorNotice(null)}
+              style={{
+                background: 'none', border: 'none',
+                color: investorNotice.type === 'error' ? '#ef4444' : 'var(--brand-green)',
+                cursor: 'pointer', fontSize: '1rem',
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
           
           {/* Header Card */}
           <div className="glass-panel glow-green" style={{ padding: '32px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>

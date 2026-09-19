@@ -242,12 +242,17 @@ function StartupDashboardContent() {
             <div className="glass-panel" style={{ padding: '24px' }}>
               <h3 style={{ fontSize: '1rem', marginBottom: '16px' }}>Ecosystem Progress</h3>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '8px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Ecosystem XP</span>
-                <span style={{ fontWeight: 600 }}>450 XP</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Profile Completion</span>
+                <span style={{ fontWeight: 600 }}>{mounted ? (user?.profile_completion ?? 10) : 0}%</span>
               </div>
               <div style={{ width: '100%', height: '6px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '99px', overflow: 'hidden' }}>
-                <div style={{ width: '45%', height: '100%', backgroundColor: 'var(--brand-green)' }} />
+                <div style={{ width: `${mounted ? (user?.profile_completion ?? 10) : 0}%`, height: '100%', backgroundColor: 'var(--brand-green)', transition: 'width 0.6s ease' }} />
               </div>
+              {mounted && user?.hope_score !== undefined && (
+                <div style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Hope Score: <strong style={{ color: 'var(--brand-amber)' }}>{user.hope_score} pts</strong>
+                </div>
+              )}
             </div>
 
             <div className="glass-panel" style={{ padding: '24px' }}>

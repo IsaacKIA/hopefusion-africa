@@ -204,15 +204,45 @@ export default function RegisterPage() {
             </button>
           </div>
 
-          {/* Password strength */}
+          {/* Password strength meter */}
           {formData.password && (
-            <div style={{ fontSize: '0.75rem', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: isPasswordStrong ? 'var(--brand-green)' : '#f59e0b' }}>
-                <span style={{
-                  width: '8px', height: '8px', borderRadius: '50%', display: 'inline-block',
-                  backgroundColor: isPasswordStrong ? 'var(--brand-green)' : '#f59e0b',
-                }} />
-                {isPasswordStrong ? '✓ Strong password' : 'Need 8+ chars, uppercase, lowercase & number'}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px', marginBottom: '8px' }}>
+                {[1, 2, 3, 4].map((step) => {
+                  const score = [
+                    formData.password.length >= 8,
+                    /[A-Z]/.test(formData.password),
+                    /[a-z]/.test(formData.password),
+                    /\d/.test(formData.password),
+                  ].filter(Boolean).length;
+                  const isActive = score >= step;
+                  const color = score === 4 ? 'var(--brand-green)' : score >= 2 ? 'var(--brand-amber)' : '#ef4444';
+                  return (
+                    <div
+                      key={step}
+                      style={{
+                        height: '4px',
+                        borderRadius: '2px',
+                        backgroundColor: isActive ? color : 'rgba(255,255,255,0.1)',
+                        transition: 'background-color 0.3s ease',
+                      }}
+                    />
+                  );
+                })}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '0.72rem' }}>
+                <span style={{ color: formData.password.length >= 8 ? 'var(--brand-green)' : 'var(--text-muted)' }}>
+                  {formData.password.length >= 8 ? '✓' : '○'} 8+ chars
+                </span>
+                <span style={{ color: /[A-Z]/.test(formData.password) ? 'var(--brand-green)' : 'var(--text-muted)' }}>
+                  {/[A-Z]/.test(formData.password) ? '✓' : '○'} Uppercase
+                </span>
+                <span style={{ color: /[a-z]/.test(formData.password) ? 'var(--brand-green)' : 'var(--text-muted)' }}>
+                  {/[a-z]/.test(formData.password) ? '✓' : '○'} Lowercase
+                </span>
+                <span style={{ color: /\d/.test(formData.password) ? 'var(--brand-green)' : 'var(--text-muted)' }}>
+                  {/\d/.test(formData.password) ? '✓' : '○'} Number
+                </span>
               </div>
             </div>
           )}

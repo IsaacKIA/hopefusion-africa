@@ -29,6 +29,8 @@ function SettingsContent() {
 
   // Notification preferences (local only)
   const [notifPrefs, setNotifPrefs] = useState({ email_matches: true, email_grants: true, email_messages: false, push_all: true });
+  const [savedNotif, setSavedNotif] = useState(false);
+  const [showDeleteNotice, setShowDeleteNotice] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -245,9 +247,23 @@ function SettingsContent() {
                   </button>
                 </div>
               ))}
-              <button className="btn-primary" style={{ marginTop: '24px', padding: '10px 24px', fontSize: '0.85rem' }} onClick={() => alert('Notification preferences saved!')}>
-                Save Preferences
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '24px' }}>
+                <button
+                  className="btn-primary"
+                  style={{ padding: '10px 24px', fontSize: '0.85rem' }}
+                  onClick={() => {
+                    setSavedNotif(true);
+                    setTimeout(() => setSavedNotif(false), 3000);
+                  }}
+                >
+                  Save Preferences
+                </button>
+                {savedNotif && (
+                  <span style={{ color: 'var(--brand-green)', fontSize: '0.85rem', fontWeight: 600 }}>
+                    ✓ Preferences saved!
+                  </span>
+                )}
+              </div>
             </div>
           )}
 
@@ -266,14 +282,29 @@ function SettingsContent() {
                     Sign Out Everywhere
                   </button>
                 </div>
-                <div style={{ padding: '20px', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.2)', backgroundColor: 'rgba(239,68,68,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '4px' }}>Delete Account</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Permanently deletes your profile, startup data, and ecosystem history. Cannot be undone.</div>
+                <div style={{ padding: '20px', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.2)', backgroundColor: 'rgba(239,68,68,0.03)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '4px' }}>Delete Account</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Permanently deletes your profile, startup data, and ecosystem history. Cannot be undone.</div>
+                    </div>
+                    <button onClick={() => setShowDeleteNotice(!showDeleteNotice)} style={{ padding: '8px 16px', fontSize: '0.8rem', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.4)', backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                      Delete Account
+                    </button>
                   </div>
-                  <button onClick={() => alert('Please contact support@hopefusion.africa to request account deletion.')} style={{ padding: '8px 16px', fontSize: '0.8rem', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.4)', backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
-                    Delete Account
-                  </button>
+                  {showDeleteNotice && (
+                    <div style={{
+                      backgroundColor: 'rgba(239,68,68,0.08)',
+                      border: '1px solid rgba(239,68,68,0.3)',
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                      fontSize: '0.85rem',
+                      color: '#fca5a5',
+                      lineHeight: 1.5,
+                    }}>
+                      To permanently delete your account and verify ownership, please email <strong>support@hopefusion.africa</strong> from your registered email address ({user?.email}) with subject &quot;Account Deletion Request&quot;. Your request will be fulfilled within 24 hours in compliance with data privacy regulations.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
