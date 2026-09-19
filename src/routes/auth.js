@@ -123,7 +123,7 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
         `UPDATE users
          SET password_hash = $2, role = $3, roles = ARRAY[$3]::TEXT[], first_name = $4, last_name = $5, phone = $6, country = $7, website_url = $8, updated_at = NOW()
          WHERE id = $1
-         RETURNING id, email, role, first_name, last_name`,
+         RETURNING id, email, role, first_name, last_name, is_verified, onboarding_completed`,
         [userId, hash, dbRole, first_name, last_name, normalizedPhone, country || null, website_url || null]
       );
       user = updatedUser;
@@ -131,7 +131,7 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
       const { rows: [newUser] } = await client.query(
         `INSERT INTO users (email, password_hash, role, roles, first_name, last_name, phone, country, linkedin_url, website_url, bio)
          VALUES ($1, $2, $3, ARRAY[$3]::TEXT[], $4, $5, $6, $7, $8, $9, $10)
-         RETURNING id, email, role, first_name, last_name`,
+         RETURNING id, email, role, first_name, last_name, is_verified, onboarding_completed`,
         [email.toLowerCase(), hash, dbRole, first_name, last_name, normalizedPhone, country || null, linkedin_url || null, website_url || null, dbRole === 'mentor' ? mentor_bio || null : null]
       );
       user = newUser;
@@ -260,7 +260,15 @@ router.post('/register', rateLimit(5, 60), validate(registerSchema), async (req,
       message: 'Account created! Check your email for a verification code.',
       token,
       refreshToken,
-      user: { id: user.id, email: user.email, role: user.role, first_name: user.first_name, last_name: user.last_name },
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        is_verified: Boolean(user.is_verified),
+        onboarding_completed: Boolean(user.onboarding_completed)
+      },
       // Always expose OTP in dev so developers can test without a live email domain
       ...(isDev && { debug_otp: code, debug_note: 'Verify your domain at resend.com/domains to enable real email delivery' }),
     });
@@ -286,8 +294,8 @@ router.post('/login', rateLimit(10, 60), validate(loginSchema), async (req, res)
     const { email, password } = req.body;
 
     const { rows } = await db.query(
-      'SELECT id, email, password_hash, role, first_name, last_name, is_verified, is_active FROM users WHERE email = $1',
-      [email]
+      'SELECT id, email, password_hash, role, roles, first_name, last_name, is_verified, is_active, onboarding_completed, country, avatar_url FROM users WHERE email = $1',
+      [email.toLowerCase()]
     );
     if (!rows.length) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -339,9 +347,13 @@ router.post('/login', rateLimit(10, 60), validate(loginSchema), async (req, res)
         id: user.id,
         email: user.email,
         role: user.role,
+        roles: user.roles || [user.role],
         first_name: user.first_name,
         last_name: user.last_name,
-        is_verified: user.is_verified,
+        is_verified: Boolean(user.is_verified),
+        onboarding_completed: Boolean(user.onboarding_completed),
+        country: user.country || null,
+        avatar_url: user.avatar_url || null,
       },
     });
 
