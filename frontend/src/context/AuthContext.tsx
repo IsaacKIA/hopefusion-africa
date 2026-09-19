@@ -117,10 +117,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshProfile = async () => {
-    const res = await HFAApi.getProfile();
-    if (res?.data) {
-      setUser(res.data);
-      localStorage.setItem('hfa_user', JSON.stringify(res.data));
+    const res = await HFAApi.getAuthStatus();
+    if (res?.success && res.user) {
+      setUser(res.user);
+      localStorage.setItem('hfa_user', JSON.stringify(res.user));
     }
   };
 
