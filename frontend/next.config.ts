@@ -25,13 +25,14 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Allow images from Cloudinary + Supabase
+  // Allow images from Cloudinary + Supabase + local public assets
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "*.supabase.co" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
+    // Local images in /public are served as-is; no config needed for them
   },
 
   // Compress output

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   const { user, logout } = useAuth();
@@ -80,21 +81,15 @@ export default function Home() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 2.5rem'
       }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <svg style={{ width: '36px', height: '36px' }} viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 28 Q5 18 11 10" stroke="var(--brand-green)" strokeWidth="3" strokeLinecap="round"/>
-            <path d="M13 30 Q9 19 16 11" stroke="var(--brand-amber)" strokeWidth="3" strokeLinecap="round"/>
-            <path d="M18 31 Q14 20 21 12" stroke="var(--brand-green)" strokeWidth="3" strokeLinecap="round"/>
-            <path d="M23 30 Q19 19 25 12" stroke="var(--brand-amber)" strokeWidth="3" strokeLinecap="round"/>
-            <circle cx="21" cy="8" r="2.5" fill="#EF4444"/>
-            <circle cx="26" cy="13" r="2.5" fill="#EF4444"/>
-          </svg>
-          <div>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '18px', fontWeight: 700 }}>
-              <span style={{ color: 'var(--brand-green)' }}>Hope</span>Fusion
-            </span>
-            <span style={{ display: 'block', fontSize: '10px', letterSpacing: '0.22em', marginTop: '-4px', color: 'var(--brand-amber)' }}>AFRICA</span>
-          </div>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center' }}>
+          <Image
+            src="/images/hopefusion-logo.png"
+            alt="HopeFusion Africa"
+            width={180}
+            height={48}
+            style={{ height: '44px', width: 'auto' }}
+            priority
+          />
         </Link>
 
         {/* Desktop Nav */}

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const ROLES = [
   { value: 'startup',          label: 'Startup Founder' },
@@ -116,10 +117,15 @@ export default function RegisterPage() {
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.5rem', fontWeight: 800 }}>
-              <span style={{ color: 'var(--brand-green)' }}>Hope</span>Fusion
-            </span>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', marginBottom: '16px' }}>
+            <Image
+              src="/images/hopefusion-logo.png"
+              alt="HopeFusion Africa"
+              width={180}
+              height={48}
+              style={{ height: '44px', width: 'auto' }}
+              priority
+            />
           </Link>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 700 }}>Create Account</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '6px' }}>

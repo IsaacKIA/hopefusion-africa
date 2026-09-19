@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface NavItem {
   label: string;
@@ -166,11 +167,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         
         {/* Sidebar Header Brand */}
         <div style={{ height: '70px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', padding: '0 24px' }}>
-          <Link href={homePath} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.25rem', fontWeight: 800 }}>
-              <span style={{ color: 'var(--brand-green)' }}>Hope</span>Fusion
-            </span>
-            <span className="badge badge-amber" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>AFRICA</span>
+          <Link href={homePath} style={{ display: 'flex', alignItems: 'center' }}>
+            <Image
+              src="/images/hopefusion-logo.png"
+              alt="HopeFusion Africa"
+              width={160}
+              height={44}
+              style={{ height: '40px', width: 'auto' }}
+              priority
+            />
           </Link>
         </div>
 
@@ -260,9 +265,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           }}>
             <div style={{ height: '70px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
-              <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.25rem', fontWeight: 800 }}>
-                <span style={{ color: 'var(--brand-green)' }}>Hope</span>Fusion
-              </span>
+              <Image
+                src="/images/hopefusion-logo.png"
+                alt="HopeFusion Africa"
+                width={150}
+                height={40}
+                style={{ height: '36px', width: 'auto' }}
+              />
               <button 
                 onClick={() => setMobileOpen(false)}
                 style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-secondary)' }}

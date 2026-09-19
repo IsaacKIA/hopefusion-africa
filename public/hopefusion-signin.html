@@ -30,6 +30,7 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--txt);min-height:
 .left-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 30% 80%,rgba(45,181,98,0.12),transparent),radial-gradient(ellipse 60% 40% at 80% 20%,rgba(232,160,32,0.08),transparent)}
 .dots-bg{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.06) 1px,transparent 1px);background-size:32px 32px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black,transparent)}
 .left-logo{display:flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:auto;position:relative;z-index:1}
+.left-logo-img{height:44px;width:auto;display:block}
 .left-brand{font-family:var(--font-h);font-size:16px;font-weight:600}
 .left-brand .h{color:var(--g)}.left-brand .f{color:#fff}
 .left-brand .a{color:var(--gold);font-size:9px;display:block;letter-spacing:.18em;font-family:var(--font-m);font-weight:400}
@@ -64,15 +65,7 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--txt);min-height:
 <div class="left-panel">
   <div class="dots-bg"></div>
   <a class="left-logo" href="hopefusion-homepage.html">
-    <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
-      <path d="M8 28 Q5 18 11 10" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
-      <path d="M13 30 Q9 19 16 11" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
-      <path d="M18 31 Q14 20 21 12" stroke="#2DB562" stroke-width="3" stroke-linecap="round"/>
-      <path d="M23 30 Q19 19 25 12" stroke="#E8A020" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="21" cy="8" r="2.5" fill="#E02020"/>
-      <circle cx="26" cy="13" r="2.5" fill="#E02020"/>
-    </svg>
-    <div class="left-brand"><span class="h">Hope</span><span class="f">Fusion</span><span class="a">A F R I C A</span></div>
+    <img src="/images/hopefusion-logo.png" alt="HopeFusion Africa" class="left-logo-img"/>
   </a>
   <div class="left-content">
     <h2 class="left-headline">Welcome<br/>back to <em>Africa's</em><br/>startup hub.</h2>
