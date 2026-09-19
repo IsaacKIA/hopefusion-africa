@@ -1,32 +1,21 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/.next",
-  "installCommand": "cd frontend && npm ci",
   "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "https://hopefusion-africa.onrender.com/api/v1"
-  },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_API_URL": "https://hopefusion-africa.onrender.com/api/v1"
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options",    "value": "nosniff" },
-        { "key": "X-Frame-Options",            "value": "SAMEORIGIN" },
-        { "key": "X-XSS-Protection",           "value": "1; mode=block" },
-        { "key": "Referrer-Policy",            "value": "strict-origin-when-cross-origin" },
-        { "key": "Strict-Transport-Security",  "value": "max-age=63072000; includeSubDomains; preload" }
+        { "key": "X-Content-Type-Options",   "value": "nosniff" },
+        { "key": "X-Frame-Options",           "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection",          "value": "1; mode=block" },
+        { "key": "Referrer-Policy",           "value": "strict-origin-when-cross-origin" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
       ]
     },
     {
       "source": "/sw.js",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Cache-Control",          "value": "no-cache, no-store, must-revalidate" },
         { "key": "Service-Worker-Allowed", "value": "/" }
       ]
     },
