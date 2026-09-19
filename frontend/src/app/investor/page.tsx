@@ -1181,7 +1181,7 @@ export default function PortalsDashboard() {
             </div>
           )}
 
-      <style jsx global>{`
+      <style>{`
         .tab-btn {
           background: transparent;
           border: none;

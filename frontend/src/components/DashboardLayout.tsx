@@ -519,7 +519,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </nav>
 
-      <style jsx global>{`
+      <style>{`
         .nav-link-hover:hover {
           background-color: rgba(255, 255, 255, 0.02) !important;
           color: white !important;

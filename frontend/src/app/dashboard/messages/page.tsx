@@ -266,7 +266,7 @@ function MessagesContent() {
         )}
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @media (max-width: 768px) {
           .messages-grid { grid-template-columns: 1fr !important; }
         }

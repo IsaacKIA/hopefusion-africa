@@ -483,7 +483,7 @@ function MentorshipHubContent() {
 
       </main>
 
-      <style jsx global>{`
+      <style>{`
         @media(max-width: 900px) {
           .mentorship-layout-grid { grid-template-columns: 1fr !important; }
         }

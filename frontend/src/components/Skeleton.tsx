@@ -56,7 +56,7 @@ export default function Skeleton({ type = 'card', count = 1 }: SkeletonProps) {
     <>
       {renderSkeleton()}
       
-      <style jsx global>{`
+      <style>{`
         @keyframes shimmer {
           0% {
             background-color: rgba(255, 255, 255, 0.01);

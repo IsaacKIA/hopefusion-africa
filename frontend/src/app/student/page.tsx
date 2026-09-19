@@ -272,7 +272,7 @@ function StudentDashboardContent() {
 
       </main>
 
-      <style jsx>{`
+      <style>{`
         @media (max-width: 768px) {
           .student-grid {
             grid-template-columns: 1fr !important;

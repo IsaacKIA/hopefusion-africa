@@ -307,7 +307,7 @@ function MarketplaceContent() {
         </div>
       )}
 
-      <style jsx global>{`
+      <style>{`
         @keyframes shimmer {
           0% { background-color: rgba(255,255,255,0.01); }
           50% { background-color: rgba(255,255,255,0.05); }

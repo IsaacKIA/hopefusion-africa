@@ -177,7 +177,7 @@ function ServiceProviderDashboardContent() {
 
       </main>
 
-      <style jsx>{`
+      <style>{`
         @media (max-width: 768px) {
           .provider-grid {
             grid-template-columns: 1fr !important;

@@ -665,7 +665,7 @@ function MeetingRoomContent() {
       </div>
 
       {/* Global Embedded CSS Animations */}
-      <style jsx global>{`
+      <style>{`
         @keyframes bounceWave {
           0%, 100% { transform: scaleY(1); }
           50% { transform: scaleY(2.2); }

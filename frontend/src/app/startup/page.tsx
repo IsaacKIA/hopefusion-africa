@@ -269,7 +269,7 @@ function StartupDashboardContent() {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @media(max-width: 768px) {
           .startup-workspace-grid { grid-template-columns: 1fr !important; }
         }

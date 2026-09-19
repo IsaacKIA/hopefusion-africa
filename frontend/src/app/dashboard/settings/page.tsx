@@ -312,7 +312,7 @@ function SettingsContent() {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @media (max-width: 768px) {
           .settings-grid { grid-template-columns: 1fr !important; }
         }

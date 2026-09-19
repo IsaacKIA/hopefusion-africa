@@ -167,7 +167,7 @@ function ProfileContent() {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @media (max-width: 900px) {
           .profile-grid { grid-template-columns: 1fr !important; }
         }
