@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
+import { AppStoreBadge, PlayStoreBadge } from '../components/StoreBadges';
 
 export default function Home() {
   const { user, logout } = useAuth();
@@ -98,6 +99,7 @@ export default function Home() {
           <a href="#platform" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Platform</a>
           <a href="#impact" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Impact</a>
           <a href="#sdgs" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>SDGs</a>
+          <Link href="/download" style={{ fontSize: '0.9rem', color: 'var(--brand-green)', fontWeight: 600 }}>Get Mobile App</Link>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -461,13 +463,23 @@ export default function Home() {
           <p style={{ color: 'rgba(0,0,0,0.7)', fontSize: '1.1rem', marginBottom: '36px' }}>
             Join thousands of founders, investors, and mentors building scalable projects cross-continentally.
           </p>
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '28px' }}>
             <Link href="/register?role=startup" className="btn-secondary" style={{ backgroundColor: '#000', color: '#fff', borderColor: 'transparent', padding: '14px 28px' }}>
               Launch My Startup →
             </Link>
             <Link href="/register?role=investor" className="btn-secondary" style={{ backgroundColor: 'transparent', color: '#000', borderColor: 'rgba(0,0,0,0.3)', padding: '14px 28px' }}>
               Join as Capital Allocator
             </Link>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '0.85rem', color: 'rgba(0,0,0,0.6)', fontWeight: 600 }}>
+              Or get the official app on your device:
+            </span>
+            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <AppStoreBadge />
+              <PlayStoreBadge />
+            </div>
           </div>
         </div>
       </section>
@@ -503,6 +515,7 @@ export default function Home() {
                 <li><Link href="/matching">AI Matchmaking</Link></li>
                 <li><Link href="/elearning">E-Learning Hub</Link></li>
                 <li><Link href="/marketplace">B2B Marketplace</Link></li>
+                <li><Link href="/download" style={{ color: 'var(--brand-green)', fontWeight: 600 }}>Mobile App (iOS & Android)</Link></li>
               </ul>
             </div>
 

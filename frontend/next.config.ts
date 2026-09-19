@@ -25,6 +25,17 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // Friendly redirect for /app -> /download
+  async redirects() {
+    return [
+      {
+        source: "/app",
+        destination: "/download",
+        permanent: false,
+      },
+    ];
+  },
+
   // Allow images from Cloudinary + Supabase + local public assets
   images: {
     remotePatterns: [

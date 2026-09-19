@@ -3,7 +3,7 @@ import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar';
-import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import SmartAppBanner from '@/components/SmartAppBanner';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 // Non-blocking font loading — Next.js handles preload & self-hosting
@@ -82,8 +82,8 @@ export default function RootLayout({
         <AuthProvider>
           {/* Registers service worker on client mount */}
           <ServiceWorkerRegistrar />
-          {/* Global custom PWA installation banner */}
-          <PWAInstallPrompt />
+          {/* Smart App Banner — directs mobile users safely to App Store / Google Play */}
+          <SmartAppBanner />
           {children}
           <SpeedInsights />
         </AuthProvider>
