@@ -387,8 +387,9 @@ function MentorshipHubContent() {
               <h2 style={{ fontSize: '1.25rem', marginBottom: '8px', fontFamily: 'Outfit' }}>
                 Book Consultation
               </h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '24px' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '16px' }}>
                 Scheduling session with <strong>{selectedMentor.first_name} {selectedMentor.last_name}</strong>
+              </p>
               {bookingError && (
                 <div style={{
                   backgroundColor: 'rgba(239, 68, 68, 0.08)',
