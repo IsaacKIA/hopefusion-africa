@@ -1,8 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { db } from '../config/db.js';
 import { generateEmbedding, formatOpportunityText } from '../utils/embeddings.js';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const gemini = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
 const INGESTION_SYSTEM = `You are HopeFusion Africa's V4 Ingestion AI parser.
 Your task is to take unstructured opportunity text (such as grant descriptions, corporate RFP postings, investment notices, or program announcements) and normalize them into a structured JSON schema mapping to our database columns.
@@ -28,28 +29,18 @@ The JSON schema you must return is:
 }`;
 
 /**
- * Parses raw, unstructured opportunity text using Claude 3.5 Sonnet.
+ * Parses raw, unstructured opportunity text using Gemini 3.6 Flash.
  * @param {string} rawText 
  * @returns {Promise<object>}
  */
-export async function parseOpportunityWithClaude(rawText) {
+export async function parseOpportunityWithGemini(rawText) {
   if (!rawText || typeof rawText !== 'string' || rawText.trim() === '') {
     throw new Error('rawText is required');
   }
 
-  const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
-    max_tokens: 1200,
-    system: INGESTION_SYSTEM,
-    messages: [
-      { role: 'user', content: `Parse the following unstructured opportunity description:\n\n${rawText}` }
-    ]
-  });
-
-  const text = response.content
-    .filter(b => b.type === 'text')
-    .map(b => b.text)
-    .join('');
+  const fullPrompt = `${INGESTION_SYSTEM}\n\nParse the following unstructured opportunity description:\n\n${rawText}`;
+  const result = await gemini.generateContent(fullPrompt);
+  const text = result.response.text();
   const clean = text.replace(/```json|```/g, '').trim();
   return JSON.parse(clean);
 }
@@ -60,7 +51,7 @@ export async function parseOpportunityWithClaude(rawText) {
  * @returns {Promise<object>}
  */
 export async function ingestOpportunity(rawText) {
-  const parsed = await parseOpportunityWithClaude(rawText);
+  const parsed = await parseOpportunityWithGemini(rawText);
 
   // Generate vector embedding
   const formattedText = formatOpportunityText(parsed);

@@ -5,9 +5,10 @@
 
 import { db, redis } from '../config/db.js';
 import { generateEmbedding, formatStartupText, formatInvestorText } from '../utils/embeddings.js';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const gemini = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
 const MATCHING_SYSTEM = `You are HopeFusion Africa's AI matching engine.
 Your job is to evaluate compatibility between startups and investors/mentors.
@@ -42,7 +43,7 @@ const pLimit = (concurrency) => {
 async function checkCreditsOk() {
   try {
     if (redis && redis.isOpen) {
-      const blocked = await redis.get('anthropic:circuit_open');
+      const blocked = await redis.get('gemini:circuit_open');
       return !blocked;
     }
   } catch (err) {
@@ -54,24 +55,30 @@ async function checkCreditsOk() {
 async function markCreditsExhausted() {
   try {
     if (redis && redis.isOpen) {
-      await redis.set('anthropic:circuit_open', '1', { EX: 3600 });
+      await redis.set('gemini:circuit_open', '1', { EX: 3600 });
     }
   } catch (err) {
     console.warn('[Agent] Redis circuit write failed:', err.message);
   }
 }
 
-function parseAIResponse(content) {
+function parseAIResponse(text) {
   try {
-    const text = content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('');
-    const clean = text.replace(/```json|```/g, '').trim();
-    return JSON.parse(clean);
+    if (!text || typeof text !== 'string') {
+      throw new Error('Empty AI response');
+    }
+    const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (match) {
+      return JSON.parse(match[1].trim());
+    }
+    const jsonMatch = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[1].trim());
+    }
+    return JSON.parse(text.trim());
   } catch (err) {
     console.warn('[Agent] Failed to parse JSON response:', err.message);
-    throw new Error('AI returned an invalid response format.');
+    throw new Error('AI returned an invalid response format.', { cause: err });
   }
 }
 
@@ -85,8 +92,8 @@ async function runAgentSweep(io) {
     return;
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('[Proactive Match Agent] Anthropic API Key missing. Skipping AI-dependent tasks.');
+  if (!process.env.GEMINI_API_KEY) {
+    console.error('[Proactive Match Agent] Gemini API Key missing. Skipping AI-dependent tasks.');
   }
 
   console.log('[Proactive Match Agent] Executing sweep & vector healing sweep...');
@@ -124,9 +131,9 @@ async function runAgentSweep(io) {
 
     // 3. Proactively pre-calculate matches for high-similarity pairs
     const creditsOk = await checkCreditsOk();
-    if (process.env.ANTHROPIC_API_KEY && creditsOk) {
+    if (process.env.GEMINI_API_KEY && creditsOk) {
       const activeStartups = await db.query('SELECT * FROM startups WHERE embedding IS NOT NULL LIMIT 50');
-      const limit = pLimit(3); // max 3 concurrent Claude calls
+      const limit = pLimit(3); // max 3 concurrent Gemini calls
       let matchesCalculated = 0;
       const maxMatchesPerSweep = 10;
       const tasks = [];
@@ -204,14 +211,9 @@ Return a JSON object with exactly this structure:
   "ticket_fit": <integer 0-100>
 }`;
 
-                  const response = await anthropic.messages.create({
-                    model: 'claude-3-5-sonnet-20241022',
-                    max_tokens: 1000,
-                    system: MATCHING_SYSTEM,
-                    messages: [{ role: 'user', content: prompt }]
-                  });
-
-                  const result = parseAIResponse(response.content);
+                  const fullPrompt = `${MATCHING_SYSTEM}\n\n${prompt}`;
+                  const geminiResult = await gemini.generateContent(fullPrompt);
+                  const result = parseAIResponse(geminiResult.response.text());
 
                   await db.query(
                     `INSERT INTO matches (startup_id, target_id, target_type, ai_score, ai_grade, ai_reasons, ai_breakdown)
@@ -246,7 +248,7 @@ Return a JSON object with exactly this structure:
                   consecutiveErrors = 0;
                 } catch (err) {
                   if (err.message && err.message.includes('credit balance is too low')) {
-                    console.warn('[Proactive Match Agent] Anthropic credits exhausted — opening Redis circuit breaker.');
+                    console.warn('[Proactive Match Agent] Gemini credits exhausted — opening Redis circuit breaker.');
                     await markCreditsExhausted();
                   } else {
                     consecutiveErrors++;

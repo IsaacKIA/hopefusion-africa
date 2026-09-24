@@ -21,7 +21,7 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
-      - key: ANTHROPIC_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
       - key: PAYSTACK_SECRET_KEY
         sync: false

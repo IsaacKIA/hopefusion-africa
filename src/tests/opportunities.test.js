@@ -11,41 +11,34 @@ jest.unstable_mockModule('@xenova/transformers', () => ({
   })
 }));
 
-jest.unstable_mockModule('@anthropic-ai/sdk', () => {
-  return {
-    default: class MockAnthropic {
-      constructor() {
-        this.messages = {
-          create: jest.fn(async () => {
-            return {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify({
-                    title: 'Mock Opportunity from Claude',
-                    description: 'A parsed mock opportunity description',
-                    opportunity_type: 'grant',
-                    value_amount: 50000,
-                    currency: 'USD',
-                    eligible_countries: ['KE', 'UG'],
-                    eligible_sectors: ['Agriculture'],
-                    eligible_stages: ['mvp'],
-                    deadline: '2026-12-31T00:00:00Z',
-                    metadata: {
-                      application_url: 'https://example.com/apply',
-                      funder_name: 'Mock Funder',
-                      requirements: ['Must be agtech']
-                    }
-                  })
-                }
-              ]
-            };
-          })
-        };
-      }
+jest.unstable_mockModule('@google/generative-ai', () => ({
+  GoogleGenerativeAI: class MockGoogleGenerativeAI {
+    getGenerativeModel() {
+      return {
+        generateContent: jest.fn(async () => ({
+          response: {
+            text: () => JSON.stringify({
+              title: 'Mock Opportunity from Gemini',
+              description: 'A parsed mock opportunity description',
+              opportunity_type: 'grant',
+              value_amount: 50000,
+              currency: 'USD',
+              eligible_countries: ['KE', 'UG'],
+              eligible_sectors: ['Agriculture'],
+              eligible_stages: ['mvp'],
+              deadline: '2026-12-31T00:00:00Z',
+              metadata: {
+                application_url: 'https://example.com/apply',
+                funder_name: 'Mock Funder',
+                requirements: ['Must be agtech']
+              }
+            })
+          }
+        }))
+      };
     }
-  };
-});
+  }
+}));
 
 // Import dynamically so mocks are applied beforehand
 const { app, httpServer } = await import('../server.js');
@@ -172,7 +165,7 @@ describe('Opportunities Route Integration Tests', () => {
   });
 
   describe('POST /api/v1/opportunities/parse', () => {
-    it('should parse unstructured text via Claude', async () => {
+    it('should parse unstructured text via Gemini', async () => {
       const res = await request(app)
         .post('/api/v1/opportunities/parse')
         .set('Authorization', `Bearer ${startupToken}`)
@@ -182,7 +175,7 @@ describe('Opportunities Route Integration Tests', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.title).toBe('Mock Opportunity from Claude');
+      expect(res.body.data.title).toBe('Mock Opportunity from Gemini');
     });
   });
 

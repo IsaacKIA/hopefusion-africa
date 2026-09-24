@@ -16,7 +16,7 @@
     "health": "curl -s http://localhost:3000/api/v1/health | node -e \"process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.stringify(JSON.parse(d),null,2)))\""
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.24.0",
+    "@google/generative-ai": "^0.21.0",
     "@sentry/node": "^10.65.0",
     "@sentry/profiling-node": "^10.65.0",
     "@vercel/speed-insights": "^2.0.0",

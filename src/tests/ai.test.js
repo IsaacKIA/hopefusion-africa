@@ -1,14 +1,14 @@
 import { jest } from '@jest/globals';
 
-// ─── HOISTED ESM MODULE MOCKS ──────────────────────────────────
-jest.unstable_mockModule('@anthropic-ai/sdk', () => {
+jest.unstable_mockModule('@google/generative-ai', () => {
   return {
-    default: class MockAnthropic {
-      constructor() {
-        this.messages = {
-          create: jest.fn(async (options) => {
+    GoogleGenerativeAI: class MockGoogleGenerativeAI {
+      constructor() {}
+      getGenerativeModel() {
+        return {
+          generateContent: jest.fn(async (prompt) => {
             let responseText = '{}';
-            const userContent = options.messages[0].content;
+            const userContent = typeof prompt === 'string' ? prompt : JSON.stringify(prompt);
 
             if (userContent.includes('Write a compelling grant proposal')) {
               responseText = JSON.stringify({
@@ -59,35 +59,18 @@ jest.unstable_mockModule('@anthropic-ai/sdk', () => {
             }
 
             return {
-              content: [
-                {
-                  type: "text",
-                  text: responseText
-                }
-              ],
-              usage: {
-                input_tokens: 100,
-                output_tokens: 150
+              response: {
+                text: () => responseText
               }
             };
           }),
-          stream: jest.fn(async () => {
-            const mockStream = {
-              [Symbol.asyncIterator]: async function* () {
-                yield {
-                  type: 'content_block_delta',
-                  delta: {
-                    type: 'text_delta',
-                    text: 'Mock chat reply stream'
-                  }
-                };
-              },
-              finalMessage: async () => ({
-                usage: { input_tokens: 10, output_tokens: 20 }
-              })
-            };
-            return mockStream;
-          })
+          startChat: jest.fn(() => ({
+            sendMessageStream: jest.fn(async () => ({
+              stream: (async function* () {
+                yield { text: () => 'Mock chat reply stream' };
+              })()
+            }))
+          }))
         };
       }
     }

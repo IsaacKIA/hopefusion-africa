@@ -109,7 +109,7 @@ export default function AdminHealth() {
           <StatusCard icon="🔌" label="WebSocket (Socket.io)"
             status="ok" detail="Real-time messaging + WebRTC" />
           <StatusCard icon="🤖" label="AI Engine"
-            status="degraded" detail="Anthropic credits exhausted" />
+            status={data.services.ai?.status || "ok"} detail={data.services.ai?.detail || "Google Gemini 3.5 Flash"} />
         </>}
         {loading && !data && [1,2,3,4].map((i: number) => (
           <div key={i} className="health-card health-skeleton" />

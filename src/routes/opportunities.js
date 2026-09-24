@@ -4,7 +4,7 @@ import { authenticate, authorize } from '../middleware/auth.js';
 import { validate } from '../middleware/validation.js';
 import { z } from 'zod';
 import { generateEmbedding, formatOpportunityText, formatStartupText } from '../utils/embeddings.js';
-import { parseOpportunityWithClaude } from '../services/ingestion.js';
+import { parseOpportunityWithGemini } from '../services/ingestion.js';
 
 const router = express.Router();
 
@@ -195,11 +195,11 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// POST /opportunities/parse - Parse raw unstructured opportunity text using Claude
+// POST /opportunities/parse - Parse raw unstructured opportunity text using Gemini
 router.post('/parse', authenticate, validate(parseTextSchema), async (req, res) => {
   try {
     const { raw_text } = req.body;
-    const result = await parseOpportunityWithClaude(raw_text);
+    const result = await parseOpportunityWithGemini(raw_text);
     return res.json({ success: true, data: result });
   } catch (err) {
     return res.status(500).json({ error: err.message });

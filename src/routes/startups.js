@@ -4,10 +4,11 @@ import { authenticate, authorize } from '../middleware/auth.js';
 import { validate } from '../middleware/validation.js';
 import { startupProfileSchema, investorProfileSchema } from '../schemas/startup.schema.js';
 import { generateEmbedding, formatStartupText, formatInvestorText } from '../utils/embeddings.js';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { verifyCompany } from '../services/registrar.js';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const gemini = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
 const startupsRouter = express.Router();
 const investorsRouter = express.Router();
@@ -268,13 +269,19 @@ priorities that drive impact investment on the continent.
 
 Always respond with valid JSON only. No markdown, no prose outside the JSON.`;
 
-function parseAIResponse(content) {
-  const text = content
-    .filter(b => b.type === 'text')
-    .map(b => b.text)
-    .join('');
-  const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
+function parseAIResponse(text) {
+  if (!text || typeof text !== 'string') {
+    throw new Error('Empty AI response');
+  }
+  const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (match) {
+    return JSON.parse(match[1].trim());
+  }
+  const jsonMatch = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+  if (jsonMatch) {
+    return JSON.parse(jsonMatch[1].trim());
+  }
+  return JSON.parse(text.trim());
 }
 
 // GET /api/v1/matches/my — get my AI matches
@@ -337,7 +344,7 @@ matchesRouter.get('/my', authenticate, async (req, res) => {
         topInvestors = queryRes.rows;
       }
 
-      // 4. Calculate Claude matching scores for the top investors in parallel
+      // 4. Calculate Gemini matching scores for the top investors in parallel
       const matchPromises = topInvestors.map(async (investor) => {
         const existing = await db.query(
           'SELECT * FROM matches WHERE startup_id = $1 AND target_id = $2 AND target_type = $3',
@@ -359,7 +366,7 @@ matchesRouter.get('/my', authenticate, async (req, res) => {
 
         // On-the-fly calculation
         try {
-          console.log(`[Matches Router] Running Claude matching evaluation for startup "${startup.name}" and investor "${investor.firm_name}"...`);
+          console.log(`[Matches Router] Running Gemini matching evaluation for startup "${startup.name}" and investor "${investor.firm_name}"...`);
           
           const prompt = `Evaluate the compatibility between this startup and investor for HopeFusion Africa.
 
@@ -404,14 +411,9 @@ Return a JSON object with exactly this structure:
   "ticket_fit": <integer 0-100>
 }`;
 
-          const response = await anthropic.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
-            max_tokens: 1000,
-            system: MATCHING_SYSTEM,
-            messages: [{ role: 'user', content: prompt }]
-          });
+          const geminiResult = await gemini.generateContent(`${MATCHING_SYSTEM}\n\n${prompt}`);
 
-          const result = parseAIResponse(response.content);
+          const result = parseAIResponse(geminiResult.response.text());
           
           const insertRes = await db.query(
             `INSERT INTO matches (startup_id, target_id, target_type, ai_score, ai_grade, ai_reasons, ai_breakdown)
@@ -434,7 +436,7 @@ Return a JSON object with exactly this structure:
           };
           return newMatch;
         } catch (err) {
-          console.error(`[Matches Router] Claude match failed for investor "${investor.firm_name}":`, err.message);
+          console.error(`[Matches Router] Gemini match failed for investor "${investor.firm_name}":`, err.message);
           // Fallback static match record using vector distance similarity score
           const distanceVal = parseFloat(investor.distance || 0.5);
           const scoreVal = Math.round((1 - distanceVal) * 100);
@@ -512,7 +514,7 @@ Return a JSON object with exactly this structure:
         topStartups = queryRes.rows;
       }
 
-      // 4. Calculate Claude matching scores for the top startups in parallel
+      // 4. Calculate Gemini matching scores for the top startups in parallel
       const matchPromises = topStartups.map(async (startup) => {
         const existing = await db.query(
           'SELECT * FROM matches WHERE startup_id = $1 AND target_id = $2 AND target_type = $3',
@@ -536,7 +538,7 @@ Return a JSON object with exactly this structure:
 
         // On-the-fly calculation
         try {
-          console.log(`[Matches Router] Running Claude matching evaluation for startup "${startup.name}" and investor "${investor.firm_name}"...`);
+          console.log(`[Matches Router] Running Gemini matching evaluation for startup "${startup.name}" and investor "${investor.firm_name}"...`);
           
           const prompt = `Evaluate the compatibility between this startup and investor for HopeFusion Africa.
 
@@ -581,14 +583,9 @@ Return a JSON object with exactly this structure:
   "ticket_fit": <integer 0-100>
 }`;
 
-          const response = await anthropic.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
-            max_tokens: 1000,
-            system: MATCHING_SYSTEM,
-            messages: [{ role: 'user', content: prompt }]
-          });
+          const geminiResult = await gemini.generateContent(`${MATCHING_SYSTEM}\n\n${prompt}`);
 
-          const result = parseAIResponse(response.content);
+          const result = parseAIResponse(geminiResult.response.text());
           
           const insertRes = await db.query(
             `INSERT INTO matches (startup_id, target_id, target_type, ai_score, ai_grade, ai_reasons, ai_breakdown)
@@ -613,7 +610,7 @@ Return a JSON object with exactly this structure:
           };
           return newMatch;
         } catch (err) {
-          console.error(`[Matches Router] Claude match failed for startup "${startup.name}":`, err.message);
+          console.error(`[Matches Router] Gemini match failed for startup "${startup.name}":`, err.message);
           const distanceVal = parseFloat(startup.distance || 0.5);
           const scoreVal = Math.round((1 - distanceVal) * 100);
           const gradeVal = scoreVal >= 85 ? 'Excellent' : scoreVal >= 70 ? 'Strong' : 'Good';

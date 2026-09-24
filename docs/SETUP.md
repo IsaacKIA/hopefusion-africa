@@ -55,7 +55,7 @@ hopefusion-africa/
 | Upstash | upstash.com | Redis cache |
 | Render | render.com | Backend hosting |
 | Netlify | netlify.com | Frontend hosting |
-| Anthropic | console.anthropic.com | Claude AI API |
+| Google Gemini | ai.google.dev | Gemini AI API |
 | Paystack | paystack.com | Card payments |
 | MTN MoMo | momodeveloper.mtn.com | Mobile money |
 | Cloudinary | cloudinary.com | File storage |
@@ -211,7 +211,7 @@ NODE_ENV=production
 DATABASE_URL=postgresql://...  (from Supabase)
 REDIS_URL=rediss://...          (from Upstash)
 JWT_SECRET=your_64_char_secret
-ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=AQ...
 PAYSTACK_SECRET_KEY=sk_live_...
 PAYSTACK_WEBHOOK_SECRET=...
 MTN_MOMO_SUBSCRIPTION_KEY=...
@@ -235,7 +235,7 @@ FRONTEND_URL=https://hopefusionafrica.com
 1. New → **Web Service** → same repo
 2. **Name:** `hopefusion-ai`
 3. **Start command:** `node src/ai-engine.js`
-4. Add env: `ANTHROPIC_API_KEY`, `PORT=3001`
+4. Add env: `GEMINI_API_KEY`, `PORT=3001`
 5. Your AI URL: `https://hopefusion-ai.onrender.com`
 
 ### Run database schema
@@ -530,7 +530,7 @@ Add to `public/_headers` (Netlify security headers):
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.socket.io https://fonts.googleapis.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; connect-src 'self' https://hopefusion-api.onrender.com https://hopefusion-ai.onrender.com wss://hopefusion-api.onrender.com https://api.anthropic.com;
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.socket.io https://fonts.googleapis.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; connect-src 'self' https://hopefusion-api.onrender.com https://hopefusion-ai.onrender.com wss://hopefusion-api.onrender.com https://generativelanguage.googleapis.com;
 ```
 
 ---
@@ -573,7 +573,7 @@ Add to `public/_headers` (Netlify security headers):
 | Render (AI engine) | Free | $7/mo Starter |
 | Supabase (DB) | Free (500MB) | $25/mo Pro |
 | Upstash (Redis) | Free (10K/day) | $10/mo Pay-as-you-go |
-| Anthropic (Claude) | Pay-per-use | ~$50-200/mo at scale |
+| Google Gemini | Pay-per-use / Free tier | ~$20-100/mo at scale |
 | Cloudinary (files) | Free (25GB) | $89/mo Plus |
 | Resend (email) | Free (3K/mo) | $20/mo Pro |
 | **Total to launch** | **$0** | **~$130-300/mo at scale** |

@@ -108,7 +108,7 @@ Push to `main` branch automatically:
 - `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (optional — FCM)
 
 ### AI Features
-- `ANTHROPIC_API_KEY` — Claude API key (top up at console.anthropic.com)
+- `GEMINI_API_KEY` — Google Gemini API key (ai.google.dev)
 
 ### Storage & Email
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`

@@ -75,7 +75,7 @@ git push -u origin main
 ### Step 5 — Deploy AI engine to Render
 1. New → **Web Service** → same repo
 2. **Start command:** `npm run start:ai`
-3. Add `ANTHROPIC_API_KEY` environment variable
+3. Add `GEMINI_API_KEY` environment variable
 4. Deploy — AI URL: `https://hopefusion-ai.onrender.com`
 
 ### Step 6 — Deploy frontend to Netlify
@@ -195,7 +195,7 @@ Add to `<head>`:
 
 | Service | Get it at | Used for |
 |---------|-----------|----------|
-| Anthropic | console.anthropic.com | AI matching, pitch analysis |
+| Google Gemini | ai.google.dev | AI matching, pitch analysis |
 | Supabase | supabase.com | PostgreSQL database |
 | Upstash | upstash.com | Redis cache |
 | Paystack | paystack.com | Card payments (GH, NG, KE) |
@@ -212,7 +212,7 @@ Add to `<head>`:
 
 - [ ] All HTML pages deployed to Netlify
 - [ ] Backend API running on Render
-- [ ] AI engine running with Anthropic API key
+- [ ] AI engine running with Gemini API key
 - [ ] PostgreSQL schema created on Supabase
 - [ ] Redis connected on Upstash
 - [ ] Paystack test mode verified

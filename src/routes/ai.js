@@ -4,14 +4,15 @@
  */
 
 import express from 'express';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import multer from 'multer';
 import pdfParse from 'pdf-parse';
-import { db, redis } from '../config/db.js';
+import { redis } from '../config/db.js';
 import { authenticate } from '../middleware/auth.js';
 
 const aiRouter = express.Router();
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const gemini = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 /* ============================================================
@@ -143,7 +144,7 @@ profile, stage, sector and goals. Your recommendations are specific and ranked.
 Always respond with valid JSON only. No markdown, no prose outside the JSON.`;
 
 /* ============================================================
-   HELPER: safe JSON parse from Claude response
+   HELPER: safe JSON parse from Gemini response
    ============================================================ */
 const SAFE_STARTUP_FIELDS = [
   'name', 'tagline', 'description', 'sector', 'stage',
@@ -172,18 +173,25 @@ function sanitizeForPrompt(obj, allowedFields) {
   );
 }
 
-function parseAIResponse(content, fallback = null) {
+function parseAIResponse(text, fallback = null) {
   try {
-    const text = content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('');
-    const clean = text.replace(/```json|```/g, '').trim();
-    return JSON.parse(clean);
+    if (!text || typeof text !== 'string') {
+      if (fallback !== null) return fallback;
+      throw new Error('Empty AI response');
+    }
+    const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (match) {
+      return JSON.parse(match[1].trim());
+    }
+    const jsonMatch = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[1].trim());
+    }
+    return JSON.parse(text.trim());
   } catch (err) {
     console.warn('[AI] Failed to parse JSON response:', err.message);
     if (fallback !== null) return fallback;
-    throw new Error('AI returned an invalid response format. Please try again.');
+    throw new Error('AI returned an invalid response format. Please try again.', { cause: err });
   }
 }
 
@@ -225,15 +233,9 @@ Return a JSON object with exactly this structure:
   "ticket_fit": <integer 0-100>
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1000,
-      system: MATCHING_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const result = parseAIResponse(response.content);
-    res.json({ success: true, data: result, usage: response.usage });
+    const geminiResult = await gemini.generateContent(`${MATCHING_SYSTEM}\n\n${prompt}`);
+    const result = parseAIResponse(geminiResult.response.text());
+    res.json({ success: true, data: result });
 
   } catch (err) {
     console.error('Match error:', err);
@@ -277,14 +279,8 @@ Return JSON array sorted by score descending:
   }
 ]`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1000,
-      system: MATCHING_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const matches = parseAIResponse(response.content);
+    const geminiResult = await gemini.generateContent(`${MATCHING_SYSTEM}\n\n${prompt}`);
+    const matches = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: matches, count: matches.length });
 
   } catch (err) {
@@ -343,14 +339,8 @@ Return JSON with this exact structure:
   "recommended_investors": [<3 specific investor types or programmes to target>]
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1000,
-      system: PITCH_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const result = parseAIResponse(response.content);
+    const geminiResult = await gemini.generateContent(`${PITCH_SYSTEM}\n\n${prompt}`);
+    const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
   } catch (err) {
@@ -385,14 +375,8 @@ Return JSON:
   ]
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 500,
-      system: PITCH_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const result = parseAIResponse(response.content);
+    const geminiResult = await gemini.generateContent(`${PITCH_SYSTEM}\n\n${prompt}`);
+    const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
   } catch (err) {
@@ -432,14 +416,8 @@ Return JSON:
   "alternative_grants": [<2-3 grants to consider if not eligible>]
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1000,
-      system: GRANT_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const result = parseAIResponse(response.content);
+    const geminiResult = await gemini.generateContent(`${GRANT_SYSTEM}\n\n${prompt}`);
+    const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
   } catch (err) {
@@ -483,14 +461,8 @@ Return JSON:
   "strategy": <2-3 sentence recommended application strategy>
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1000,
-      system: GRANT_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const result = parseAIResponse(response.content);
+    const geminiResult = await gemini.generateContent(`${GRANT_SYSTEM}\n\n${prompt}`);
+    const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
   } catch (err) {
@@ -532,14 +504,8 @@ Return JSON:
   "disclaimer": "This is AI guidance only. Consult a qualified lawyer for legal decisions."
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1000,
-      system: COMPLIANCE_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const result = parseAIResponse(response.content);
+    const geminiResult = await gemini.generateContent(`${COMPLIANCE_SYSTEM}\n\n${prompt}`);
+    const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
   } catch (err) {
@@ -578,14 +544,8 @@ Return JSON with recommendations for: ${type === 'all' ? 'courses, mentors, gran
   "personalisation_summary": <1-2 sentence summary of what drives these recommendations>
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1000,
-      system: RECOMMENDATION_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const result = parseAIResponse(response.content);
+    const geminiResult = await gemini.generateContent(`${RECOMMENDATION_SYSTEM}\n\n${prompt}`);
+    const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
   } catch (err) {
@@ -599,7 +559,7 @@ Return JSON with recommendations for: ${type === 'all' ? 'courses, mentors, gran
    ============================================================ */
 aiRouter.post('/chat/stream', async (req, res) => {
   try {
-    const { messages, context = 'general', thread_id, user } = req.body;
+    const { messages, context = 'general', thread_id } = req.body;
 
     if (!messages?.length) {
       return res.status(400).json({ error: '`messages` array is required' });
@@ -630,11 +590,6 @@ aiRouter.post('/chat/stream', async (req, res) => {
     const history = await getThreadHistory(activeThreadId);
     const currentUserMessage = messages[messages.length - 1]?.content || '';
 
-    const fullMessages = [
-      ...history,
-      ...messages.map(m => ({ role: m.role, content: m.content }))
-    ];
-
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -642,23 +597,53 @@ aiRouter.post('/chat/stream', async (req, res) => {
 
     res.write(`data: ${JSON.stringify({ thread_id: activeThreadId })}\n\n`);
 
-    const stream = await client.messages.stream({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 600,
-      system: systemPrompts[context] || systemPrompts.general,
-      messages: fullMessages,
-    });
+    // Prepare prior history (excluding the current turn)
+    const priorMessages = [
+      ...history,
+      ...messages.slice(0, -1)
+    ];
 
-    let assistantReply = '';
-
-    for await (const event of stream) {
-      if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-        assistantReply += event.delta.text;
-        res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`);
+    const chatHistory = [];
+    for (const m of priorMessages) {
+      if (m.role === 'system') continue;
+      const role = m.role === 'assistant' || m.role === 'model' ? 'model' : 'user';
+      if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === role) {
+        chatHistory[chatHistory.length - 1].parts[0].text += `\n\n${m.content || ''}`;
+      } else {
+        chatHistory.push({
+          role,
+          parts: [{ text: m.content || '' }],
+        });
       }
     }
 
-    const finalMsg = await stream.finalMessage();
+    // History must start with 'user' and end with 'model' before calling sendMessageStream
+    while (chatHistory.length > 0 && chatHistory[0].role !== 'user') {
+      chatHistory.shift();
+    }
+    while (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role !== 'model') {
+      chatHistory.pop();
+    }
+
+    const promptText = systemPrompts[context] || systemPrompts.general;
+    const geminiChat = genAI.getGenerativeModel({
+      model: 'gemini-3.5-flash',
+      systemInstruction: { parts: [{ text: promptText }] },
+    }).startChat({
+      history: chatHistory,
+    });
+
+    const streamResult = await geminiChat.sendMessageStream(currentUserMessage);
+
+    let assistantReply = '';
+
+    for await (const chunk of streamResult.stream) {
+      const chunkText = chunk.text();
+      if (chunkText) {
+        assistantReply += chunkText;
+        res.write(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
+      }
+    }
 
     if (assistantReply) {
       await appendThreadHistory(activeThreadId, currentUserMessage, assistantReply);
@@ -668,7 +653,6 @@ aiRouter.post('/chat/stream', async (req, res) => {
       done      : true,
       thread_id : activeThreadId,
       memory    : (redis && redis.isOpen) ? 'redis' : 'memory',
-      usage     : finalMsg.usage
     })}\n\n`);
     res.end();
 
@@ -752,14 +736,8 @@ Return JSON:
   "milestones": [<5 financial milestones to hit for next funding round>]
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1000,
-      system: PITCH_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const result = parseAIResponse(response.content);
+    const geminiResult = await gemini.generateContent(`${PITCH_SYSTEM}\n\n${prompt}`);
+    const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
   } catch (err) {
@@ -805,14 +783,8 @@ Return JSON:
   "suggested_edits": [<2-3 actionable tips for startup founder to customize this answer further>]
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1500,
-      system: GRANT_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const result = parseAIResponse(response.content);
+    const geminiResult = await gemini.generateContent(`${GRANT_SYSTEM}\n\n${prompt}`);
+    const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
   } catch (err) {
@@ -866,14 +838,8 @@ Return JSON:
   "call_to_action": "<the call to action ask>"
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1500,
-      system: PITCH_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const result = parseAIResponse(response.content);
+    const geminiResult = await gemini.generateContent(`${PITCH_SYSTEM}\n\n${prompt}`);
+    const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
   } catch (err) {
