@@ -493,7 +493,7 @@ router.get('/health', async (req, res) => {
       services: {
         database: { status: dbOk  ? 'ok' : 'error', latency_ms: dbMs },
         cache:    { status: redisOk ? 'ok' : 'error', latency_ms: redisMs },
-        ai:       { status: process.env.GEMINI_API_KEY ? 'ok' : 'degraded', detail: 'Google Gemini 3.6 Flash' },
+        ai:       { status: process.env.GEMINI_API_KEY ? 'ok' : 'degraded', detail: 'Google Gemini 3.5 Flash' },
       },
       system: {
         node_version: process.version,
