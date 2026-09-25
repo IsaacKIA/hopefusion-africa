@@ -531,7 +531,7 @@ paymentsRouter.post('/escrow/create', authenticate, validate(escrowCreateSchema)
 paymentsRouter.post('/escrow/:escrowId/milestone/:milestoneId/release', authenticate, validate(escrowReleaseSchema), async (req, res) => {
   try {
     const { escrowId, milestoneId } = req.params;
-    const { evidence_url, notes } = req.body;
+    const { evidence_url, notes: _notes } = req.body;
 
     // Fetch Milestone details
     const mRes = await db.query(

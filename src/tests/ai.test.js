@@ -79,7 +79,7 @@ jest.unstable_mockModule('@google/generative-ai', () => {
 
 jest.unstable_mockModule('@xenova/transformers', () => ({
   pipeline: jest.fn(async () => {
-    return jest.fn(async (text, options) => {
+    return jest.fn(async (_text, _options) => {
       return {
         data: new Float32Array(384).fill(0.05)
       };

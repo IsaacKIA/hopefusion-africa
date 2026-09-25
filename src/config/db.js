@@ -211,7 +211,7 @@ if (process.env.NODE_ENV === 'test') {
     safeRedisProxy.isOpen = true;
     console.log('[Redis] Connected successfully');
   });
-  realRedis.on('error', (err) => {
+  realRedis.on('error', (_err) => {
     safeRedisProxy.isOpen = false;
     if (!realRedis._errorLogged) {
       console.warn('[Redis] Not available — falling back to local memory store for cache/OTP.');

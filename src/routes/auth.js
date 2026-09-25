@@ -813,7 +813,7 @@ router.post('/onboard', authenticate, validate(onboardingSchema), async (req, re
       // Startup fields
       startup_name, sector, stage, team_size, funding_goal, sdgs, is_women_led, startup_tagline, startup_website,
       // Investor fields
-      firm_name, investor_type, ticket_min, ticket_max, sectors, stages, countries, instruments, firm_website,
+      firm_name, investor_type, ticket_min, ticket_max, sectors, stages, countries, instruments, firm_website: _firm_website,
       // Mentor fields
       expertise, session_types, languages, experience_years, max_mentees, hourly_rate, current_role, mentor_bio
     } = req.body;

@@ -77,7 +77,7 @@ function requireScope(...scopes) {
 
 // Rate limiting tiers
 const freeTierLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 100, message: { error: 'Rate limit exceeded. Free tier: 100 req/hour. Upgrade at hopefusionafrica.com/pricing' } });
-const proTierLimit  = rateLimit({ windowMs: 60 * 60 * 1000, max: 5000, message: { error: 'Rate limit exceeded. Pro tier: 5000 req/hour.' } });
+const _proTierLimit  = rateLimit({ windowMs: 60 * 60 * 1000, max: 5000, message: { error: 'Rate limit exceeded. Pro tier: 5000 req/hour.' } });
 
 // Apply API key auth to all public API routes
 router.use(apiKeyAuth);
@@ -216,7 +216,7 @@ router.get('/v1/investors', requireScope('investors:read', '*'), async (req, res
 
 router.get('/v1/mentors', requireScope('mentors:read', '*'), async (req, res) => {
   try {
-    const { expertise, country, language, available, limit = 20 } = req.query;
+    const { expertise: _expertise, country: _country, language: _language, available: _available, limit = 20 } = req.query;
     const { rows } = await db.query(
       `SELECT m.id, m.expertise, m.industries, m.countries, m.languages,
               m.session_types, m.hourly_rate, m.avg_rating, m.rating_count,
@@ -265,7 +265,7 @@ router.get('/v1/matches', requireScope('matches:read', '*'), async (req, res) =>
 
 router.get('/v1/grants', requireScope('grants:read', '*'), async (req, res) => {
   try {
-    const { sector, country, min_amount, max_amount, page = 1, limit = 20 } = req.query;
+    const { sector: _sector, country: _country2, min_amount: _min_amount, max_amount: _max_amount, page = 1, limit = 20 } = req.query;
     // In production: query grants table. For now return structured mock.
     res.json({
       object: 'list',

@@ -37,7 +37,7 @@ async function sendWhatsAppConfirmation(phone, message) {
    ============================================================ */
 router.post('/ussd', async (req, res) => {
   try {
-    const { sessionId, serviceCode, phoneNumber, text = '' } = req.body;
+    const { sessionId: _sessionId, serviceCode: _serviceCode, phoneNumber, text = '' } = req.body;
 
     if (!phoneNumber) {
       return res.status(400).send('ERROR: Missing phoneNumber');
@@ -132,7 +132,7 @@ router.post('/ussd', async (req, res) => {
    ============================================================ */
 router.post('/sms/incoming', async (req, res) => {
   try {
-    const { from, to, text = '' } = req.body;
+    const { from, to: _to, text = '' } = req.body;
 
     if (!from || !text) {
       return res.status(400).json({ error: 'Missing parameters from/text' });

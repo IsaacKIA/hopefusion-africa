@@ -42,7 +42,7 @@ Sentry.init({
   ],
 
   // Scrub sensitive request data before sending
-  beforeSend(event, hint) {
+  beforeSend(event, _hint) {
     // Never send in test mode
     if (process.env.NODE_ENV === 'test') return null;
 

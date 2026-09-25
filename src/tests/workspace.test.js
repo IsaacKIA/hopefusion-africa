@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { app, httpServer } from '../server.js';
-import { mockDbReset, mockDbExpectQuery, redisMockStore } from '../config/db.js';
-import { jest } from '@jest/globals';
+import { mockDbReset, mockDbExpectQuery } from '../config/db.js';
+// jest is a global in test environment, import removed to avoid no-unused-vars
 import jwt from 'jsonwebtoken';
 
 process.env.JWT_SECRET = 'supersecretjwtdevelopmentkeyforetestingruns';
