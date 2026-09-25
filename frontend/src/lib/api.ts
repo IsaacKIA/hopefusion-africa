@@ -115,8 +115,10 @@ async function apiFetch(path: string, options: RequestInit = {}, timeoutMs = 100
 export const API = {
   get: (path: string, opts?: RequestInit) =>
     apiFetch(path, { method: 'GET', ...opts }),
-  post: (path: string, body?: any, opts?: RequestInit) =>
-    apiFetch(path, { method: 'POST', body: JSON.stringify(body), ...opts }),
+  post: (path: string, body?: any, opts?: RequestInit) => {
+    const isAi = path.startsWith('/ai') || path.includes('/ai/');
+    return apiFetch(path, { method: 'POST', body: JSON.stringify(body), ...opts }, isAi ? 60000 : 15000);
+  },
   postAuth: (path: string, body?: any, opts?: RequestInit) =>
     // Auth endpoints do bcrypt + remote DB (Supabase pooler) — needs generous timeout
     apiFetch(path, { method: 'POST', body: JSON.stringify(body), ...opts }, 35000),
