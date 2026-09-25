@@ -8,6 +8,7 @@ interface HealthData {
   services: {
     database: { status: string; latency_ms: number };
     cache:    { status: string; latency_ms: number };
+    ai?:      { status: string; detail?: string };
   };
   system: {
     node_version: string; uptime_seconds: number;
