@@ -130,7 +130,7 @@ export const metadata: Metadata = {
 
   // ─── Verification tokens (fill in after registering) ────────────────────
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? '',
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || 'google59e336434f702a44',
     // yandex: '',
     // bing: '',
   },

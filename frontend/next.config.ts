@@ -54,7 +54,7 @@ const nextConfig: NextConfig = {
           { key: "X-XSS-Protection",         value: "1; mode=block" },
           { key: "Referrer-Policy",          value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
+            value: "camera=(self), microphone=(self), display-capture=(self), geolocation=(), interest-cohort=()" },
           { key: "Strict-Transport-Security",
             value: "max-age=63072000; includeSubDomains; preload" },
           // Tell Googlebot this is an African platform (Ghana-first)
