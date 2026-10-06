@@ -195,6 +195,33 @@ function parseAIResponse(text, fallback = null) {
   }
 }
 
+/**
+ * Wraps gemini.generateContent with a single automatic retry on 429 rate-limit errors.
+ * Parses the retryDelay from the error message and waits up to 30 s before retrying.
+ */
+async function geminiGenerate(prompt) {
+  try {
+    return await gemini.generateContent(prompt);
+  } catch (err) {
+    const is429 = err.message && (
+      err.message.includes('429') ||
+      err.message.includes('quota') ||
+      err.message.includes('RESOURCE_EXHAUSTED') ||
+      err.message.includes('rate limit')
+    );
+    if (is429) {
+      // Extract retryDelay seconds from error if available, cap at 30s
+      const delayMatch = err.message.match(/retry[^\d]*(\d+(?:\.\d+)?)\s*s/i);
+      const waitMs = delayMatch ? Math.min(parseFloat(delayMatch[1]) * 1000, 30000) : 15000;
+      console.warn(`[AI] Rate-limited by Gemini — retrying in ${Math.round(waitMs / 1000)}s...`);
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+      return await gemini.generateContent(prompt); // single retry
+    }
+    throw err;
+  }
+}
+
+
 /* ============================================================
    1. STARTUP–INVESTOR AI MATCHING
    POST /api/v1/ai/match
@@ -233,7 +260,7 @@ Return a JSON object with exactly this structure:
   "ticket_fit": <integer 0-100>
 }`;
 
-    const geminiResult = await gemini.generateContent(`${MATCHING_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${MATCHING_SYSTEM}\n\n${prompt}`);
     const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
@@ -279,7 +306,7 @@ Return JSON array sorted by score descending:
   }
 ]`;
 
-    const geminiResult = await gemini.generateContent(`${MATCHING_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${MATCHING_SYSTEM}\n\n${prompt}`);
     const matches = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: matches, count: matches.length });
 
@@ -339,7 +366,7 @@ Return JSON with this exact structure:
   "recommended_investors": [<3 specific investor types or programmes to target>]
 }`;
 
-    const geminiResult = await gemini.generateContent(`${PITCH_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${PITCH_SYSTEM}\n\n${prompt}`);
     const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
@@ -375,7 +402,7 @@ Return JSON:
   ]
 }`;
 
-    const geminiResult = await gemini.generateContent(`${PITCH_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${PITCH_SYSTEM}\n\n${prompt}`);
     const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
@@ -416,7 +443,7 @@ Return JSON:
   "alternative_grants": [<2-3 grants to consider if not eligible>]
 }`;
 
-    const geminiResult = await gemini.generateContent(`${GRANT_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${GRANT_SYSTEM}\n\n${prompt}`);
     const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
@@ -461,7 +488,7 @@ Return JSON:
   "strategy": <2-3 sentence recommended application strategy>
 }`;
 
-    const geminiResult = await gemini.generateContent(`${GRANT_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${GRANT_SYSTEM}\n\n${prompt}`);
     const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
@@ -504,7 +531,7 @@ Return JSON:
   "disclaimer": "This is AI guidance only. Consult a qualified lawyer for legal decisions."
 }`;
 
-    const geminiResult = await gemini.generateContent(`${COMPLIANCE_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${COMPLIANCE_SYSTEM}\n\n${prompt}`);
     const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
@@ -544,7 +571,7 @@ Return JSON with recommendations for: ${type === 'all' ? 'courses, mentors, gran
   "personalisation_summary": <1-2 sentence summary of what drives these recommendations>
 }`;
 
-    const geminiResult = await gemini.generateContent(`${RECOMMENDATION_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${RECOMMENDATION_SYSTEM}\n\n${prompt}`);
     const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
@@ -736,7 +763,7 @@ Return JSON:
   "milestones": [<5 financial milestones to hit for next funding round>]
 }`;
 
-    const geminiResult = await gemini.generateContent(`${PITCH_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${PITCH_SYSTEM}\n\n${prompt}`);
     const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
@@ -783,7 +810,7 @@ Return JSON:
   "suggested_edits": [<2-3 actionable tips for startup founder to customize this answer further>]
 }`;
 
-    const geminiResult = await gemini.generateContent(`${GRANT_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${GRANT_SYSTEM}\n\n${prompt}`);
     const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 
@@ -838,7 +865,7 @@ Return JSON:
   "call_to_action": "<the call to action ask>"
 }`;
 
-    const geminiResult = await gemini.generateContent(`${PITCH_SYSTEM}\n\n${prompt}`);
+    const geminiResult = await geminiGenerate(``${PITCH_SYSTEM}\n\n${prompt}`);
     const result = parseAIResponse(geminiResult.response.text());
     res.json({ success: true, data: result });
 

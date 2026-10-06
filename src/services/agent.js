@@ -21,6 +21,9 @@ Always respond with valid JSON only. No markdown, no prose outside the JSON.`;
 let consecutiveErrors = 0;
 const MAX_CONSECUTIVE_ERRORS = 5;
 
+// Small helper to sleep between Gemini calls and avoid hammering the rate limit
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Concurrency helper
 const pLimit = (concurrency) => {
   const queue = [];
@@ -133,9 +136,9 @@ async function runAgentSweep(io) {
     const creditsOk = await checkCreditsOk();
     if (process.env.GEMINI_API_KEY && creditsOk) {
       const activeStartups = await db.query('SELECT * FROM startups WHERE embedding IS NOT NULL LIMIT 50');
-      const limit = pLimit(3); // max 3 concurrent Gemini calls
+      const limit = pLimit(1); // Only 1 concurrent Gemini call — free tier is 5 RPM
       let matchesCalculated = 0;
-      const maxMatchesPerSweep = 10;
+      const maxMatchesPerSweep = 3; // Cap at 3 per sweep to preserve quota for user-facing requests
       const tasks = [];
 
       for (const startup of activeStartups.rows) {
@@ -212,6 +215,7 @@ Return a JSON object with exactly this structure:
 }`;
 
                   const fullPrompt = `${MATCHING_SYSTEM}\n\n${prompt}`;
+                  await sleep(2000); // 2s delay between calls — free tier allows 5 RPM
                   const geminiResult = await gemini.generateContent(fullPrompt);
                   const result = parseAIResponse(geminiResult.response.text());
 
@@ -247,8 +251,15 @@ Return a JSON object with exactly this structure:
                   }
                   consecutiveErrors = 0;
                 } catch (err) {
-                  if (err.message && err.message.includes('credit balance is too low')) {
-                    console.warn('[Proactive Match Agent] Gemini credits exhausted — opening Redis circuit breaker.');
+                  const isQuotaError = err.message && (
+                    err.message.includes('credit balance is too low') ||
+                    err.message.includes('429') ||
+                    err.message.includes('quota') ||
+                    err.message.includes('RESOURCE_EXHAUSTED') ||
+                    err.message.includes('rate limit')
+                  );
+                  if (isQuotaError) {
+                    console.warn('[Proactive Match Agent] Gemini quota/rate-limit hit — opening Redis circuit breaker for 1 hour.');
                     await markCreditsExhausted();
                   } else {
                     consecutiveErrors++;

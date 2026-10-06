@@ -1,18 +1,36 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Grants & Funding Opportunities — HopeFusion Africa',
-  description: 'Discover African startup grants, seed funding, equity-free capital, and government-backed financing opportunities. Updated regularly by HopeFusion Africa.',
+  title: 'Startup Grants & Funding — Africa & Ghana Funding Opportunities',
+  description:
+    'Discover the best startup grants, equity-free capital, seed funding, and government-backed finance for African founders. Updated daily. Apply through HopeFusion Africa.',
+  keywords: [
+    'startup grants Africa', 'African startup funding', 'equity-free funding Ghana',
+    'seed capital Africa', 'government grants startups Ghana', 'African development grants',
+    'impact grants Africa', 'SME funding Ghana', 'women startup grants Africa',
+    'youth entrepreneur grants Ghana',
+  ],
+  alternates: {
+    canonical: '/grants',
+  },
   openGraph: {
-    title: 'Grants & Funding Opportunities — HopeFusion Africa',
-    description: 'Find grants, seed funding, and equity-free capital for your African startup. Access curated funding opportunities from across the continent.',
+    title: 'Startup Grants & Funding — HopeFusion Africa',
+    description:
+      'Find and apply for startup grants, seed funding, and equity-free capital across Ghana and Africa. Updated daily.',
     type: 'website',
     siteName: 'HopeFusion Africa',
+    images: [{ url: '/images/hopefusion-og.png', width: 1200, height: 630 }],
   },
-  keywords: ['startup grants Africa', 'African startup funding', 'equity-free funding', 'seed capital Africa', 'government grants startups'],
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Startup Grants & Funding — HopeFusion Africa',
+    description: 'Find and apply for startup grants and seed funding across Ghana and Africa.',
+    images: ['/images/hopefusion-og.png'],
+  },
   robots: {
     index: true,
     follow: true,
+    googleBot: { index: true, follow: true, 'max-snippet': -1 },
   },
 };
 

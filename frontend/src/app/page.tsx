@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AppStoreBadge, PlayStoreBadge } from '../components/StoreBadges';
+import HomepageStructuredData from '../components/HomepageStructuredData';
 
 export default function Home() {
   const { user, logout } = useAuth();
@@ -74,6 +75,8 @@ export default function Home() {
 
   return (
     <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: '100vh', overflowX: 'hidden' }} className="fade-in">
+      {/* JSON-LD structured data for rich results (SoftwareApplication + FAQPage) */}
+      <HomepageStructuredData />
       {/* ===== HEADER NAVIGATION ===== */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
