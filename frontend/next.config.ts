@@ -34,10 +34,6 @@ const nextConfig: NextConfig = {
   },
 
   // ─── Experimental perf flags ─────────────────────────────────────────────
-  // Partial Pre-rendering (Next 16+): static shell + streaming dynamic parts
-  // experimental.ppr was merged into cacheComponents in Next.js 16
-  cacheComponents: true,
-
   experimental: {
     // Optimise CSS — inlines critical CSS, reduces render-blocking
     optimizeCss: true,
@@ -63,15 +59,6 @@ const nextConfig: NextConfig = {
             value: "max-age=63072000; includeSubDomains; preload" },
           // Tell Googlebot this is an African platform (Ghana-first)
           { key: "Content-Language", value: "en-GH" },
-        ],
-      },
-
-      // Static assets — long-lived immutable cache (1 year)
-      {
-        source: "/_next/static/(.*)",
-        headers: [
-          { key: "Cache-Control",
-            value: "public, max-age=31536000, immutable" },
         ],
       },
 
