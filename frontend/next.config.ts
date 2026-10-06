@@ -105,9 +105,9 @@ const nextConfig: NextConfig = {
     return [
       // /app → /download (app store redirect)
       { source: "/app", destination: "/download", permanent: false },
-      // www → non-www canonical
+      // www → non-www canonical (preserves full path and query string)
       {
-        source: "/(.*)",
+        source: "/:path*",
         has: [{ type: "host", value: "www.hopefusionafrica.com" }],
         destination: "https://hopefusionafrica.com/:path*",
         permanent: true,
