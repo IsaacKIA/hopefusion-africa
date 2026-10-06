@@ -128,9 +128,13 @@ export const metadata: Metadata = {
     },
   },
 
-  // ─── Verification tokens (fill in after registering) ────────────────────
+  // ─── Verification tokens (Google Search Console) ─────────────────────────
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || 'google59e336434f702a44',
+    google: [
+      '5PBXzgOEOvnMOV46EkT72FQDYOr1pVImMn7524W74U8',
+      ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ? [process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION] : []),
+      'google59e336434f702a44',
+    ],
     // yandex: '',
     // bing: '',
   },
