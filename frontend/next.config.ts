@@ -34,14 +34,14 @@ const nextConfig: NextConfig = {
   },
 
   // ─── Experimental perf flags ─────────────────────────────────────────────
+  // Partial Pre-rendering (Next 16+): static shell + streaming dynamic parts
+  // experimental.ppr was merged into cacheComponents in Next.js 16
+  cacheComponents: true,
+
   experimental: {
     // Optimise CSS — inlines critical CSS, reduces render-blocking
     optimizeCss: true,
-    // Partial Pre-rendering (Next 14+): static shell + streaming dynamic parts
-    ppr: true,
-    // React compiler (requires React 19)
-    // reactCompiler: true,
-    // Faster server-side rendering via Partial Pre-rendering
+    // Faster server-side rendering
     serverComponentsHmrCache: true,
   },
 
@@ -148,10 +148,14 @@ export default withSentryConfig(nextConfig, {
     disable: process.env.NODE_ENV !== "production",
   },
 
-  autoInstrumentServerFunctions: true,
-  autoInstrumentMiddleware: true,
-  autoInstrumentAppDirectory: true,
+  webpack: {
+    autoInstrumentServerFunctions: true,
+    autoInstrumentMiddleware: true,
+    autoInstrumentAppDirectory: true,
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
 
-  disableLogger: true,
   tunnelRoute: "/monitoring",
 });
